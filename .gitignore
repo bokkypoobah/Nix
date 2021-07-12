@@ -1,0 +1,14 @@
+node_modules
+
+#Hardhat files
+cache
+artifacts
+
+.DS_Store
+.project
+.settings
+scripts/raw/*.json
+scripts/osraw/*.json
+scripts/node_modules
+scripts/package-lock.json
+private
