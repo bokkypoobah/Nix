@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 
-import "../utils/EnumerableSet.sol";
+import "../utils/structs/EnumerableSet.sol";
 
 // Bytes32Set
 contract EnumerableBytes32SetMock {
@@ -32,6 +32,10 @@ contract EnumerableBytes32SetMock {
 
     function at(uint256 index) public view returns (bytes32) {
         return _set.at(index);
+    }
+
+    function values() public view returns (bytes32[] memory) {
+        return _set.values();
     }
 }
 
@@ -64,6 +68,10 @@ contract EnumerableAddressSetMock {
     function at(uint256 index) public view returns (address) {
         return _set.at(index);
     }
+
+    function values() public view returns (address[] memory) {
+        return _set.values();
+    }
 }
 
 // UintSet
@@ -94,5 +102,9 @@ contract EnumerableUintSetMock {
 
     function at(uint256 index) public view returns (uint256) {
         return _set.at(index);
+    }
+
+    function values() public view returns (uint256[] memory) {
+        return _set.values();
     }
 }

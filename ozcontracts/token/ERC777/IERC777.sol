@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Interface of the ERC777Token standard as defined in the EIP.
@@ -58,7 +58,11 @@ interface IERC777 {
      * - if `recipient` is a contract, it must implement the {IERC777Recipient}
      * interface.
      */
-    function send(address recipient, uint256 amount, bytes calldata data) external;
+    function send(
+        address recipient,
+        uint256 amount,
+        bytes calldata data
+    ) external;
 
     /**
      * @dev Destroys `amount` tokens from the caller's account, reducing the

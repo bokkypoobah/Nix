@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 
-import "../payment/escrow/ConditionalEscrow.sol";
+import "../utils/escrow/ConditionalEscrow.sol";
 
 // mock class using ConditionalEscrow
 contract ConditionalEscrowMock is ConditionalEscrow {

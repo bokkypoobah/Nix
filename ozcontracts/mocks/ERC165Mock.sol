@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 
-import "../introspection/ERC165.sol";
+import "../utils/introspection/ERC165.sol";
 
-contract ERC165Mock is ERC165 {
-    function registerInterface(bytes4 interfaceId) public {
-        _registerInterface(interfaceId);
-    }
-}
+contract ERC165Mock is ERC165 {}

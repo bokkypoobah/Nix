@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.8.0;
 
-import "../utils/EnumerableMap.sol";
+import "../utils/structs/EnumerableMap.sol";
 
 contract EnumerableMapMock {
     using EnumerableMap for EnumerableMap.UintToAddressMap;
@@ -32,7 +32,6 @@ contract EnumerableMapMock {
     function at(uint256 index) public view returns (uint256 key, address value) {
         return _map.at(index);
     }
-
 
     function tryGet(uint256 key) public view returns (bool, address) {
         return _map.tryGet(key);
