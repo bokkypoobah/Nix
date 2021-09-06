@@ -983,12 +983,12 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     ) internal virtual {}
 }
 
-// File: contracts/MyERC721.sol
+// File: contracts/SimpleERC721.sol
 
 pragma solidity ^0.8.0;
 
 
 contract MyNFT is ERC721 {
-    constructor() ERC721("MyNFT", "MNFT") {
+    constructor() ERC721("MyNFTee", "MNFT") {
     }
 }
