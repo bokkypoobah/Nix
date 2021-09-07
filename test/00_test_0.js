@@ -4,7 +4,7 @@ const { BigNumber } = require("ethers");
 const util = require('util');
 
 describe("Nix", function () {
-
+  const NULLACCOUNT = "0x0000000000000000000000000000000000000000";
   let owner, user0, user1, ownerSigner, user0Signer, user1Signer, erc1820Registry, simpleERC721, nft1;
   const accounts = [];
   const accountNames = {};
@@ -132,9 +132,68 @@ describe("Nix", function () {
     const approveTx = await nft1.connect(user0Signer).setApprovalForAll(nix.address, true);
     printEvents("Approved Nix To Transfer", await approveTx.wait());
 
-    const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
+    const exchangeTx = await nix.connect(user0Signer).makerAddOrder(
+      NULLACCOUNT, // taker
+      [ nix.address ], // makerTokens
+      [ 1 ], // makerTokenIds
+      0, // makerWeth
+      [  ], // takerTokens
+      [  ], // takerTokenIds
+      ethers.utils.parseUnits("123.456", 18), // takerWeth
+      0, // makerType
+      0, // takerType
+      0, // expiry
+    );
     printEvents("Exchanged", await exchangeTx.wait());
     await printERC721Details("After Approve And Exchange =");
+
+
+
+//     function makerAddOrder(
+// ////        address maker,
+//         address taker,
+//
+//         address[] memory makerTokens,
+//         uint[] memory makerTokenIds,
+//         uint makerWeth,
+//
+//         address[] memory takerTokens,
+//         uint[] memory takerTokenIds,
+//         uint takerWeth,
+//
+//         OrderType makerType,
+//         OrderType takerType,
+//         uint64 expiry
+// //        OrderStatus orderStatus;
+
+
+        // enum OrderType { All, Any }
+        // enum OrderStatus { Active, Cancelled, Executed }
+        //
+        // struct Order {
+        //     address maker;
+        //     address taker;
+        //
+        //     address[] makerTokens;
+        //     uint[] makerTokenIds;
+        //     uint makerWeth;
+        //
+        //     address[] takerTokens;
+        //     uint[] takerTokenIds;
+        //     uint takerWeth;
+        //
+        //     OrderType makerType;
+        //     OrderType takerType;
+        //     uint64 expiry;
+        //     OrderStatus orderStatus;
+        // }
+
+
+    if (false) {
+      const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
+      printEvents("Exchanged", await exchangeTx.wait());
+      await printERC721Details("After Approve And Exchange =");
+    }
 
 
     // const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
