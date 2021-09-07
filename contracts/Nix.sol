@@ -70,10 +70,10 @@ contract Nix {
 
     // TODO: Optimise to minimise storage requirement
     struct Order {
+        OrderStatus orderStatus;
         uint64 expiry;
 
         address maker;
-        OrderStatus orderStatus;
         OrderType makerOrderType;
         address[] makerNFTContracts;
         uint[] makerNFTTokenIds;
