@@ -64,7 +64,21 @@ contract ERC721Helper {
 
 
 contract Nix {
-    mapping(address => mapping(address => string)) data;
+    enum OrderType { BuyAll, BuyAny, SellAll, SellAny }
+    struct Order {
+        address maker;
+        OrderType orderType;
+        address[] nftContracts;
+        uint[] nftTokenIds;
+        uint amount;
+        uint64 units; // BuyAny @ amount x 5
+        uint64 timestamp;
+        uint64 expiry;
+        uint8 cancelled; // Non-0 if cancelled
+    }
+
+    Order[] public orders;
+    mapping(bytes32 => uint) orderIndex;
 
     string greeting;
 

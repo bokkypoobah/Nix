@@ -135,11 +135,11 @@ describe("Nix", function () {
     const nix = await Nix.deploy("Hello, world!");
     await nix.deployed();
 
-    const approveTx = await erc721PresetMinterPauserAutoId.setApprovalForAll(nix.address, true);
+    const approveTx = await erc721PresetMinterPauserAutoId.connect(ownerSigner).setApprovalForAll(nix.address, true);
     printEvents([erc721PresetMinterPauserAutoId], await approveTx.wait());
     await printERC721Details();
 
-    const exchangeTx = await nix.exchange(erc721PresetMinterPauserAutoId.address, 0, user1);
+    const exchangeTx = await nix.connect(ownerSigner).exchange(erc721PresetMinterPauserAutoId.address, 0, user1);
     printEvents([nix, erc721PresetMinterPauserAutoId], await exchangeTx.wait());
     await printERC721Details();
 
