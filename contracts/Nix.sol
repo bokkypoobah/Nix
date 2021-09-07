@@ -64,17 +64,18 @@ contract ERC721Helper {
 
 
 contract Nix {
+
     enum OrderType { BuyAll, BuyAny, SellAll, SellAny }
+    enum OrderStatus { Active, Cancelled, Executed }
+
     struct Order {
         address maker;
         OrderType orderType;
-        address[] nftContracts;
-        uint[] nftTokenIds;
-        uint amount;
-        uint64 units; // BuyAny @ amount x 5
-        uint64 timestamp;
+        OrderStatus orderStatus;
         uint64 expiry;
-        uint8 cancelled; // Non-0 if cancelled
+        address nftContract;
+        uint nftTokenId;
+        uint amount;
     }
 
     Order[] public orders;
