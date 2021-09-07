@@ -69,12 +69,12 @@ contract Nix {
     string greeting;
 
     constructor(string memory _greeting) {
-        console.log("Deploying a Nix with greeting:", _greeting);
+        console.log("      >> Nix.constructor() ", _greeting);
         greeting = _greeting;
     }
 
     function exchange(IERC721Partial token, uint tokenId, address to) public {
-        console.log("exchange token '%s', tokenId %s, to %s", address(token), tokenId, to);
+        console.log("      >> Nix.exchange() token '%s', tokenId %s, to %s", address(token), tokenId, to);
         IERC721Partial(token).safeTransferFrom(msg.sender, to, tokenId);
     }
 
@@ -83,7 +83,7 @@ contract Nix {
     }
 
     function setGreeting(string memory _greeting) public {
-        console.log("Changing greeting from '%s' to '%s'", greeting, _greeting);
+        console.log("      >> Nix.setGreeting() from '%s' to '%s'", greeting, _greeting);
         greeting = _greeting;
     }
 }
