@@ -75,19 +75,19 @@ contract Nix {
 
         address maker;
         OrderType makerOrderType;
-        address[] makerNFTContracts;
-        uint[] makerNFTTokenIds;
-        uint makerWeth;
+        address[] makerTokens;
+        uint[] makerTokenIds;
+        // uint makerWeth;
 
-        address taker; // null for anyone
-        OrderType takerOrderType;
-        address[] takerNFTContracts;
-        uint[] takerNFTTokenIds;
+        // address taker; // null for anyone
+        // OrderType takerOrderType;
+        // address[] takerTokens;
+        // uint[] takerTokenIds;
         uint takerWeth;
     }
 
-    Order[] public orders;
-    mapping(bytes32 => uint) orderIndex;
+    bytes32[] public ordersIndex;
+    mapping(bytes32 => Order) orders;
 
     string greeting;
 
@@ -95,6 +95,43 @@ contract Nix {
         console.log("      >> Nix.constructor() ", _greeting);
         greeting = _greeting;
     }
+
+    function generateOrderKey(
+        address maker,
+        address taker,
+        OrderType makerOrderType,
+        address[] memory makerTokens,
+        uint[] memory makerTokenIds,
+        uint expiry
+    ) internal pure returns (bytes32 seriesKey) {
+        return keccak256(abi.encodePacked(maker, taker, makerOrderType, makerTokens, makerTokenIds, expiry));
+    }
+
+    event MakerOrderAdded(bytes32 orderKey);
+    function makerAddOrder(
+        address taker,
+        OrderType makerOrderType,
+        address[] memory makerTokens,
+        uint[] memory makerTokenIds,
+        uint expiry,
+        uint takerWeth
+    ) public {
+        bytes32 _orderKey = generateOrderKey(msg.sender, taker, makerOrderType, makerTokens, makerTokenIds, expiry);
+        require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
+        ordersIndex.push(_orderKey);
+        Order storage order = orders[_orderKey];
+        order.maker = msg.sender;
+        order.makerOrderType = makerOrderType;
+        order.makerTokens = makerTokens;
+        order.makerTokenIds = makerTokenIds;
+        order.takerWeth = takerWeth;
+        emit MakerOrderAdded(_orderKey);
+        // order.
+        // uint _seriesIndex = seriesIndex.length - 1;
+        // seriesData[seriesKey] = Series(block.timestamp, _seriesIndex, seriesKey, inputData.pair, inputData.feeds, inputData.feedParameters, [callPut, expiry, strike, bound, 0], optinos);
+        // emit SeriesAdded(seriesKey, _seriesIndex, optinos);
+    }
+
 
     function exchange(IERC721Partial token, uint tokenId, address to) public {
         console.log("      >> Nix.exchange() token '%s', tokenId %s, to %s", address(token), tokenId, to);

@@ -5,7 +5,7 @@ const util = require('util');
 
 describe("Nix", function () {
 
-  let owner, user0, user1, ownerSigner, user0Signer, user1Signer, erc1820Registry, simpleERC721, erc721PresetMinterPauserAutoId;
+  let owner, user0, user1, ownerSigner, user0Signer, user1Signer, erc1820Registry, simpleERC721, nft1;
   const accounts = [];
   const accountNames = {};
 
@@ -65,13 +65,13 @@ describe("Nix", function () {
   async function printERC721Details(header = false) {
     console.log("    --- printERC721Details ---");
     if (header) {
-      console.log("      - name: " + await erc721PresetMinterPauserAutoId.name());
-      console.log("      - symbol: " + await erc721PresetMinterPauserAutoId.symbol());
+      console.log("      - name: " + await nft1.name());
+      console.log("      - symbol: " + await nft1.symbol());
     }
-    const totalSupply = await erc721PresetMinterPauserAutoId.totalSupply();
+    const totalSupply = await nft1.totalSupply();
     console.log("      - totalSupply: " + totalSupply);
     for (let i = 0; i < totalSupply; i++) {
-      const ownerOf = await erc721PresetMinterPauserAutoId.ownerOf(i);
+      const ownerOf = await nft1.ownerOf(i);
       console.log("        " + i + " " + getShortAccountName(ownerOf));
     }
   }
@@ -95,20 +95,20 @@ describe("Nix", function () {
     addAccount(erc1820Registry.address, "ERC1820Registry");
 
     const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
-    erc721PresetMinterPauserAutoId = await ERC721PresetMinterPauserAutoId.deploy("name", "symbol", "uri");
-    addAccount(erc721PresetMinterPauserAutoId.address, "ERC721PresetMinterPauserAutoId");
+    nft1 = await ERC721PresetMinterPauserAutoId.deploy("name", "symbol", "uri");
+    addAccount(nft1.address, "NFT1");
     await printERC721Details(true);
-    const erc721PresetMinterPauserAutoIdTransactionReceipt = await erc721PresetMinterPauserAutoId.deployTransaction.wait();
-    printEvents([erc721PresetMinterPauserAutoId], erc721PresetMinterPauserAutoIdTransactionReceipt);
+    const nft1TransactionReceipt = await nft1.deployTransaction.wait();
+    printEvents([nft1], nft1TransactionReceipt);
 
-    const mint0Tx = await erc721PresetMinterPauserAutoId.mint(owner);
-    printEvents([erc721PresetMinterPauserAutoId], await mint0Tx.wait());
-    const mint1Tx = await erc721PresetMinterPauserAutoId.mint(user0);
-    printEvents([erc721PresetMinterPauserAutoId], await mint1Tx.wait());
-    const mint2Tx = await erc721PresetMinterPauserAutoId.mint(user0);
-    printEvents([erc721PresetMinterPauserAutoId], await mint2Tx.wait());
-    const mint3Tx = await erc721PresetMinterPauserAutoId.mint(user0);
-    printEvents([erc721PresetMinterPauserAutoId], await mint3Tx.wait());
+    const mint0Tx = await nft1.mint(owner);
+    printEvents([nft1], await mint0Tx.wait());
+    const mint1Tx = await nft1.mint(user0);
+    printEvents([nft1], await mint1Tx.wait());
+    const mint2Tx = await nft1.mint(user0);
+    printEvents([nft1], await mint2Tx.wait());
+    const mint3Tx = await nft1.mint(user0);
+    printEvents([nft1], await mint3Tx.wait());
     await printERC721Details();
 
     // const SimpleERC721 = await ethers.getContractFactory("SimpleERC721");
@@ -135,23 +135,26 @@ describe("Nix", function () {
     const nix = await Nix.deploy("Hello, world!");
     await nix.deployed();
 
-    const approveTx = await erc721PresetMinterPauserAutoId.connect(ownerSigner).setApprovalForAll(nix.address, true);
-    printEvents([erc721PresetMinterPauserAutoId], await approveTx.wait());
+    const approveTx = await nft1.connect(user0Signer).setApprovalForAll(nix.address, true);
+    printEvents([nft1], await approveTx.wait());
     await printERC721Details();
 
-    const exchangeTx = await nix.connect(ownerSigner).exchange(erc721PresetMinterPauserAutoId.address, 0, user1);
-    printEvents([nix, erc721PresetMinterPauserAutoId], await exchangeTx.wait());
+    const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
+    printEvents([nix, nft1], await exchangeTx.wait());
     await printERC721Details();
 
 
+    // const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
+    // printEvents([nix, nft1], await exchangeTx.wait());
+    // await printERC721Details();
 
-    expect(await nix.greet()).to.equal("Hello, world!");
-
-    const setGreetingTx = await nix.setGreeting("Hola, mundo!");
-
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
-
-    expect(await nix.greet()).to.equal("Hola, mundo!");
+    // expect(await nix.greet()).to.equal("Hello, world!");
+    //
+    // const setGreetingTx = await nix.setGreeting("Hola, mundo!");
+    //
+    // // wait until the transaction is mined
+    // await setGreetingTx.wait();
+    //
+    // expect(await nix.greet()).to.equal("Hola, mundo!");
   });
 });
