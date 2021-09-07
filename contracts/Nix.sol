@@ -87,7 +87,7 @@ contract Nix {
     }
 
     bytes32[] public ordersIndex;
-    mapping(bytes32 => Order) orders;
+    mapping(bytes32 => Order) public orders;
 
     string greeting;
 
@@ -117,18 +117,18 @@ contract Nix {
         return keccak256(abi.encodePacked(maker, taker, makerTokens, makerTokenIds, takerTokens, takerTokenIds, makerType, takerType, expiry));
     }
 
-    event MakerOrderAdded(bytes32 orderKey);
+    event MakerOrderAdded(bytes32 orderKey, uint orderIndex);
     function makerAddOrder(
 ////        address maker,
         address taker,
 
         address[] memory makerTokens,
         uint[] memory makerTokenIds,
-       uint makerWeth,
+        uint makerWeth,
 
         address[] memory takerTokens,
         uint[] memory takerTokenIds,
-       uint takerWeth,
+        uint takerWeth,
 
         OrderType makerType,
         OrderType takerType,
@@ -149,7 +149,9 @@ contract Nix {
         order.takerWeth = takerWeth;
         order.makerType = makerType;
         order.takerType = takerType;
-        emit MakerOrderAdded(_orderKey);
+        order.expiry = expiry;
+        // default order.orderStatus = OrderType.All;
+        emit MakerOrderAdded(_orderKey, ordersIndex.length - 1);
         // order.
         // uint _seriesIndex = seriesIndex.length - 1;
         // seriesData[seriesKey] = Series(block.timestamp, _seriesIndex, seriesKey, inputData.pair, inputData.feeds, inputData.feedParameters, [callPut, expiry, strike, bound, 0], optinos);
