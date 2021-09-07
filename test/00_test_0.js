@@ -26,31 +26,37 @@ describe("Nix", function () {
     return address;
   }
 
-  function printEvents(contract, receipt) {
+  function printEvents(contracts, receipt) {
     console.log("      Gas used: " + receipt.gasUsed);
     receipt.logs.forEach((log) => {
-      try {
-        var data = contract.interface.parseLog(log);
-        var result = data.name + "(";
-        let separator = "";
-        data.eventFragment.inputs.forEach((a) => {
-          result = result + separator + a.name + ": ";
-          if (a.type == 'address') {
-            result = result + getShortAccountName(data.args[a.name].toString());
-          } else if (a.type == 'uint256' || a.type == 'uint128') {
-            if (a.name == 'tokens' || a.name == 'amount' || a.name == 'balance' || a.name == 'value') {
-              result = result + ethers.utils.formatUnits(data.args[a.name], 18);
+      let found = false;
+      for (let i = 0; i < contracts.length && !found; i++) {
+        try {
+          var data = contracts[i].interface.parseLog(log);
+          var result = data.name + "(";
+          let separator = "";
+          data.eventFragment.inputs.forEach((a) => {
+            result = result + separator + a.name + ": ";
+            if (a.type == 'address') {
+              result = result + getShortAccountName(data.args[a.name].toString());
+            } else if (a.type == 'uint256' || a.type == 'uint128') {
+              if (a.name == 'tokens' || a.name == 'amount' || a.name == 'balance' || a.name == 'value') {
+                result = result + ethers.utils.formatUnits(data.args[a.name], 18);
+              } else {
+                result = result + data.args[a.name].toString();
+              }
             } else {
               result = result + data.args[a.name].toString();
             }
-          } else {
-            result = result + data.args[a.name].toString();
-          }
-          separator = ", ";
-        });
-        result = result + ")";
-        console.log("      + " + log.blockNumber + "." + log.logIndex + " " + result);
-      } catch (e) {
+            separator = ", ";
+          });
+          result = result + ")";
+          console.log("      + " + getShortAccountName(log.address) + " " + log.blockNumber + "." + log.logIndex + " " + result);
+          found = true;
+        } catch (e) {
+        }
+      }
+      if (!found) {
         console.log("      + " + getShortAccountName(log.address) + " " + JSON.stringify(log.topics));
       }
     });
@@ -93,16 +99,16 @@ describe("Nix", function () {
     addAccount(erc721PresetMinterPauserAutoId.address, "ERC721PresetMinterPauserAutoId");
     await printERC721Details(true);
     const erc721PresetMinterPauserAutoIdTransactionReceipt = await erc721PresetMinterPauserAutoId.deployTransaction.wait();
-    printEvents(erc721PresetMinterPauserAutoId, erc721PresetMinterPauserAutoIdTransactionReceipt);
+    printEvents([erc721PresetMinterPauserAutoId], erc721PresetMinterPauserAutoIdTransactionReceipt);
 
     const mint0Tx = await erc721PresetMinterPauserAutoId.mint(owner);
-    printEvents(erc721PresetMinterPauserAutoId, await mint0Tx.wait());
+    printEvents([erc721PresetMinterPauserAutoId], await mint0Tx.wait());
     const mint1Tx = await erc721PresetMinterPauserAutoId.mint(user0);
-    printEvents(erc721PresetMinterPauserAutoId, await mint1Tx.wait());
+    printEvents([erc721PresetMinterPauserAutoId], await mint1Tx.wait());
     const mint2Tx = await erc721PresetMinterPauserAutoId.mint(user0);
-    printEvents(erc721PresetMinterPauserAutoId, await mint2Tx.wait());
+    printEvents([erc721PresetMinterPauserAutoId], await mint2Tx.wait());
     const mint3Tx = await erc721PresetMinterPauserAutoId.mint(user0);
-    printEvents(erc721PresetMinterPauserAutoId, await mint3Tx.wait());
+    printEvents([erc721PresetMinterPauserAutoId], await mint3Tx.wait());
     await printERC721Details();
 
     // const SimpleERC721 = await ethers.getContractFactory("SimpleERC721");
@@ -130,12 +136,11 @@ describe("Nix", function () {
     await nix.deployed();
 
     const approveTx = await erc721PresetMinterPauserAutoId.setApprovalForAll(nix.address, true);
-    printEvents(erc721PresetMinterPauserAutoId, await approveTx.wait());
+    printEvents([erc721PresetMinterPauserAutoId], await approveTx.wait());
     await printERC721Details();
 
     const exchangeTx = await nix.exchange(erc721PresetMinterPauserAutoId.address, 0, user1);
-    // printEvents(nix, await exchangeTx.wait());
-    printEvents(erc721PresetMinterPauserAutoId, await exchangeTx.wait());
+    printEvents([nix, erc721PresetMinterPauserAutoId], await exchangeTx.wait());
     await printERC721Details();
 
 
