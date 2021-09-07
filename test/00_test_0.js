@@ -126,16 +126,27 @@ describe("Nix", function () {
     // console.log(simpleERC721Symbol + " - " + simpleERC721Name);
 
     const Nix = await ethers.getContractFactory("Nix");
-    const greeter = await Nix.deploy("Hello, world!");
-    await greeter.deployed();
+    const nix = await Nix.deploy("Hello, world!");
+    await nix.deployed();
 
-    expect(await greeter.greet()).to.equal("Hello, world!");
+    const approveTx = await erc721PresetMinterPauserAutoId.setApprovalForAll(nix.address, true);
+    printEvents(erc721PresetMinterPauserAutoId, await approveTx.wait());
+    await printERC721Details();
 
-    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
+    const exchangeTx = await nix.exchange(erc721PresetMinterPauserAutoId.address, 0, user1);
+    // printEvents(nix, await exchangeTx.wait());
+    printEvents(erc721PresetMinterPauserAutoId, await exchangeTx.wait());
+    await printERC721Details();
+
+
+
+    expect(await nix.greet()).to.equal("Hello, world!");
+
+    const setGreetingTx = await nix.setGreeting("Hola, mundo!");
 
     // wait until the transaction is mined
     await setGreetingTx.wait();
 
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+    expect(await nix.greet()).to.equal("Hola, mundo!");
   });
 });

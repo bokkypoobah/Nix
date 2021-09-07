@@ -63,65 +63,27 @@ contract ERC721Helper {
 }
 
 
-
-// contract MockERC721Partial is IERC721Partial {
-//     string private _name = "name";
-//     string private _symbol = "symbol";
-//
-//     function name() external view override returns (string memory) {
-//         return _name;
-//     }
-//     function symbol() external view override returns (string memory) {
-//         return _symbol;
-//     }
-//     function totalSupply() external view override returns (uint256) {
-//         _name;
-//         return 3;
-//     }
-//     function ownerOf(uint256 tokenId) external view override returns (address) {
-//         _name;
-//         return address(uint160(tokenId));
-//     }
-//     function tokenOfOwnerByIndex(address /*owner*/, uint256 /*index*/) external view override returns (uint256) {
-//         _name;
-//         return 1;
-//     }
-//     function tokenByIndex(uint256 index) external view override returns (uint256) {
-//         _name;
-//         return index;
-//     }
-//     function tokenURI(uint256 /*tokenId*/) external view override returns (string memory) {
-//         _name;
-//         return "";
-//     }
-//
-// }
-
 contract Nix {
-
-    // IERC721Partial public token;
-
     mapping(address => mapping(address => string)) data;
 
+    string greeting;
 
+    constructor(string memory _greeting) {
+        console.log("Deploying a Nix with greeting:", _greeting);
+        greeting = _greeting;
+    }
 
-  string greeting;
+    function exchange(IERC721Partial token, uint tokenId, address to) public {
+        console.log("exchange token '%s', tokenId %s, to %s", address(token), tokenId, to);
+        IERC721Partial(token).safeTransferFrom(msg.sender, to, tokenId);
+    }
 
-  constructor(string memory _greeting) {
-      // token = new MockERC721Partial();
-
-
-
-      console.log("Deploying a Nix with greeting:", _greeting);
-      greeting = _greeting;
-  }
-
-  function greet() public view returns (string memory) {
+    function greet() public view returns (string memory) {
       return greeting;
-  }
+    }
 
-  function setGreeting(string memory _greeting) public {
-      console.log("Changing greeting from '%s' to '%s'", greeting, _greeting);
-      greeting = _greeting;
-  }
+    function setGreeting(string memory _greeting) public {
+        console.log("Changing greeting from '%s' to '%s'", greeting, _greeting);
+        greeting = _greeting;
+    }
 }
