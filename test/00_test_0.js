@@ -62,6 +62,12 @@ describe("Nix", function () {
       console.log("      - name: " + await erc721PresetMinterPauserAutoId.name());
       console.log("      - symbol: " + await erc721PresetMinterPauserAutoId.symbol());
     }
+    const totalSupply = await erc721PresetMinterPauserAutoId.totalSupply();
+    console.log("      - totalSupply: " + totalSupply);
+    for (let i = 0; i < totalSupply; i++) {
+      const ownerOf = await erc721PresetMinterPauserAutoId.ownerOf(i);
+      console.log("        " + i + " " + getShortAccountName(ownerOf));
+    }
   }
 
 
@@ -85,9 +91,19 @@ describe("Nix", function () {
     const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
     erc721PresetMinterPauserAutoId = await ERC721PresetMinterPauserAutoId.deploy("name", "symbol", "uri");
     addAccount(erc721PresetMinterPauserAutoId.address, "ERC721PresetMinterPauserAutoId");
-    printERC721Details(true);
+    await printERC721Details(true);
     const erc721PresetMinterPauserAutoIdTransactionReceipt = await erc721PresetMinterPauserAutoId.deployTransaction.wait();
     printEvents(erc721PresetMinterPauserAutoId, erc721PresetMinterPauserAutoIdTransactionReceipt);
+
+    const mint0Tx = await erc721PresetMinterPauserAutoId.mint(owner);
+    printEvents(erc721PresetMinterPauserAutoId, await mint0Tx.wait());
+    const mint1Tx = await erc721PresetMinterPauserAutoId.mint(user0);
+    printEvents(erc721PresetMinterPauserAutoId, await mint1Tx.wait());
+    const mint2Tx = await erc721PresetMinterPauserAutoId.mint(user0);
+    printEvents(erc721PresetMinterPauserAutoId, await mint2Tx.wait());
+    const mint3Tx = await erc721PresetMinterPauserAutoId.mint(user0);
+    printEvents(erc721PresetMinterPauserAutoId, await mint3Tx.wait());
+    await printERC721Details();
 
     // const SimpleERC721 = await ethers.getContractFactory("SimpleERC721");
     // simpleERC721 = await SimpleERC721.deploy();

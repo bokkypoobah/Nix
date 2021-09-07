@@ -25,6 +25,8 @@ interface IERC721Partial {
     function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256);
     function tokenByIndex(uint256 index) external view returns (uint256);
     function tokenURI(uint256 tokenId) external view returns (string memory);
+
+    function safeTransferFrom(address _from, address _to, uint256 _tokenId) external payable;
 }
 
 
@@ -62,42 +64,42 @@ contract ERC721Helper {
 
 
 
-contract MockERC721Partial is IERC721Partial {
-    string private _name = "name";
-    string private _symbol = "symbol";
-
-    function name() external view override returns (string memory) {
-        return _name;
-    }
-    function symbol() external view override returns (string memory) {
-        return _symbol;
-    }
-    function totalSupply() external view override returns (uint256) {
-        _name;
-        return 3;
-    }
-    function ownerOf(uint256 tokenId) external view override returns (address) {
-        _name;
-        return address(uint160(tokenId));
-    }
-    function tokenOfOwnerByIndex(address /*owner*/, uint256 /*index*/) external view override returns (uint256) {
-        _name;
-        return 1;
-    }
-    function tokenByIndex(uint256 index) external view override returns (uint256) {
-        _name;
-        return index;
-    }
-    function tokenURI(uint256 /*tokenId*/) external view override returns (string memory) {
-        _name;
-        return "";
-    }
-
-}
+// contract MockERC721Partial is IERC721Partial {
+//     string private _name = "name";
+//     string private _symbol = "symbol";
+//
+//     function name() external view override returns (string memory) {
+//         return _name;
+//     }
+//     function symbol() external view override returns (string memory) {
+//         return _symbol;
+//     }
+//     function totalSupply() external view override returns (uint256) {
+//         _name;
+//         return 3;
+//     }
+//     function ownerOf(uint256 tokenId) external view override returns (address) {
+//         _name;
+//         return address(uint160(tokenId));
+//     }
+//     function tokenOfOwnerByIndex(address /*owner*/, uint256 /*index*/) external view override returns (uint256) {
+//         _name;
+//         return 1;
+//     }
+//     function tokenByIndex(uint256 index) external view override returns (uint256) {
+//         _name;
+//         return index;
+//     }
+//     function tokenURI(uint256 /*tokenId*/) external view override returns (string memory) {
+//         _name;
+//         return "";
+//     }
+//
+// }
 
 contract Nix {
 
-    IERC721Partial public token;
+    // IERC721Partial public token;
 
     mapping(address => mapping(address => string)) data;
 
@@ -106,7 +108,7 @@ contract Nix {
   string greeting;
 
   constructor(string memory _greeting) {
-      token = new MockERC721Partial();
+      // token = new MockERC721Partial();
 
 
 
