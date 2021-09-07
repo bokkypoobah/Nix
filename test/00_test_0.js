@@ -8,6 +8,7 @@ describe("Nix", function () {
   let owner, user0, user1, ownerSigner, user0Signer, user1Signer, erc1820Registry, simpleERC721, nft1;
   const accounts = [];
   const accountNames = {};
+  const contracts = [];
 
   function addAccount(account, accountName) {
     accounts.push(account);
@@ -26,8 +27,8 @@ describe("Nix", function () {
     return address;
   }
 
-  function printEvents(contracts, receipt) {
-    console.log("      Gas used: " + receipt.gasUsed);
+  function printEvents(prefix, receipt) {
+    console.log("      > " + prefix + " - gasUsed: " + receipt.gasUsed);
     receipt.logs.forEach((log) => {
       let found = false;
       for (let i = 0; i < contracts.length && !found; i++) {
@@ -51,7 +52,7 @@ describe("Nix", function () {
             separator = ", ";
           });
           result = result + ")";
-          console.log("      + " + getShortAccountName(log.address) + " " + log.blockNumber + "." + log.logIndex + " " + result);
+          console.log("        + " + getShortAccountName(log.address) + " " + log.blockNumber + "." + log.logIndex + " " + result);
           found = true;
         } catch (e) {
         }
@@ -62,14 +63,9 @@ describe("Nix", function () {
     });
   }
 
-  async function printERC721Details(header = false) {
-    console.log("    --- printERC721Details ---");
-    if (header) {
-      console.log("      - name: " + await nft1.name());
-      console.log("      - symbol: " + await nft1.symbol());
-    }
+  async function printERC721Details(prefix) {
     const totalSupply = await nft1.totalSupply();
-    console.log("      - totalSupply: " + totalSupply);
+    console.log("    --- " + prefix + " - ERC721 '" + await nft1.name() + "' '" + await nft1.symbol() + "' " + totalSupply + " ---");
     for (let i = 0; i < totalSupply; i++) {
       const ownerOf = await nft1.ownerOf(i);
       console.log("        " + i + " " + getShortAccountName(ownerOf));
@@ -81,11 +77,8 @@ describe("Nix", function () {
   before(async function () {
     [owner, user0, user1] = await web3.eth.getAccounts();
     [ownerSigner, user0Signer, user1Signer] = await ethers.getSigners();
-    console.log("    --- Setup ---");
-    [owner, user0, user1] = await web3.eth.getAccounts();
-    [ownerSigner, user0Signer, user1Signer] = await ethers.getSigners();
 
-    console.log("    --- Setup ---");
+    console.log("    --- Setup Accounts ---");
     addAccount("0x0000000000000000000000000000000000000000", "null");
     addAccount(owner, "owner");
     addAccount(user0, "user0");
@@ -96,20 +89,20 @@ describe("Nix", function () {
 
     const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
     nft1 = await ERC721PresetMinterPauserAutoId.deploy("name", "symbol", "uri");
+    contracts.push(nft1);
     addAccount(nft1.address, "NFT1");
-    await printERC721Details(true);
     const nft1TransactionReceipt = await nft1.deployTransaction.wait();
-    printEvents([nft1], nft1TransactionReceipt);
+    printEvents("Deployed NFT1", nft1TransactionReceipt);
 
     const mint0Tx = await nft1.mint(owner);
-    printEvents([nft1], await mint0Tx.wait());
+    printEvents("Minted NFT1", await mint0Tx.wait());
     const mint1Tx = await nft1.mint(user0);
-    printEvents([nft1], await mint1Tx.wait());
+    printEvents("Minted NFT1", await mint1Tx.wait());
     const mint2Tx = await nft1.mint(user0);
-    printEvents([nft1], await mint2Tx.wait());
+    printEvents("Minted NFT1", await mint2Tx.wait());
     const mint3Tx = await nft1.mint(user0);
-    printEvents([nft1], await mint3Tx.wait());
-    await printERC721Details();
+    printEvents("Minted NFT1", await mint3Tx.wait());
+    await printERC721Details("NFT Setup Completed");
 
     // const SimpleERC721 = await ethers.getContractFactory("SimpleERC721");
     // simpleERC721 = await SimpleERC721.deploy();
@@ -134,14 +127,14 @@ describe("Nix", function () {
     const Nix = await ethers.getContractFactory("Nix");
     const nix = await Nix.deploy("Hello, world!");
     await nix.deployed();
+    contracts.push(nix);
 
     const approveTx = await nft1.connect(user0Signer).setApprovalForAll(nix.address, true);
-    printEvents([nft1], await approveTx.wait());
-    await printERC721Details();
+    printEvents("Approved Nix To Transfer", await approveTx.wait());
 
     const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
-    printEvents([nix, nft1], await exchangeTx.wait());
-    await printERC721Details();
+    printEvents("Exchanged", await exchangeTx.wait());
+    await printERC721Details("After Approve And Exchange =");
 
 
     // const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
