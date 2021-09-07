@@ -65,17 +65,25 @@ contract ERC721Helper {
 
 contract Nix {
 
-    enum OrderType { BuyAll, BuyAny, SellAll, SellAny }
+    enum OrderType { Any, All }
     enum OrderStatus { Active, Cancelled, Executed }
 
+    // TODO: Optimise to minimise storage requirement
     struct Order {
-        address maker;
-        OrderType orderType;
-        OrderStatus orderStatus;
         uint64 expiry;
-        address nftContract;
-        uint nftTokenId;
-        uint amount;
+
+        address maker;
+        OrderStatus orderStatus;
+        OrderType makerOrderType;
+        address[] makerNFTContracts;
+        uint[] makerNFTTokenIds;
+        uint makerWeth;
+
+        address taker; // null for anyone
+        OrderType takerOrderType;
+        address[] takerNFTContracts;
+        uint[] takerNFTTokenIds;
+        uint takerWeth;
     }
 
     Order[] public orders;
