@@ -65,7 +65,28 @@ contract ERC721Helper {
 
 contract Nix {
 
-    enum OrderType { SellAll, SellAnyOnce, SellAnyMultiple, BuyAll, BuyAnyOnce, BuyAnyMultiple }
+    // Maker: BuyAny [x, y, z] - Buy any of x, y or z. Buy any, if [ ]
+    // Taker: Sell y
+    // Maker must WETH.approve Nix
+    // Taker must NFT.approve Nix
+
+    // Maker: SellAny [x, y, z] - Sell any of x, y or z. All must be owned by Maker. Sell any owned by Maker, if [ ]
+    // Taker: Buy y
+    // Maker must NFT.approve Nix
+    // Taker must WETH.approve Nix
+
+    // Maker: BuyAll [x, y, z] - Buy all of x, y and z. All must be owned by Taker. Cannot have [ ]
+    // Taker: Sell
+    // Maker must WETH.approve Nix
+    // Taker must NFT.approve Nix
+
+    // Maker: SellAll [x, y, z] - Sell all of x, y and z. All must be owned by Maker. Cannot have [ ]
+    // Taker: Buy
+    // Maker must NFT.approve Nix
+    // Taker must WETH.approve Nix
+
+
+    enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
     enum OrderStatus { Active, Cancelled, Executed, NotExecutable }
 
     struct Order {
@@ -81,7 +102,7 @@ contract Nix {
         OrderStatus orderStatus;
     }
 
-    // TODO: Segregate by NFT contract addresses
+    // TODO: Segregate by NFT contract addresses. Or multi-NFTs
     bytes32[] public ordersIndex;
     mapping(bytes32 => Order) public orders;
 
