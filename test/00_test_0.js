@@ -198,14 +198,21 @@ describe("Nix", function () {
     await printEvents("WETH.approve(nix)", await wethApproveNix1Tx.wait());
     const wethApproveNix2Tx = await weth.connect(maker1Signer).approve(nix.address, ethers.utils.parseEther("100"));
     await printEvents("WETH.approve(nix)", await wethApproveNix2Tx.wait());
+    const wethApproveNix3Tx = await weth.connect(taker0Signer).approve(nix.address, ethers.utils.parseEther("100"));
+    await printEvents("WETH.approve(nix)", await wethApproveNix3Tx.wait());
+    const wethApproveNix4Tx = await weth.connect(taker1Signer).approve(nix.address, ethers.utils.parseEther("100"));
+    await printEvents("WETH.approve(nix)", await wethApproveNix4Tx.wait());
 
   })
 
 
   it("Should return the new greeting once it's changed", async function () {
 
-    const approveTx = await nftA.connect(maker0Signer).setApprovalForAll(nix.address, true);
-    printEvents("Approved Nix To Transfer", await approveTx.wait());
+    const approve0Tx = await nftA.connect(maker0Signer).setApprovalForAll(nix.address, true);
+    printEvents("Approved Nix To Transfer", await approve0Tx.wait());
+    console.log();
+    const approve1Tx = await nftA.connect(taker0Signer).setApprovalForAll(nix.address, true);
+    printEvents("Approved Nix To Transfer", await approve1Tx.wait());
     console.log();
     await printBalances("After Maker Approve Nix To Transfer");
     console.log();
@@ -213,12 +220,12 @@ describe("Nix", function () {
     const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(
       NULLACCOUNT, // taker
       nftA.address, // token
-      [ 1 ], // tokenIds
+      [ 3, 4, 5 ], // tokenIds
       ethers.utils.parseEther("12.3456"), // weth
       ORDERTYPE_BUYANY, // orderType
       0, // expiry
     );
-    await printEvents("Maker Added Order #0 - Buy NFT1:1 for 12.3456e", await makerAddOrder1Tx.wait());
+    await printEvents("Maker Added Order #0 - Buy NFT1:{3|4|5} for 12.3456e", await makerAddOrder1Tx.wait());
     console.log();
     // await printNixDetails("After Approve And Maker Added Order #0");
     // console.log();
@@ -237,9 +244,9 @@ describe("Nix", function () {
     console.log();
     await printNixDetails("After Approve And Maker Added Order #1");
 
-    const takerExecuteOrder1Tx = await nix.connect(maker1Signer).takerExecuteOrder(0, [ 1 ], ethers.utils.parseEther("12.3456"));
+    const takerExecuteOrder1Tx = await nix.connect(taker0Signer).takerExecuteOrder(0, [ 4 ], ethers.utils.parseEther("12.3456"));
     console.log();
-    await printEvents("Taker Executed Order #1 - Buy NFT1:1 for 12.3456e", await takerExecuteOrder1Tx.wait());
+    await printEvents("Taker Executed Order #1 - Buy NFT1:{3|4|5} for 12.3456e", await takerExecuteOrder1Tx.wait());
     console.log();
     await printNixDetails("After Taker Executed Order #1");
     console.log();

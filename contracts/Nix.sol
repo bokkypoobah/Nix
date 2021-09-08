@@ -181,6 +181,8 @@ contract Nix {
         if (order.orderType == OrderType.BuyAny) {
             for (uint i = 0; i < order.tokenIds.length && !found; i++) {
                 if (tokenId == order.tokenIds[i]) {
+                    // console.log("safeTransfer");
+                    IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenId);
                     found = true;
                 }
             }

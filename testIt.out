@@ -1,5 +1,3 @@
-Compiling 1 file with 0.8.4
-Compilation finished successfully
 
 
   Nix
@@ -46,8 +44,15 @@ Compilation finished successfully
         + WETH:0xe7f1 17.0 Approval(tokenOwner: maker0:0x7099, spender: Nix:0x0DCd, tokens: 100.0)
       > WETH.approve(nix) - gasUsed: 46742
         + WETH:0xe7f1 18.0 Approval(tokenOwner: maker1:0x3C44, spender: Nix:0x0DCd, tokens: 100.0)
+      > WETH.approve(nix) - gasUsed: 46742
+        + WETH:0xe7f1 19.0 Approval(tokenOwner: taker0:0x90F7, spender: Nix:0x0DCd, tokens: 100.0)
+      > WETH.approve(nix) - gasUsed: 46742
+        + WETH:0xe7f1 20.0 Approval(tokenOwner: taker1:0x15d3, spender: Nix:0x0DCd, tokens: 100.0)
       > Approved Nix To Transfer - gasUsed: 46703
-        + NFT1:0x0165 19.0 ApprovalForAll(owner: maker0:0x7099, operator: Nix:0x0DCd, approved: true)
+        + NFT1:0x0165 21.0 ApprovalForAll(owner: maker0:0x7099, operator: Nix:0x0DCd, approved: true)
+
+      > Approved Nix To Transfer - gasUsed: 46703
+        + NFT1:0x0165 22.0 ApprovalForAll(owner: taker0:0x90F7, operator: Nix:0x0DCd, approved: true)
 
       --- After Maker Approve Nix To Transfer - ERC721 'name' 'symbol' 6 ---
         Owner                            WETH NFTA
@@ -57,36 +62,38 @@ Compilation finished successfully
         taker0:0x90F7                   100.0 [3,4,5] 
         taker1:0x15d3                   100.0 [] 
 
-      > Maker Added Order #0 - Buy NFT1:1 for 12.3456e - gasUsed: 189125
-        + Nix:0x0DCd 20.0 MakerOrderAdded(orderKey: 0x013a94e5325c3f5ae257da5a257bd11f2d288e0df0287afc16647230997546ff, orderIndex: 0)
+      > Maker Added Order #0 - Buy NFT1:{3|4|5} for 12.3456e - gasUsed: 234775
+        + Nix:0x0DCd 23.0 MakerOrderAdded(orderKey: 0x8944d4772f9ee680ced2152629aab344dfcda36f8f874872bf23416adf0f53ad, orderIndex: 0)
 
 
       > Maker Added Order #1 - Buy NFT1:* for 1.23456e - gasUsed: 149208
-        + Nix:0x0DCd 21.0 MakerOrderAdded(orderKey: 0xccb9c4d304d0e8664b691c0fe777b4d35cdc29c25ff76315b1a874613a688d88, orderIndex: 1)
+        + Nix:0x0DCd 24.0 MakerOrderAdded(orderKey: 0x6dfee79c6c88dfc1dfd2e1e9a3cf81c495aa33e220e3d698fed0a056cc239b60, orderIndex: 1)
 
     --- After Approve And Maker Added Order #1 - Nix - orders: 2 ---
            # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds
-           0 maker0:0x7099 null:0x0000  NFT1:0x0165               12.3456 BuyAny          (none)                   Active       0x013a94e5 [1]
-           1 maker0:0x7099 null:0x0000  NFT1:0x0165               1.23456 BuyAny          2021-09-09T16:35:11.000Z Active       0xccb9c4d3 []
+           0 maker0:0x7099 null:0x0000  NFT1:0x0165               12.3456 BuyAny          (none)                   Active       0x8944d477 [3,4,5]
+           1 maker0:0x7099 null:0x0000  NFT1:0x0165               1.23456 BuyAny          2021-09-09T16:56:00.000Z Active       0x6dfee79c []
 
-      > Taker Executed Order #1 - Buy NFT1:1 for 12.3456e - gasUsed: 87493
-        + WETH:0xe7f1 22.0 Transfer(from: maker1:0x3C44, to: maker0:0x7099, tokens: 12.3456)
-        + Nix:0x0DCd 22.1 TakerOrderExecuted(orderKey: 0x013a94e5325c3f5ae257da5a257bd11f2d288e0df0287afc16647230997546ff, orderIndex: 0)
+      > Taker Executed Order #1 - Buy NFT1:{3|4|5} for 12.3456e - gasUsed: 157536
+        + WETH:0xe7f1 25.0 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokens: 12.3456)
+        + NFT1:0x0165 25.1 Approval(owner: taker0:0x90F7, approved: null:0x0000, tokenId: 4)
+        + NFT1:0x0165 25.2 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokenId: 4)
+        + Nix:0x0DCd 25.3 TakerOrderExecuted(orderKey: 0x8944d4772f9ee680ced2152629aab344dfcda36f8f874872bf23416adf0f53ad, orderIndex: 0)
 
     --- After Taker Executed Order #1 - Nix - orders: 2 ---
            # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds
-           0 maker0:0x7099 null:0x0000  NFT1:0x0165               12.3456 BuyAny          (none)                   Executed     0x013a94e5 [1]
-           1 maker0:0x7099 null:0x0000  NFT1:0x0165               1.23456 BuyAny          2021-09-09T16:35:11.000Z Active       0xccb9c4d3 []
+           0 maker0:0x7099 null:0x0000  NFT1:0x0165               12.3456 BuyAny          (none)                   Executed     0x8944d477 [3,4,5]
+           1 maker0:0x7099 null:0x0000  NFT1:0x0165               1.23456 BuyAny          2021-09-09T16:56:00.000Z Active       0x6dfee79c []
 
       --- Taker Executed Order #1 - ERC721 'name' 'symbol' 6 ---
         Owner                            WETH NFTA
         owner:0xf39F                    100.0 [] 
-        maker0:0x7099                112.3456 [0,1,2] 
-        maker1:0x3C44                 87.6544 [] 
-        taker0:0x90F7                   100.0 [3,4,5] 
+        maker0:0x7099                112.3456 [0,1,2,4] 
+        maker1:0x3C44                   100.0 [] 
+        taker0:0x90F7                 87.6544 [3,5] 
         taker1:0x15d3                   100.0 [] 
-    ✓ Should return the new greeting once it's changed (302ms)
+    ✓ Should return the new greeting once it's changed (368ms)
 
 
-  1 passing (3s)
+  1 passing (2s)
 
