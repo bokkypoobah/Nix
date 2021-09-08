@@ -78,52 +78,22 @@ describe("Nix", function () {
     for (let i = 0; i < ordersLength; i++) {
       const order = await nix.getOrderByIndex(i);
 
-      const expiry = order[10];
-      const orderStatus = order[11];
-
       const maker = order[0];
-      const makerWeth = order[4];
-      const makerType = order[8];
-      console.log("        " + i + " maker: " + getShortAccountName(maker) + ", makerWeth: " + ethers.utils.formatEther(makerWeth) + ", expiry: " + expiry + ", orderStatus: " + orderStatus);
-      const makerTokens = order[2];
-      const makerTokenIds = order[3];
-      for (let j = 0; j < makerTokens.length; j++) {
-        console.log("          - " + j + ". token: " + getShortAccountName(makerTokens[j]) + ", tokenId: " + makerTokenIds[j]);
-      }
-
       const taker = order[1];
-      const takerWeth = order[7];
-      const takerType = order[9];
-      console.log("          taker: " + getShortAccountName(taker) + ", takerWeth: " + ethers.utils.formatEther(takerWeth));
-      const takerTokens = order[5];
-      const takerTokenIds = order[6];
-      for (let j = 0; j < takerTokens.length; j++) {
-        console.log("          - " + j + ". token: " + getShortAccountName(takerTokens[j]) + ", tokenId: " + takerTokenIds[j]);
-      }
+      const token = order[2];
+      const tokenIds = order[3];
+      const weth = order[4];
+      const orderType = order[5];
+      const expiry = order[6];
+      const orderStatus = order[7];
 
+      console.log("        " + i + " maker: " + getShortAccountName(maker) + ", taker: " + getShortAccountName(taker) + ", token: " + getShortAccountName(token) + ", weth: " + ethers.utils.formatEther(weth) + ", orderType: " + orderType + ", expiry: " + expiry + ", orderStatus: " + orderStatus);
+      for (let j = 0; j < tokenIds.length; j++) {
+        console.log("          - " + j + ". tokenId: " + tokenIds[j]);
+      }
       // console.log("        " + i + " " + JSON.stringify(order));
-      // console.log("        " + i + " " + JSON.stringify(order.map((x) => { return x.toString(); })));
     }
   }
-
-  // struct Order {
-  //     address maker;
-  //     address taker;
-  //
-  //     address[] makerTokens;
-  //     uint[] makerTokenIds;
-  //     uint makerWeth;
-  //
-  //     address[] takerTokens;
-  //     uint[] takerTokenIds;
-  //     uint takerWeth;
-  //
-  //     OrderType makerType;
-  //     OrderType takerType;
-  //     uint64 expiry;
-  //     OrderStatus orderStatus;
-  // }
-
 
 
   before(async function () {
@@ -162,26 +132,10 @@ describe("Nix", function () {
     contracts.push(nix);
     addAccount(nix.address, "Nix");
     await printNixDetails("Nix Deployed");
-
-    // const SimpleERC721 = await ethers.getContractFactory("SimpleERC721");
-    // simpleERC721 = await SimpleERC721.deploy();
-    // addAccount(simpleERC721.address, "SimpleERC721");
-    // printERC721Details(true);
-    // const deploySimpleERC721TransactionReceipt = await simpleERC721.deployTransaction.wait();
-    // printEvents(simpleERC721, deploySimpleERC721TransactionReceipt);
-
   })
 
 
   it("Should return the new greeting once it's changed", async function () {
-
-    // const SimpleERC721 = await ethers.getContractFactory("SimpleERC721");
-    // const simpleERC721 = await SimpleERC721.deploy();
-    // await simpleERC721.deployed();
-    //
-    // const simpleERC721Symbol = await simpleERC721.symbol();
-    // const simpleERC721Name = await simpleERC721.name();
-    // console.log(simpleERC721Symbol + " - " + simpleERC721Name);
 
     const approveTx = await nft1.connect(user0Signer).setApprovalForAll(nix.address, true);
     printEvents("Approved Nix To Transfer", await approveTx.wait());
@@ -189,14 +143,10 @@ describe("Nix", function () {
 
     const makerAddOrder1Tx = await nix.connect(user0Signer).makerAddOrder(
       NULLACCOUNT, // taker
-      [ nft1.address ], // makerTokens
-      [ 1 ], // makerTokenIds
-      0, // makerWeth
-      [  ], // takerTokens
-      [  ], // takerTokenIds
-      ethers.utils.parseUnits("123.456", 18), // takerWeth
-      0, // makerType
-      0, // takerType
+      nft1.address, // token
+      [ 1 ], // tokenIds
+      ethers.utils.parseEther("12.3456"), // weth
+      0, // orderType
       0, // expiry
     );
     printEvents("Maker Added Order #0 - Sell NFT1:1 for 123.456e", await makerAddOrder1Tx.wait());
@@ -204,52 +154,20 @@ describe("Nix", function () {
 
     const makerAddOrder2Tx = await nix.connect(user0Signer).makerAddOrder(
       NULLACCOUNT, // taker
-      [ nft1.address ], // makerTokens
-      [ ], // makerTokenIds
-      0, // makerWeth
-      [  ], // takerTokens
-      [  ], // takerTokenIds
-      ethers.utils.parseUnits("123.456", 18), // takerWeth
-      0, // makerType
-      0, // takerType
+      nft1.address, // token
+      [ ], // tokenIds
+      ethers.utils.parseEther("1.23456"), // weth
+      0, // orderType
       0, // expiry
     );
     printEvents("Maker Added Order #1 - Sell NFT1:* for 123.456e", await makerAddOrder2Tx.wait());
     await printNixDetails("After Approve And Maker Added Order #1");
-
-
-        // enum OrderType { All, Any }
-        // enum OrderStatus { Active, Cancelled, Executed }
-        //
-        // struct Order {
-        //     address maker;
-        //     address taker;
-        //
-        //     address[] makerTokens;
-        //     uint[] makerTokenIds;
-        //     uint makerWeth;
-        //
-        //     address[] takerTokens;
-        //     uint[] takerTokenIds;
-        //     uint takerWeth;
-        //
-        //     OrderType makerType;
-        //     OrderType takerType;
-        //     uint64 expiry;
-        //     OrderStatus orderStatus;
-        // }
-
 
     if (false) {
       const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
       printEvents("Exchanged", await exchangeTx.wait());
       await printERC721Details("After Approve And Exchange =");
     }
-
-
-    // const exchangeTx = await nix.connect(user0Signer).exchange(nft1.address, 1, user1);
-    // printEvents([nix, nft1], await exchangeTx.wait());
-    // await printERC721Details();
 
     // expect(await nix.greet()).to.equal("Hello, world!");
     //

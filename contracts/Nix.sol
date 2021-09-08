@@ -72,16 +72,11 @@ contract Nix {
         address maker;
         address taker;
 
-        address[] makerTokens;
-        uint[] makerTokenIds;
-        uint makerWeth;
+        address token;
+        uint[] tokenIds;
+        uint weth;
 
-        address[] takerTokens;
-        uint[] takerTokenIds;
-        uint takerWeth;
-
-        OrderType makerType;
-        OrderType takerType;
+        OrderType orderType;
         uint64 expiry;
         OrderStatus orderStatus;
     }
@@ -99,64 +94,36 @@ contract Nix {
     function generateOrderKey(
         address maker,
         address taker,
-
-        address[] memory makerTokens,
-        uint[] memory makerTokenIds,
-//        uint makerWeth,
-
-        address[] memory takerTokens,
-        uint[] memory takerTokenIds,
-//        uint takerWeth,
-
-        OrderType makerType,
-        OrderType takerType,
+        address token,
+        uint[] memory tokenIds,
+        OrderType orderType,
         uint64 expiry
-//        OrderStatus orderStatus;
-
     ) internal pure returns (bytes32 seriesKey) {
-        return keccak256(abi.encodePacked(maker, taker, makerTokens, makerTokenIds, takerTokens, takerTokenIds, makerType, takerType, expiry));
+        return keccak256(abi.encodePacked(maker, taker, token, tokenIds, orderType, expiry));
     }
 
     event MakerOrderAdded(bytes32 orderKey, uint orderIndex);
     function makerAddOrder(
-////        address maker,
         address taker,
-
-        address[] memory makerTokens,
-        uint[] memory makerTokenIds,
-        uint makerWeth,
-
-        address[] memory takerTokens,
-        uint[] memory takerTokenIds,
-        uint takerWeth,
-
-        OrderType makerType,
-        OrderType takerType,
+        address token,
+        uint[] memory tokenIds,
+        uint weth,
+        OrderType orderType,
         uint64 expiry
-//        OrderStatus orderStatus;
     ) public {
-        bytes32 _orderKey = generateOrderKey(msg.sender, taker, makerTokens, makerTokenIds, takerTokens, takerTokenIds, makerType, takerType, expiry);
+        bytes32 _orderKey = generateOrderKey(msg.sender, taker, token, tokenIds, orderType, expiry);
         require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
         // TODO: Expiry check
         ordersIndex.push(_orderKey);
         Order storage order = orders[_orderKey];
         order.maker = msg.sender;
         order.taker = taker;
-        order.makerTokens = makerTokens;
-        order.makerTokenIds = makerTokenIds;
-        order.takerTokens = takerTokens;
-        order.takerTokenIds = takerTokenIds;
-        order.makerWeth = makerWeth;
-        order.takerWeth = takerWeth;
-        order.makerType = makerType;
-        order.takerType = takerType;
+        order.token = token;
+        order.tokenIds = tokenIds;
+        order.weth = weth;
+        order.orderType = orderType;
         order.expiry = expiry;
-        // default order.orderStatus = OrderType.All;
         emit MakerOrderAdded(_orderKey, ordersIndex.length - 1);
-        // order.
-        // uint _seriesIndex = seriesIndex.length - 1;
-        // seriesData[seriesKey] = Series(block.timestamp, _seriesIndex, seriesKey, inputData.pair, inputData.feeds, inputData.feedParameters, [callPut, expiry, strike, bound, 0], optinos);
-        // emit SeriesAdded(seriesKey, _seriesIndex, optinos);
     }
 
 

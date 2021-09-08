@@ -35,22 +35,18 @@
         1 user0:0x7099
         2 user0:0x7099
         3 user0:0x7099
-      > Maker Added Order #0 - Sell NFT1:1 for 123.456e - gasUsed: 223532
-        + Nix:0x0165 10.0 MakerOrderAdded(orderKey: 0x980dab938b0498bb0cc8102dcd2e8c8a7a4c5276fc96eb02e64bb350b2a34867, orderIndex: 0)
+      > Maker Added Order #0 - Sell NFT1:1 for 123.456e - gasUsed: 189057
+        + Nix:0x0165 10.0 MakerOrderAdded(orderKey: 0x1af4541a17b0d3ea8993fbbd3eed4a1cd0004f63a54089ffe55726e9b919bef4, orderIndex: 0)
     --- After Approve And Maker Added Order #0 - Nix - orders: 1 ---
-        0 maker: user0:0x7099, makerWeth: 0.0, expiry: 0, orderStatus: 0
-          - 0. token: NFT1:0xe7f1, tokenId: 1
-          taker: null:0x0000, takerWeth: 123.456
-      > Maker Added Order #1 - Sell NFT1:* for 123.456e - gasUsed: 163651
-        + Nix:0x0165 11.0 MakerOrderAdded(orderKey: 0xa6dda5443416c14d9b165a9712f6de8dbfc5d60e011e438d88c1c82497abc9ba, orderIndex: 1)
+        0 maker: user0:0x7099, taker: null:0x0000, token: NFT1:0xe7f1, weth: 12.3456, orderType: 0, expiry: 0, orderStatus: 0
+          - 0. tokenId: 1
+      > Maker Added Order #1 - Sell NFT1:* for 123.456e - gasUsed: 129176
+        + Nix:0x0165 11.0 MakerOrderAdded(orderKey: 0x94eb7241ec3e8faffc2a06f966896511a98e4337b9b901875cffafe7359279f8, orderIndex: 1)
     --- After Approve And Maker Added Order #1 - Nix - orders: 2 ---
-        0 maker: user0:0x7099, makerWeth: 0.0, expiry: 0, orderStatus: 0
-          - 0. token: NFT1:0xe7f1, tokenId: 1
-          taker: null:0x0000, takerWeth: 123.456
-        1 maker: user0:0x7099, makerWeth: 0.0, expiry: 0, orderStatus: 0
-          - 0. token: NFT1:0xe7f1, tokenId: undefined
-          taker: null:0x0000, takerWeth: 123.456
-    ✓ Should return the new greeting once it's changed (189ms)
+        0 maker: user0:0x7099, taker: null:0x0000, token: NFT1:0xe7f1, weth: 12.3456, orderType: 0, expiry: 0, orderStatus: 0
+          - 0. tokenId: 1
+        1 maker: user0:0x7099, taker: null:0x0000, token: NFT1:0xe7f1, weth: 1.23456, orderType: 0, expiry: 0, orderStatus: 0
+    ✓ Should return the new greeting once it's changed (143ms)
 
 
   1 passing (2s)
