@@ -144,7 +144,7 @@ contract Nix {
         address taker,
         address token,
         uint[] memory tokenIds,
-        uint weth,
+        uint _weth,
         OrderType orderType,
         uint64 expiry
     ) public {
@@ -157,7 +157,7 @@ contract Nix {
         order.taker = taker;
         order.token = token;
         order.tokenIds = tokenIds;
-        order.weth = weth;
+        order.weth = _weth;
         order.orderType = orderType;
         order.expiry = expiry;
         emit MakerOrderAdded(_orderKey, ordersIndex.length - 1);
@@ -175,6 +175,15 @@ contract Nix {
             require(weth.transferFrom(msg.sender, order.maker, _weth), "transferFrom failure");
         } else {
             require(weth.transferFrom(order.maker, msg.sender, _weth), "transferFrom failure");
+        }
+        bool found = false;
+        if (order.orderType == OrderType.BuyAny) {
+            for (uint i = 0; i < order.tokenIds.length && !found; i++) {
+                if (tokenId == order.tokenIds[i]) {
+                    found = true;
+                }
+            }
+            require(found, "tokenId invalid");
         }
         order.orderStatus = OrderStatus.Executed;
         emit TakerOrderExecuted(orderKey, orderIndex);

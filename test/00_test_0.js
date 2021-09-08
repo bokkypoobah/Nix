@@ -222,14 +222,18 @@ describe("Nix", function () {
       ORDERTYPE_BUYANY, // orderType
       expiry2, // expiry
     );
+    console.log();
     await printEvents("Maker Added Order #1 - Buy NFT1:* for 1.23456e", await makerAddOrder2Tx.wait());
     console.log();
     await printNixDetails("After Approve And Maker Added Order #1");
 
     const takerExecuteOrder1Tx = await nix.connect(user1Signer).takerExecuteOrder(0, [ 1 ], ethers.utils.parseEther("12.3456"));
+    console.log();
     await printEvents("Taker Executed Order #1 - Buy NFT1:1 for 12.3456e", await takerExecuteOrder1Tx.wait());
     console.log();
     await printNixDetails("After Taker Executed Order #1");
+    console.log();
+    await printBalances("Taker Executed Order #1");
 
     if (false) {
       const exchangeTx = await nix.connect(user0Signer).exchange(nftA.address, 1, user1);
