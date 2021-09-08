@@ -81,14 +81,11 @@ contract Nix {
         OrderStatus orderStatus;
     }
 
+    // TODO: Segregate by NFT contract addresses
     bytes32[] public ordersIndex;
     mapping(bytes32 => Order) public orders;
 
-    string greeting;
-
-    constructor(string memory _greeting) {
-        console.log("      >> Nix.constructor() ", _greeting);
-        greeting = _greeting;
+    constructor() {
     }
 
     function generateOrderKey(
@@ -113,7 +110,7 @@ contract Nix {
     ) public {
         bytes32 _orderKey = generateOrderKey(msg.sender, taker, token, tokenIds, orderType, expiry);
         require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
-        // TODO: Expiry check
+        require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
         ordersIndex.push(_orderKey);
         Order storage order = orders[_orderKey];
         order.maker = msg.sender;
@@ -126,6 +123,15 @@ contract Nix {
         emit MakerOrderAdded(_orderKey, ordersIndex.length - 1);
     }
 
+    event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
+    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint weth) public {
+        bytes32 orderKey = ordersIndex[orderIndex];
+        Order storage order = orders[orderKey];
+        require(msg.sender != order.maker, "Cannot execute against own order");
+        require(order.expiry == 0 || order.expiry <= block.timestamp, "Order expired");
+        require(order.weth == weth, "Order weth unexpected");
+        emit TakerOrderExecuted(orderKey, orderIndex);
+    }
 
     function exchange(IERC721Partial token, uint tokenId, address to) public {
         console.log("      >> Nix.exchange() token '%s', tokenId %s, to %s", address(token), tokenId, to);
@@ -135,16 +141,8 @@ contract Nix {
     function ordersLength() public view returns (uint) {
         return ordersIndex.length;
     }
-    function getOrderByIndex(uint i) public view returns (Order memory order) {
-        return orders[ordersIndex[i]];
+    function getOrderByIndex(uint i) public view returns (Order memory order, bytes32 orderKey) {
+        return (orders[ordersIndex[i]], ordersIndex[i]);
     }
 
-    function greet() public view returns (string memory) {
-      return greeting;
-    }
-
-    function setGreeting(string memory _greeting) public {
-        console.log("      >> Nix.setGreeting() from '%s' to '%s'", greeting, _greeting);
-        greeting = _greeting;
-    }
 }

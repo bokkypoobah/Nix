@@ -7,49 +7,47 @@
       Mapping 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 => user0:0x7099
       Mapping 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC => user1:0x3C44
       Mapping 0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24 => ERC1820Registry:0x1820
-      Mapping 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 => NFT1:0xe7f1
+      Mapping 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 => WETH:0xe7f1
+      Mapping 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 => NFT1:0x9fE4
       > Deployed NFT1 - gasUsed: 4472103
-        + NFT1:0xe7f1 3.0 RoleGranted(role: 0x0000000000000000000000000000000000000000000000000000000000000000, account: owner:0xf39F, sender: owner:0xf39F)
-        + NFT1:0xe7f1 3.1 RoleGranted(role: 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6, account: owner:0xf39F, sender: owner:0xf39F)
-        + NFT1:0xe7f1 3.2 RoleGranted(role: 0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a, account: owner:0xf39F, sender: owner:0xf39F)
+        + NFT1:0x9fE4 4.0 RoleGranted(role: 0x0000000000000000000000000000000000000000000000000000000000000000, account: owner:0xf39F, sender: owner:0xf39F)
+        + NFT1:0x9fE4 4.1 RoleGranted(role: 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6, account: owner:0xf39F, sender: owner:0xf39F)
+        + NFT1:0x9fE4 4.2 RoleGranted(role: 0x65d7a28e3265b37a6474929f336521b332c1681b933f6cb9f3376673440d862a, account: owner:0xf39F, sender: owner:0xf39F)
       > Minted NFT1 - gasUsed: 127944
-        + NFT1:0xe7f1 4.0 Transfer(from: null:0x0000, to: owner:0xf39F, tokenId: 0)
+        + NFT1:0x9fE4 5.0 Transfer(from: null:0x0000, to: owner:0xf39F, tokenId: 0)
       > Minted NFT1 - gasUsed: 153444
-        + NFT1:0xe7f1 5.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 1)
+        + NFT1:0x9fE4 6.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 1)
       > Minted NFT1 - gasUsed: 156244
-        + NFT1:0xe7f1 6.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 2)
+        + NFT1:0x9fE4 7.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 2)
       > Minted NFT1 - gasUsed: 156244
-        + NFT1:0xe7f1 7.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 3)
-      --- NFT Setup Completed - ERC721 'name' 'symbol' 4 ---
-          0 owner:0xf39F
-          1 user0:0x7099
-          2 user0:0x7099
-          3 user0:0x7099
-      >> Nix.constructor()  Hello, world!
-      Mapping 0x0165878A594ca255338adfa4d48449f69242Eb8F => Nix:0x0165
+        + NFT1:0x9fE4 8.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 3)
+      Mapping 0xa513E6E4b8f2a923D98304ec87F64353C4D5C853 => Nix:0xa513
     --- Nix Deployed - Nix - orders: 0 ---
-           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status TokenIds
       > Approved Nix To Transfer - gasUsed: 46703
-        + NFT1:0xe7f1 9.0 ApprovalForAll(owner: user0:0x7099, operator: Nix:0x0165, approved: true)
+        + NFT1:0x9fE4 10.0 ApprovalForAll(owner: user0:0x7099, operator: Nix:0xa513, approved: true)
       --- After Maker Approve Nix To Transfer - ERC721 'name' 'symbol' 4 ---
-          0 owner:0xf39F
-          1 user0:0x7099
-          2 user0:0x7099
-          3 user0:0x7099
+        owner:0xf39F               1000.0 [0] 
+        user0:0x7099                  0.0 [1,2,3] 
+        user1:0x3C44                  0.0 [] 
 
-      > Maker Added Order #0 - Sell NFT1:1 for 123.456e - gasUsed: 189057
-        + Nix:0x0165 10.0 MakerOrderAdded(orderKey: 0x1af4541a17b0d3ea8993fbbd3eed4a1cd0004f63a54089ffe55726e9b919bef4, orderIndex: 0)
-    --- After Approve And Maker Added Order #0 - Nix - orders: 1 ---
-           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status TokenIds
-           0 user0:0x7099 null:0x0000  NFT1:0xe7f1               12.3456 SellAll         (none)                   Active       [1]
+      > Maker Added Order #0 - Sell NFT1:1 for 12.3456e - gasUsed: 189103
+        + Nix:0xa513 11.0 MakerOrderAdded(orderKey: 0xeb5588a9553d5874820185f0c8d175685d07f0cc49af14f9a9adc7b3b0aa0f0d, orderIndex: 0)
 
-      > Maker Added Order #1 - Sell NFT1:* for 123.456e - gasUsed: 149124
-        + Nix:0x0165 11.0 MakerOrderAdded(orderKey: 0x9b9a4fb8fd04d086bbb07e107505a5a675234af7d072a0effdddd0f86415851d, orderIndex: 1)
+      > Maker Added Order #1 - Sell NFT1:* for 1.23456e - gasUsed: 149186
+        + Nix:0xa513 12.0 MakerOrderAdded(orderKey: 0xd8ce5ef16b0421a3efe851cbe144d134fccd75277910555c5e95f45b7a3740f7, orderIndex: 1)
+
     --- After Approve And Maker Added Order #1 - Nix - orders: 2 ---
-           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status TokenIds
-           0 user0:0x7099 null:0x0000  NFT1:0xe7f1               12.3456 SellAll         (none)                   Active       [1]
-           1 user0:0x7099 null:0x0000  NFT1:0xe7f1               1.23456 SellAll         2021-09-09T03:23:30.000Z Active       []
-    ✓ Should return the new greeting once it's changed (157ms)
+           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds
+           0 user0:0x7099 null:0x0000  NFT1:0x9fE4               12.3456 SellAll         (none)                   Active       0xeb5588a9 [1]
+           1 user0:0x7099 null:0x0000  NFT1:0x9fE4               1.23456 SellAll         2021-09-09T08:29:29.000Z Active       0xd8ce5ef1 []
+      > Taker Executed Order #1 - Buy NFT1:1 for 12.3456e - gasUsed: 35790
+        + Nix:0xa513 13.0 TakerOrderExecuted(orderKey: 0xeb5588a9553d5874820185f0c8d175685d07f0cc49af14f9a9adc7b3b0aa0f0d, orderIndex: 0)
+
+    --- After Taker Executed Order #1 - Nix - orders: 2 ---
+           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds
+           0 user0:0x7099 null:0x0000  NFT1:0x9fE4               12.3456 SellAll         (none)                   Active       0xeb5588a9 [1]
+           1 user0:0x7099 null:0x0000  NFT1:0x9fE4               1.23456 SellAll         2021-09-09T08:29:29.000Z Active       0xd8ce5ef1 []
+    ✓ Should return the new greeting once it's changed (184ms)
 
 
   1 passing (2s)
