@@ -168,6 +168,7 @@ contract Nix {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
+        require(order.taker == address(0) || order.taker == msg.sender, "Not the specified taker");
         require(order.expiry == 0 || order.expiry <= block.timestamp, "Order expired");
         require(order.weth == _weth, "Order weth unexpected");
 
