@@ -20,33 +20,36 @@
         + NFT1:0xe7f1 6.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 2)
       > Minted NFT1 - gasUsed: 156244
         + NFT1:0xe7f1 7.0 Transfer(from: null:0x0000, to: user0:0x7099, tokenId: 3)
-    --- NFT Setup Completed - ERC721 'name' 'symbol' 4 ---
-        0 owner:0xf39F
-        1 user0:0x7099
-        2 user0:0x7099
-        3 user0:0x7099
+      --- NFT Setup Completed - ERC721 'name' 'symbol' 4 ---
+          0 owner:0xf39F
+          1 user0:0x7099
+          2 user0:0x7099
+          3 user0:0x7099
       >> Nix.constructor()  Hello, world!
       Mapping 0x0165878A594ca255338adfa4d48449f69242Eb8F => Nix:0x0165
     --- Nix Deployed - Nix - orders: 0 ---
+           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status TokenIds
       > Approved Nix To Transfer - gasUsed: 46703
         + NFT1:0xe7f1 9.0 ApprovalForAll(owner: user0:0x7099, operator: Nix:0x0165, approved: true)
-    --- After Maker Approve Nix To Transfer - ERC721 'name' 'symbol' 4 ---
-        0 owner:0xf39F
-        1 user0:0x7099
-        2 user0:0x7099
-        3 user0:0x7099
+      --- After Maker Approve Nix To Transfer - ERC721 'name' 'symbol' 4 ---
+          0 owner:0xf39F
+          1 user0:0x7099
+          2 user0:0x7099
+          3 user0:0x7099
+
       > Maker Added Order #0 - Sell NFT1:1 for 123.456e - gasUsed: 189057
         + Nix:0x0165 10.0 MakerOrderAdded(orderKey: 0x1af4541a17b0d3ea8993fbbd3eed4a1cd0004f63a54089ffe55726e9b919bef4, orderIndex: 0)
     --- After Approve And Maker Added Order #0 - Nix - orders: 1 ---
-        0 maker: user0:0x7099, taker: null:0x0000, token: NFT1:0xe7f1, weth: 12.3456, orderType: 0, expiry: 0, orderStatus: 0
-          - 0. tokenId: 1
-      > Maker Added Order #1 - Sell NFT1:* for 123.456e - gasUsed: 129176
-        + Nix:0x0165 11.0 MakerOrderAdded(orderKey: 0x94eb7241ec3e8faffc2a06f966896511a98e4337b9b901875cffafe7359279f8, orderIndex: 1)
+           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status TokenIds
+           0 user0:0x7099 null:0x0000  NFT1:0xe7f1               12.3456 SellAll         (none)                   Active       [1]
+
+      > Maker Added Order #1 - Sell NFT1:* for 123.456e - gasUsed: 149124
+        + Nix:0x0165 11.0 MakerOrderAdded(orderKey: 0x9b9a4fb8fd04d086bbb07e107505a5a675234af7d072a0effdddd0f86415851d, orderIndex: 1)
     --- After Approve And Maker Added Order #1 - Nix - orders: 2 ---
-        0 maker: user0:0x7099, taker: null:0x0000, token: NFT1:0xe7f1, weth: 12.3456, orderType: 0, expiry: 0, orderStatus: 0
-          - 0. tokenId: 1
-        1 maker: user0:0x7099, taker: null:0x0000, token: NFT1:0xe7f1, weth: 1.23456, orderType: 0, expiry: 0, orderStatus: 0
-    ✓ Should return the new greeting once it's changed (143ms)
+           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status TokenIds
+           0 user0:0x7099 null:0x0000  NFT1:0xe7f1               12.3456 SellAll         (none)                   Active       [1]
+           1 user0:0x7099 null:0x0000  NFT1:0xe7f1               1.23456 SellAll         2021-09-09T03:23:30.000Z Active       []
+    ✓ Should return the new greeting once it's changed (157ms)
 
 
   1 passing (2s)

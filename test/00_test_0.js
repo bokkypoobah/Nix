@@ -63,18 +63,37 @@ describe("Nix", function () {
     });
   }
 
+  function padLeft(s, n) {
+    var o = s;
+    while (o.length < n) {
+      o = " " + o;
+    }
+    return o;
+  }
+  function padRight(s, n) {
+    var o = s;
+    while (o.length < n) {
+      o = o + " ";
+    }
+    return o;
+  }
+
   async function printERC721Details(prefix) {
     const totalSupply = await nft1.totalSupply();
-    console.log("    --- " + prefix + " - ERC721 '" + await nft1.name() + "' '" + await nft1.symbol() + "' " + totalSupply + " ---");
+    console.log("      --- " + prefix + " - ERC721 '" + await nft1.name() + "' '" + await nft1.symbol() + "' " + totalSupply + " ---");
     for (let i = 0; i < totalSupply; i++) {
       const ownerOf = await nft1.ownerOf(i);
-      console.log("        " + i + " " + getShortAccountName(ownerOf));
+      console.log("          " + i + " " + getShortAccountName(ownerOf));
     }
   }
 
   async function printNixDetails(prefix) {
+    const orderTypes = [ "SellAll", "SellAnySingle", "SellAnyMultiple", "BuyAll", "BuyAnySingle", "BuyAnyMultiple" ];
+    const orderStatuses = [ "Active", "Cancelled", "Executed", "NotExecutable" ];
+
     const ordersLength = await nix.ordersLength();
     console.log("    --- " + prefix + " - Nix - orders: " + ordersLength + " ---");
+    console.log("           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status TokenIds");
     for (let i = 0; i < ordersLength; i++) {
       const order = await nix.getOrderByIndex(i);
 
@@ -85,12 +104,18 @@ describe("Nix", function () {
       const weth = order[4];
       const orderType = order[5];
       const expiry = order[6];
+      const expiryString = expiry == 0 ? "(none)" : new Date(expiry * 1000).toISOString();
       const orderStatus = order[7];
 
-      console.log("        " + i + " maker: " + getShortAccountName(maker) + ", taker: " + getShortAccountName(taker) + ", token: " + getShortAccountName(token) + ", weth: " + ethers.utils.formatEther(weth) + ", orderType: " + orderType + ", expiry: " + expiry + ", orderStatus: " + orderStatus);
-      for (let j = 0; j < tokenIds.length; j++) {
-        console.log("          - " + j + ". tokenId: " + tokenIds[j]);
-      }
+      console.log("           " + padLeft(i, 3) + " " + padRight(getShortAccountName(maker), 12) + " " +
+        padRight(getShortAccountName(taker), 12) + " " + padRight(getShortAccountName(token), 12) + " " +
+        padLeft(ethers.utils.formatEther(weth), 20) + " " + padRight(orderTypes[orderType], 15) + " " +
+        padRight(expiryString, 24) + " " +
+        padRight(orderStatuses[orderStatus], 12) + " " +
+        JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
+      // for (let j = 0; j < tokenIds.length; j++) {
+      //   console.log("          - " + j + ". tokenId: " + tokenIds[j]);
+      // }
       // console.log("        " + i + " " + JSON.stringify(order));
     }
   }
@@ -140,6 +165,7 @@ describe("Nix", function () {
     const approveTx = await nft1.connect(user0Signer).setApprovalForAll(nix.address, true);
     printEvents("Approved Nix To Transfer", await approveTx.wait());
     await printERC721Details("After Maker Approve Nix To Transfer");
+    console.log();
 
     const makerAddOrder1Tx = await nix.connect(user0Signer).makerAddOrder(
       NULLACCOUNT, // taker
@@ -149,18 +175,20 @@ describe("Nix", function () {
       0, // orderType
       0, // expiry
     );
-    printEvents("Maker Added Order #0 - Sell NFT1:1 for 123.456e", await makerAddOrder1Tx.wait());
+    printEvents("Maker Added Order #0 - Sell NFT1:1 for 12.3456e", await makerAddOrder1Tx.wait());
     await printNixDetails("After Approve And Maker Added Order #0");
+    console.log();
 
+    const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
     const makerAddOrder2Tx = await nix.connect(user0Signer).makerAddOrder(
       NULLACCOUNT, // taker
       nft1.address, // token
       [ ], // tokenIds
       ethers.utils.parseEther("1.23456"), // weth
       0, // orderType
-      0, // expiry
+      expiry2, // expiry
     );
-    printEvents("Maker Added Order #1 - Sell NFT1:* for 123.456e", await makerAddOrder2Tx.wait());
+    printEvents("Maker Added Order #1 - Sell NFT1:* for 1.23456e", await makerAddOrder2Tx.wait());
     await printNixDetails("After Approve And Maker Added Order #1");
 
     if (false) {

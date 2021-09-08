@@ -65,8 +65,8 @@ contract ERC721Helper {
 
 contract Nix {
 
-    enum OrderType { All, Any }
-    enum OrderStatus { Active, Cancelled, Executed }
+    enum OrderType { SellAll, SellAnyOnce, SellAnyMultiple, BuyAll, BuyAnyOnce, BuyAnyMultiple }
+    enum OrderStatus { Active, Cancelled, Executed, NotExecutable }
 
     struct Order {
         address maker;
