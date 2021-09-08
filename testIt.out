@@ -1,3 +1,5 @@
+Compiling 1 file with 0.8.4
+Compilation finished successfully
 
 
   Nix
@@ -41,20 +43,20 @@
         + Nix:0x8A79 13.0 MakerOrderAdded(orderKey: 0x7c33cdf3b55ba00296893e06e11686e86603bc7cbf3b5a29c3725544d5a933e2, orderIndex: 0)
 
       > Maker Added Order #1 - Sell NFT1:* for 1.23456e - gasUsed: 149174
-        + Nix:0x8A79 14.0 MakerOrderAdded(orderKey: 0xfe8328db6f384baa83f827edd3e990d46e8979079b5e9321d59f348e7b94c48b, orderIndex: 1)
+        + Nix:0x8A79 14.0 MakerOrderAdded(orderKey: 0xfa160e1607f3221aa655e0eacbb80a99bdc53f1befcb59919164aeaed09aa1c0, orderIndex: 1)
 
     --- After Approve And Maker Added Order #1 - Nix - orders: 2 ---
            # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds
-           0 user0:0x7099 null:0x0000  NFT1:0xDc64               12.3456 SellAll         (none)                   Active       0x7c33cdf3 [1]
-           1 user0:0x7099 null:0x0000  NFT1:0xDc64               1.23456 SellAll         2021-09-09T10:52:08.000Z Active       0xfe8328db []
+           0 user0:0x7099 null:0x0000  NFT1:0xDc64               12.3456 BuyAny          (none)                   Active       0x7c33cdf3 [1]
+           1 user0:0x7099 null:0x0000  NFT1:0xDc64               1.23456 BuyAny          2021-09-09T13:13:18.000Z Active       0xfa160e16 []
       > Taker Executed Order #1 - Buy NFT1:1 for 12.3456e - gasUsed: 35790
         + Nix:0x8A79 15.0 TakerOrderExecuted(orderKey: 0x7c33cdf3b55ba00296893e06e11686e86603bc7cbf3b5a29c3725544d5a933e2, orderIndex: 0)
 
     --- After Taker Executed Order #1 - Nix - orders: 2 ---
            # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds
-           0 user0:0x7099 null:0x0000  NFT1:0xDc64               12.3456 SellAll         (none)                   Active       0x7c33cdf3 [1]
-           1 user0:0x7099 null:0x0000  NFT1:0xDc64               1.23456 SellAll         2021-09-09T10:52:08.000Z Active       0xfe8328db []
-    ✓ Should return the new greeting once it's changed (186ms)
+           0 user0:0x7099 null:0x0000  NFT1:0xDc64               12.3456 BuyAny          (none)                   Active       0x7c33cdf3 [1]
+           1 user0:0x7099 null:0x0000  NFT1:0xDc64               1.23456 BuyAny          2021-09-09T13:13:18.000Z Active       0xfa160e16 []
+    ✓ Should return the new greeting once it's changed (205ms)
 
 
   1 passing (2s)

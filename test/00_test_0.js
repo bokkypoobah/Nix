@@ -99,7 +99,7 @@ describe("Nix", function () {
   }
 
   async function printNixDetails(prefix) {
-    const orderTypes = [ "SellAll", "SellAnySingle", "SellAnyMultiple", "BuyAll", "BuyAnySingle", "BuyAnyMultiple" ];
+    const orderTypes = [ "BuyAny", "SellAny", "BuyAll", "SellAll" ];
     const orderStatuses = [ "Active", "Cancelled", "Executed", "NotExecutable" ];
 
     const ordersLength = await nix.ordersLength();
