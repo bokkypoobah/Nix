@@ -35,13 +35,22 @@
         1 user0:0x7099
         2 user0:0x7099
         3 user0:0x7099
-      > Maker Added Order - gasUsed: 223532
+      > Maker Added Order #0 - Sell NFT1:1 for 123.456e - gasUsed: 223532
         + Nix:0x0165 10.0 MakerOrderAdded(orderKey: 0x980dab938b0498bb0cc8102dcd2e8c8a7a4c5276fc96eb02e64bb350b2a34867, orderIndex: 0)
-    --- After Approve And Maker Added Order - Nix - orders: 1 ---
+    --- After Approve And Maker Added Order #0 - Nix - orders: 1 ---
         0 maker: user0:0x7099, makerWeth: 0.0, expiry: 0, orderStatus: 0
           - 0. token: NFT1:0xe7f1, tokenId: 1
           taker: null:0x0000, takerWeth: 123.456
-    ✓ Should return the new greeting once it's changed (117ms)
+      > Maker Added Order #1 - Sell NFT1:* for 123.456e - gasUsed: 163651
+        + Nix:0x0165 11.0 MakerOrderAdded(orderKey: 0xa6dda5443416c14d9b165a9712f6de8dbfc5d60e011e438d88c1c82497abc9ba, orderIndex: 1)
+    --- After Approve And Maker Added Order #1 - Nix - orders: 2 ---
+        0 maker: user0:0x7099, makerWeth: 0.0, expiry: 0, orderStatus: 0
+          - 0. token: NFT1:0xe7f1, tokenId: 1
+          taker: null:0x0000, takerWeth: 123.456
+        1 maker: user0:0x7099, makerWeth: 0.0, expiry: 0, orderStatus: 0
+          - 0. token: NFT1:0xe7f1, tokenId: undefined
+          taker: null:0x0000, takerWeth: 123.456
+    ✓ Should return the new greeting once it's changed (189ms)
 
 
   1 passing (2s)

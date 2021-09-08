@@ -187,7 +187,7 @@ describe("Nix", function () {
     printEvents("Approved Nix To Transfer", await approveTx.wait());
     await printERC721Details("After Maker Approve Nix To Transfer");
 
-    const exchangeTx = await nix.connect(user0Signer).makerAddOrder(
+    const makerAddOrder1Tx = await nix.connect(user0Signer).makerAddOrder(
       NULLACCOUNT, // taker
       [ nft1.address ], // makerTokens
       [ 1 ], // makerTokenIds
@@ -199,8 +199,23 @@ describe("Nix", function () {
       0, // takerType
       0, // expiry
     );
-    printEvents("Maker Added Order", await exchangeTx.wait());
-    await printNixDetails("After Approve And Maker Added Order");
+    printEvents("Maker Added Order #0 - Sell NFT1:1 for 123.456e", await makerAddOrder1Tx.wait());
+    await printNixDetails("After Approve And Maker Added Order #0");
+
+    const makerAddOrder2Tx = await nix.connect(user0Signer).makerAddOrder(
+      NULLACCOUNT, // taker
+      [ nft1.address ], // makerTokens
+      [ ], // makerTokenIds
+      0, // makerWeth
+      [  ], // takerTokens
+      [  ], // takerTokenIds
+      ethers.utils.parseUnits("123.456", 18), // takerWeth
+      0, // makerType
+      0, // takerType
+      0, // expiry
+    );
+    printEvents("Maker Added Order #1 - Sell NFT1:* for 123.456e", await makerAddOrder2Tx.wait());
+    await printNixDetails("After Approve And Maker Added Order #1");
 
 
         // enum OrderType { All, Any }
