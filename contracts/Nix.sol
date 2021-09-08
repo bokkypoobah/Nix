@@ -16,6 +16,23 @@ import "hardhat/console.sol";
 // (c) BokkyPooBah / Bok Consulting Pty Ltd 2021. The MIT Licence.
 // ----------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------
+// ERC Token Standard #20 Interface
+// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
+// ----------------------------------------------------------------------------
+interface ERC20 {
+    event Transfer(address indexed from, address indexed to, uint tokens);
+    event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
+
+    function totalSupply() external view returns (uint);
+    function balanceOf(address tokenOwner) external view returns (uint balance);
+    function allowance(address tokenOwner, address spender) external view returns (uint remaining);
+    function transfer(address to, uint tokens) external returns (bool success);
+    function approve(address spender, uint tokens) external returns (bool success);
+    function transferFrom(address from, address to, uint tokens) external returns (bool success);
+}
+
+
 interface IERC721Partial {
     function name() external view returns (string memory);
     function symbol() external view returns (string memory);
@@ -103,10 +120,12 @@ contract Nix {
     }
 
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
+    ERC20 public weth;
     bytes32[] public ordersIndex;
     mapping(bytes32 => Order) public orders;
 
-    constructor() {
+    constructor(ERC20 _weth) {
+        weth = _weth;
     }
 
     function generateOrderKey(
@@ -145,12 +164,19 @@ contract Nix {
     }
 
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint weth) public {
+    function takerExecuteOrder(uint orderIndex, uint tokenId, uint _weth) public {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
         require(order.expiry == 0 || order.expiry <= block.timestamp, "Order expired");
-        require(order.weth == weth, "Order weth unexpected");
+        require(order.weth == _weth, "Order weth unexpected");
+
+        if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
+            require(weth.transferFrom(msg.sender, order.maker, _weth), "transferFrom failure");
+        } else {
+            require(weth.transferFrom(order.maker, msg.sender, _weth), "transferFrom failure");
+        }
+        order.orderStatus = OrderStatus.Executed;
         emit TakerOrderExecuted(orderKey, orderIndex);
     }
 
