@@ -244,7 +244,7 @@ describe("Nix", function () {
     console.log();
     await printNixDetails("After Approve And Maker Added Order #1");
 
-    const takerExecuteOrder1Tx = await nix.connect(taker0Signer).takerExecuteOrder(0, [ 4 ], ethers.utils.parseEther("12.3456"));
+    const takerExecuteOrder1Tx = await nix.connect(taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("1.23456"));
     console.log();
     await printEvents("Taker Executed Order #1 - Buy NFT1:{3|4|5} for 12.3456e", await takerExecuteOrder1Tx.wait());
     console.log();

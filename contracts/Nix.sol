@@ -169,7 +169,7 @@ contract Nix {
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
         require(order.taker == address(0) || order.taker == msg.sender, "Not the specified taker");
-        require(order.expiry == 0 || order.expiry <= block.timestamp, "Order expired");
+        require(order.expiry == 0 || order.expiry >= block.timestamp, "Order expired");
         require(order.weth == _weth, "Order weth unexpected");
 
         if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
@@ -177,16 +177,19 @@ contract Nix {
         } else {
             require(weth.transferFrom(order.maker, msg.sender, _weth), "transferFrom failure");
         }
-        bool found = false;
         if (order.orderType == OrderType.BuyAny) {
-            for (uint i = 0; i < order.tokenIds.length && !found; i++) {
-                if (tokenId == order.tokenIds[i]) {
-                    // console.log("safeTransfer");
-                    IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenId);
-                    found = true;
+            bool found = false;
+            if (order.tokenIds.length == 0) {
+                found = true;
+            } else {
+                for (uint i = 0; i < order.tokenIds.length && !found; i++) {
+                    if (tokenId == order.tokenIds[i]) {
+                        found = true;
+                    }
                 }
             }
             require(found, "tokenId invalid");
+            IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenId);
         }
         order.orderStatus = OrderStatus.Executed;
         emit TakerOrderExecuted(orderKey, orderIndex);
