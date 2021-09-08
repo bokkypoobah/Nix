@@ -137,6 +137,7 @@ contract Nix {
     ) public {
         bytes32 _orderKey = generateOrderKey(msg.sender, taker, makerTokens, makerTokenIds, takerTokens, takerTokenIds, makerType, takerType, expiry);
         require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
+        // TODO: Expiry check
         ordersIndex.push(_orderKey);
         Order storage order = orders[_orderKey];
         order.maker = msg.sender;
@@ -162,6 +163,13 @@ contract Nix {
     function exchange(IERC721Partial token, uint tokenId, address to) public {
         console.log("      >> Nix.exchange() token '%s', tokenId %s, to %s", address(token), tokenId, to);
         IERC721Partial(token).safeTransferFrom(msg.sender, to, tokenId);
+    }
+
+    function ordersLength() public view returns (uint) {
+        return ordersIndex.length;
+    }
+    function getOrderByIndex(uint i) public view returns (Order memory order) {
+        return orders[ordersIndex[i]];
     }
 
     function greet() public view returns (string memory) {

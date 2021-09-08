@@ -26,16 +26,22 @@
         2 user0:0x7099
         3 user0:0x7099
       >> Nix.constructor()  Hello, world!
+      Mapping 0x0165878A594ca255338adfa4d48449f69242Eb8F => Nix:0x0165
+    --- Nix Deployed - Nix - orders: 0 ---
       > Approved Nix To Transfer - gasUsed: 46703
-        + NFT1:0xe7f1 9.0 ApprovalForAll(owner: user0:0x7099, operator: 0x0165878A594ca255338adfa4d48449f69242Eb8F, approved: true)
-      > Exchanged - gasUsed: 223576
-        + 0x0165878A594ca255338adfa4d48449f69242Eb8F 10.0 MakerOrderAdded(orderKey: 0x04190f25c537b3d183934b2eb6569d13fa04fc6f242d9b6dc8213b563f154e39, orderIndex: 0)
-    --- After Approve And Exchange = - ERC721 'name' 'symbol' 4 ---
+        + NFT1:0xe7f1 9.0 ApprovalForAll(owner: user0:0x7099, operator: Nix:0x0165, approved: true)
+    --- After Maker Approve Nix To Transfer - ERC721 'name' 'symbol' 4 ---
         0 owner:0xf39F
         1 user0:0x7099
         2 user0:0x7099
         3 user0:0x7099
-    ✓ Should return the new greeting once it's changed (207ms)
+      > Maker Added Order - gasUsed: 223532
+        + Nix:0x0165 10.0 MakerOrderAdded(orderKey: 0x980dab938b0498bb0cc8102dcd2e8c8a7a4c5276fc96eb02e64bb350b2a34867, orderIndex: 0)
+    --- After Approve And Maker Added Order - Nix - orders: 1 ---
+        0 maker: user0:0x7099, makerWeth: 0.0, expiry: 0, orderStatus: 0
+          - 0. token: NFT1:0xe7f1, tokenId: 1
+          taker: null:0x0000, takerWeth: 123.456
+    ✓ Should return the new greeting once it's changed (117ms)
 
 
   1 passing (2s)
