@@ -151,6 +151,9 @@ contract Nix {
         bytes32 _orderKey = generateOrderKey(msg.sender, taker, token, tokenIds, orderType, expiry);
         require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
         require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
+        if (orderType == OrderType.BuyAll || orderType == OrderType.SellAll) {
+            require(tokenIds.length > 0, "No tokenIds specified");
+        }
         ordersIndex.push(_orderKey);
         Order storage order = orders[_orderKey];
         order.maker = msg.sender;
@@ -203,7 +206,16 @@ contract Nix {
             }
             require(found, "tokenId invalid");
             IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenId);
+        } else if (order.orderType == OrderType.BuyAll) {
+            for (uint i = 0; i < order.tokenIds.length; i++) {
+                IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
+            }
+        } else {
+            for (uint i = 0; i < order.tokenIds.length; i++) {
+                IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
+            }
         }
+
         order.orderStatus = OrderStatus.Executed;
         emit TakerOrderExecuted(orderKey, orderIndex);
     }
