@@ -147,54 +147,59 @@ contract Nix {
     }
 
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint price) public {
+    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice) public {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
         require(order.taker == address(0) || order.taker == msg.sender, "Not the specified taker");
         require(order.expiry == 0 || order.expiry >= block.timestamp, "Order expired");
-        require(order.price == price, "Order weth unexpected");
         require(order.tradeCount < order.tradeMax, "Max trades already executed");
+        require(tokenIds.length > 0, "At least one tokenId must be specified");
 
-        if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
-            require(weth.transferFrom(order.maker, msg.sender, price), "transferFrom failure");
-        } else {
-            require(weth.transferFrom(msg.sender, order.maker, price), "transferFrom failure");
-        }
         if (order.orderType == OrderType.BuyAny) {
-            // TODO: Array of tokenIds
-            bool found = false;
-            if (order.tokenIds.length == 0) {
-                found = true;
-            } else {
-                for (uint i = 0; i < order.tokenIds.length && !found; i++) {
-                    if (tokenIds[0] == order.tokenIds[i]) {
-                        found = true;
+            require(order.price * tokenIds.length == totalPrice, "Order weth unexpected");
+            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "transferFrom failure");
+            for (uint i = 0; i < tokenIds.length; i++) {
+                bool found = false;
+                if (order.tokenIds.length == 0) {
+                    found = true;
+                } else {
+                    for (uint j = 0; j < order.tokenIds.length && !found; j++) {
+                        if (tokenIds[i] == order.tokenIds[j]) {
+                            found = true;
+                        }
                     }
                 }
+                require(found, "tokenId invalid");
+                IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[i]);
             }
-            require(found, "tokenId invalid");
-            IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[0]);
         } else if (order.orderType == OrderType.SellAny) {
-            // TODO: Array of tokenIds
-            bool found = false;
-            if (order.tokenIds.length == 0) {
-                found = true;
-            } else {
-                for (uint i = 0; i < order.tokenIds.length && !found; i++) {
-                    if (tokenIds[0] == order.tokenIds[i]) {
-                        found = true;
+            require(order.price * tokenIds.length == totalPrice, "Order weth unexpected");
+            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "transferFrom failure");
+            for (uint i = 0; i < tokenIds.length; i++) {
+                bool found = false;
+                if (order.tokenIds.length == 0) {
+                    found = true;
+                } else {
+                    for (uint j = 0; j < order.tokenIds.length && !found; j++) {
+                        if (tokenIds[i] == order.tokenIds[j]) {
+                            found = true;
+                        }
                     }
                 }
+                require(found, "tokenId invalid");
+                IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[i]);
             }
-            require(found, "tokenId invalid");
-            IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[0]);
         } else if (order.orderType == OrderType.BuyAll) {
+            require(order.price == totalPrice, "Order weth unexpected");
+            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "transferFrom failure");
             for (uint i = 0; i < order.tokenIds.length; i++) {
                 require(tokenIds[i] == order.tokenIds[i], "TokenId mismatch");
                 IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
             }
         } else { // SellAll
+            require(order.price == totalPrice, "Order weth unexpected");
+            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "transferFrom failure");
             for (uint i = 0; i < order.tokenIds.length; i++) {
                 require(tokenIds[i] == order.tokenIds[i], "TokenId mismatch");
                 IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
