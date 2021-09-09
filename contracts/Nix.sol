@@ -11,7 +11,7 @@ import "hardhat/console.sol";
 //
 // SPDX-License-Identifier: MIT
 //
-// Enjoy.
+// Enjoy. And hello, from the past.
 //
 // (c) BokkyPooBah / Bok Consulting Pty Ltd 2021. The MIT Licence.
 // ----------------------------------------------------------------------------
@@ -20,65 +20,19 @@ import "hardhat/console.sol";
 // ERC Token Standard #20 Interface
 // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
 // ----------------------------------------------------------------------------
-interface ERC20 {
-    // event Transfer(address indexed from, address indexed to, uint tokens);
-    // event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
-    //
-    // function totalSupply() external view returns (uint);
+interface IERC20Partial {
     function balanceOf(address tokenOwner) external view returns (uint balance);
     function allowance(address tokenOwner, address spender) external view returns (uint remaining);
-    // function transfer(address to, uint tokens) external returns (bool success);
-    // function approve(address spender, uint tokens) external returns (bool success);
     function transferFrom(address from, address to, uint tokens) external returns (bool success);
 }
 
 
 interface IERC721Partial {
-    // function name() external view returns (string memory);
-    // function symbol() external view returns (string memory);
-    // function totalSupply() external view returns (uint256);
-    //
     function ownerOf(uint256 tokenId) external view returns (address);
+    function balanceOf(address owner) external view returns (uint256 balance);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
-    // function tokenOfOwnerByIndex(address owner, uint256 index) external view returns (uint256);
-    // function tokenByIndex(uint256 index) external view returns (uint256);
-    // function tokenURI(uint256 tokenId) external view returns (string memory);
-
     function safeTransferFrom(address _from, address _to, uint256 _tokenId) external payable;
 }
-
-
-// contract ERC721Helper {
-//     function tokenInfo(IERC721Partial token) external view returns(string memory _symbol, string memory _name, uint _totalSupply) {
-//         return (token.symbol(), token.name(), token.totalSupply());
-//     }
-//
-//     function tokenURIs(IERC721Partial token, uint from, uint to) external view returns(uint[] memory _tokenIds, string[] memory _tokenURIs) {
-//         require(from < to && to <= token.totalSupply());
-//         _tokenIds = new uint[](to - from);
-//         _tokenURIs = new string[](to - from);
-//         uint i = 0;
-//         for (uint index = from; index < to; index++) {
-//             uint tokenId = token.tokenByIndex(index);
-//             _tokenIds[i] = tokenId;
-//             _tokenURIs[i] = token.tokenURI(tokenId);
-//             i++;
-//         }
-//     }
-//
-//     function owners(IERC721Partial token, uint from, uint to) external view returns(uint[] memory _tokenIds, address[] memory _owners) {
-//         require(from < to && to <= token.totalSupply());
-//         _tokenIds = new uint[](to - from);
-//         _owners = new address[](to - from);
-//         uint i = 0;
-//         for (uint index = from; index < to; index++) {
-//             uint tokenId = token.tokenByIndex(index);
-//             _tokenIds[i] = tokenId;
-//             _owners[i] = token.ownerOf(tokenId);
-//             i++;
-//         }
-//     }
-// }
 
 
 contract Nix {
@@ -100,24 +54,13 @@ contract Nix {
     }
 
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
-    ERC20 public weth;
+    IERC20Partial public weth;
     bytes32[] public ordersIndex;
     mapping(bytes32 => Order) public orders;
 
-    constructor(ERC20 _weth) {
+    constructor(IERC20Partial _weth) {
         weth = _weth;
     }
-
-    // function generateOrderKey(
-    //     address maker,
-    //     address taker,
-    //     address token,
-    //     uint[] memory tokenIds,
-    //     OrderType orderType,
-    //     uint64 expiry
-    // ) internal pure returns (bytes32 seriesKey) {
-    //     return keccak256(abi.encodePacked(maker, taker, token, tokenIds, orderType, expiry));
-    // }
 
     event MakerOrderAdded(bytes32 orderKey, uint orderIndex);
     function makerAddOrder(
@@ -129,7 +72,6 @@ contract Nix {
         uint64 expiry,
         uint64 tradeMax
     ) public {
-        // bytes32 _orderKey = generateOrderKey(msg.sender, taker, token, tokenIds, orderType, expiry);
         bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, orderType, expiry));
         require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
         require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
@@ -245,7 +187,7 @@ contract Nix {
         return ordersIndex.length;
     }
     enum OrderStatus { Executable, Expired, Maxxed, MakerHasUnsufficientWeth, MakerHasUnsufficientWethAllowance,
-        MakerNoLongerOwnsToken, MakerHasNotApprovedNix }
+        MakerNoLongerOwnsToken, MakerHasNotApprovedNix, UnknownError }
     function orderStatus(uint i) internal view returns (uint) {
         bytes32 orderKey = ordersIndex[i];
         Order memory order = orders[orderKey];
@@ -264,20 +206,47 @@ contract Nix {
             if (wethAllowance < order.weth) {
                 return uint(OrderStatus.MakerHasUnsufficientWethAllowance);
             }
-        } else if (order.orderType == OrderType.SellAny) {
-            return 112;
-        } else { // SellAll
-            for (uint j = 0; j < order.tokenIds.length; j++) {
-                address owner = IERC721Partial(order.token).ownerOf(order.tokenIds[j]);
-                if (owner != order.maker) {
-                    return uint(OrderStatus.MakerNoLongerOwnsToken);
+        } else {
+            try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
+                if (!b) {
+                    return uint(OrderStatus.MakerHasNotApprovedNix);
                 }
-                // console.log("      >> SellAll: %s. %s %s", j, order.tokenIds[j], order.token);
+            } catch {
+                return uint(OrderStatus.UnknownError);
             }
-            if (!IERC721Partial(order.token).isApprovedForAll(order.maker, address(this))) {
-                return uint(OrderStatus.MakerHasNotApprovedNix);
+            if (order.orderType == OrderType.SellAny) {
+                if (order.tokenIds.length == 0) {
+                    try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
+                        if (b == 0) {
+                            return uint(OrderStatus.MakerNoLongerOwnsToken);
+                        }
+                    } catch {
+                        return uint(OrderStatus.UnknownError);
+                    }
+                    // uint balanceOf = IERC721Partial(order.token).balanceOf(order.maker);
+                    // if (balanceOf == 0) {
+                    //     return uint(OrderStatus.MakerNoLongerOwnsToken);
+                    // }
+                } else {
+                    bool found = false;
+                    for (uint j = 0; j < order.tokenIds.length && !found; j++) {
+                        address owner = IERC721Partial(order.token).ownerOf(order.tokenIds[j]);
+                        if (owner == order.maker) {
+                            found = true;
+                        }
+                    }
+                    if (!found) {
+                        return uint(OrderStatus.MakerNoLongerOwnsToken);
+                    }
+                }
+            } else { // SellAll
+                for (uint j = 0; j < order.tokenIds.length; j++) {
+                    address owner = IERC721Partial(order.token).ownerOf(order.tokenIds[j]);
+                    if (owner != order.maker) {
+                        return uint(OrderStatus.MakerNoLongerOwnsToken);
+                    }
+                }
             }
-            // return 224;
         }
         return uint(OrderStatus.Executable);
     }
