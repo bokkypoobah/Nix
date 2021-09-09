@@ -97,6 +97,7 @@ describe("Nix", function () {
       owners[ownerOf].push(i);
     }
     console.log("        Owner                            WETH NFTA");
+    console.log("        ---------------- -------------------- -------------------------");
     var checkAccounts = [owner, maker0, maker1, taker0, taker1];
     for (let i = 0; i < checkAccounts.length; i++) {
       const ownerData = owners[checkAccounts[i]] || [];
@@ -108,7 +109,8 @@ describe("Nix", function () {
   async function printNixDetails(prefix) {
     const ordersLength = await nix.ordersLength();
     console.log("    --- " + prefix + " - Nix - orders: " + ordersLength + " ---");
-    console.log("           # Maker        Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds");
+    console.log("           # Maker         Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds");
+    console.log("         --- ------------- ------------ --------------------------------- --------------- ------------------------ ------------ ---------- -----------------------");
     for (let i = 0; i < ordersLength; i++) {
       const order = await nix.getOrderByIndex(i);
 
@@ -203,11 +205,6 @@ describe("Nix", function () {
     const wethApproveNix4Tx = await weth.connect(taker1Signer).approve(nix.address, ethers.utils.parseEther("100"));
     await printEvents("WETH.approve(nix)", await wethApproveNix4Tx.wait());
 
-  })
-
-
-  it("YEAH!", async function () {
-
     const approve0Tx = await nftA.connect(maker0Signer).setApprovalForAll(nix.address, true);
     printEvents("Approved Nix To Transfer", await approve0Tx.wait());
     console.log();
@@ -216,22 +213,19 @@ describe("Nix", function () {
     console.log();
     await printBalances("After Maker Approve Nix To Transfer");
     console.log();
+  })
 
-    console.log("    ==== Maker Added Order #0 - Buy NFT1:{3|4|5} for 12.3456e === ");
-    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(
-      NULLACCOUNT, // taker
-      nftA.address, // token
-      [ 3, 4, 5 ], // tokenIds
-      ethers.utils.parseEther("12.3456"), // weth
-      ORDERTYPE_BUYANY, // orderType
-      0, // expiry
-    );
+
+  it("1. BuyAny Test", async function () {
+
+    console.log("    ==== Maker Added Order #0 - BuyAny NFT1:{3|4|5} for 12.3456e === ");
+    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("12.3456"), ORDERTYPE_BUYANY, 0);
     await printEvents("Maker Added Order", await makerAddOrder1Tx.wait());
     console.log();
     // await printNixDetails("After Approve And Maker Added Order #0");
     // console.log();
 
-    console.log("    ==== Maker Added Order #1 - Buy NFT1:* for 1.23456e === ");
+    console.log("    ==== Maker Added Order #1 - BuyAny NFT1:* for 1.23456e === ");
     const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
     const makerAddOrder2Tx = await nix.connect(maker0Signer).makerAddOrder(
       NULLACCOUNT, // taker
@@ -249,7 +243,7 @@ describe("Nix", function () {
     await printBalances("Maker Added Order");
     console.log();
 
-    console.log("    ==== Taker Executed Order #1 - Buy NFT1:{3|4|5} for 12.3456e === ");
+    console.log("    ==== Taker Executed Order #1 - BuyAny NFT1:{3|4|5} for 12.3456e === ");
     const takerExecuteOrder1Tx = await nix.connect(taker0Signer).takerExecuteOrder(0, [ 3 ], ethers.utils.parseEther("12.3456"));
     await printEvents("Taker Executed", await takerExecuteOrder1Tx.wait());
     console.log();
@@ -258,7 +252,7 @@ describe("Nix", function () {
     await printBalances("Taker Executed Order #1");
     console.log();
 
-    console.log("    ==== Taker Executed Order #2 - Buy NFT1:* for 1.23456e === ");
+    console.log("    ==== Taker Executed Order #2 - BuyAny NFT1:* for 1.23456e === ");
     const takerExecuteOrder2Tx = await nix.connect(taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("1.23456"));
     await printEvents("Taker Executed", await takerExecuteOrder2Tx.wait());
     console.log();

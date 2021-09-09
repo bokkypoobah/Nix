@@ -190,6 +190,19 @@ contract Nix {
             }
             require(found, "tokenId invalid");
             IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenId);
+        } else if (order.orderType == OrderType.SellAny) {
+            bool found = false;
+            if (order.tokenIds.length == 0) {
+                found = true;
+            } else {
+                for (uint i = 0; i < order.tokenIds.length && !found; i++) {
+                    if (tokenId == order.tokenIds[i]) {
+                        found = true;
+                    }
+                }
+            }
+            require(found, "tokenId invalid");
+            IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenId);
         }
         order.orderStatus = OrderStatus.Executed;
         emit TakerOrderExecuted(orderKey, orderIndex);
