@@ -240,15 +240,12 @@ describe("Nix", function () {
     await printEvents("Maker Added Order #1 - BuyAny NFTA:* for 1.23456e", await makerAddOrder2Tx.wait());
     await printState("After Maker Added Orders");
 
-    console.log("    ==== Taker Executed Order #1 - Buy #3 from BuyAny NFTA:{3|4|5} for 12.3456e === ");
+    console.log("    ==== Taker Execute Against Orders === ");
     const takerExecuteOrder1Tx = await nix.connect(taker0Signer).takerExecuteOrder(0, [ 3 ], ethers.utils.parseEther("12.3456"));
-    await printEvents("Taker Executed", await takerExecuteOrder1Tx.wait());
-    await printState("After Taker Executed Order #1");
-
-    console.log("    ==== Taker Executed Order #2 - Buy #4 from BuyAny NFTA:* for 1.23456e === ");
+    await printEvents("Taker Executed Buy #3 against BuyAny NFTA:{3|4|5} for 12.3456e" , await takerExecuteOrder1Tx.wait());
     const takerExecuteOrder2Tx = await nix.connect(taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("1.23456"));
-    await printEvents("Taker Executed", await takerExecuteOrder2Tx.wait());
-    await printState("After Taker Executed Order #2");
+    await printEvents("Taker Executed Buy #4 against BuyAny NFTA:* for 1.23456e", await takerExecuteOrder2Tx.wait());
+    await printState("After Taker Executed Orders");
   });
 });
 
