@@ -26,9 +26,11 @@ interface IERC20Partial {
     function transferFrom(address from, address to, uint tokens) external returns (bool success);
 }
 
-
-interface IERC721Partial {
+interface IERC165 {
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
+interface IERC721Partial is IERC165 {
     function ownerOf(uint256 tokenId) external view returns (address);
     function balanceOf(address owner) external view returns (uint256 balance);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
@@ -54,10 +56,13 @@ contract Nix {
         uint64 tradeMax;
     }
 
+    bytes4 constant ERC721INTERFACE = 0x80ac58cd;
+
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
     IERC20Partial public weth;
     bytes32[] public ordersIndex;
     mapping(bytes32 => Order) public orders;
+    // TODO mapping(address => bytes32[]) public ordersIndices;
 
     constructor(IERC20Partial _weth) {
         weth = _weth;
@@ -68,7 +73,7 @@ contract Nix {
         address taker,
         address token,
         uint[] memory tokenIds,
-        uint _price,
+        uint price,
         OrderType orderType,
         uint64 expiry,
         uint64 tradeMax
@@ -82,19 +87,29 @@ contract Nix {
         } else {
             require(tradeMax > 0, "Must have at least one trade");
         }
+
+        // TODO
+        // bytes32[] memory index = ordersIndices[token];
+        // if (ordersIndices[token].length == 0) {
+        //     ordersIndices[token].push
+        //     console.log("index.length == 0");
+        // }
+
+
         ordersIndex.push(_orderKey);
         Order storage order = orders[_orderKey];
         order.maker = msg.sender;
         order.taker = taker;
         order.token = token;
 
-        // bytes4 ERC721INTERFACE = 0x80ac58cd;
-        // bool result = IERC721Partial(order.token).supportsInterface(ERC721INTERFACE);
-        //
-        // console.log("Result %s", result);
+        try IERC721Partial(order.token).supportsInterface(ERC721INTERFACE) returns (bool b) {
+            console.log("Result %s", b);
+        } catch {
+            console.log("ERROR ");
+        }
 
         order.tokenIds = tokenIds;
-        order.price = _price;
+        order.price = price;
         order.orderType = orderType;
         order.expiry = expiry;
         order.tradeMax = tradeMax;
@@ -111,11 +126,11 @@ contract Nix {
     }
 
     event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateOrder(uint orderIndex, uint _price, uint64 expiry, int64 tradeMaxAdjustment) public {
+    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment) public {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Only maker can update");
-        order.price = _price;
+        order.price = price;
         order.expiry = expiry;
         // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
         if (tradeMaxAdjustment < 0) {
@@ -132,19 +147,19 @@ contract Nix {
     }
 
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint _price) public {
+    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint price) public {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
         require(order.taker == address(0) || order.taker == msg.sender, "Not the specified taker");
         require(order.expiry == 0 || order.expiry >= block.timestamp, "Order expired");
-        require(order.price == _price, "Order weth unexpected");
+        require(order.price == price, "Order weth unexpected");
         require(order.tradeCount < order.tradeMax, "Max trades already executed");
 
         if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
-            require(weth.transferFrom(order.maker, msg.sender, _price), "transferFrom failure");
+            require(weth.transferFrom(order.maker, msg.sender, price), "transferFrom failure");
         } else {
-            require(weth.transferFrom(msg.sender, order.maker, _price), "transferFrom failure");
+            require(weth.transferFrom(msg.sender, order.maker, price), "transferFrom failure");
         }
         if (order.orderType == OrderType.BuyAny) {
             // TODO: Array of tokenIds
