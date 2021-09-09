@@ -28,6 +28,7 @@ interface IERC20Partial {
 
 
 interface IERC721Partial {
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
     function ownerOf(uint256 tokenId) external view returns (address);
     function balanceOf(address owner) external view returns (uint256 balance);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
@@ -86,6 +87,12 @@ contract Nix {
         order.maker = msg.sender;
         order.taker = taker;
         order.token = token;
+
+        // bytes4 ERC721INTERFACE = 0x80ac58cd;
+        // bool result = IERC721Partial(order.token).supportsInterface(ERC721INTERFACE);
+        //
+        // console.log("Result %s", result);
+
         order.tokenIds = tokenIds;
         order.wethAmount = _wethAmount;
         order.orderType = orderType;
