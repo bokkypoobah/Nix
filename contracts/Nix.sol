@@ -178,11 +178,6 @@ contract Nix {
         emit TakerOrderExecuted(orderKey, orderIndex);
     }
 
-    function exchange(IERC721Partial token, uint tokenId, address to) public {
-        console.log("      >> Nix.exchange() token '%s', tokenId %s, to %s", address(token), tokenId, to);
-        IERC721Partial(token).safeTransferFrom(msg.sender, to, tokenId);
-    }
-
     function ordersLength() public view returns (uint) {
         return ordersIndex.length;
     }
@@ -233,10 +228,6 @@ contract Nix {
                         } catch {
                             return uint(OrderStatus.UnknownError);
                         }
-                        // address owner = IERC721Partial(order.token).ownerOf(order.tokenIds[j]);
-                        // if (owner == order.maker) {
-                        //     found = true;
-                        // }
                     }
                     if (!found) {
                         return uint(OrderStatus.MakerNoLongerOwnsToken);
@@ -244,9 +235,12 @@ contract Nix {
                 }
             } else { // SellAll
                 for (uint j = 0; j < order.tokenIds.length; j++) {
-                    address owner = IERC721Partial(order.token).ownerOf(order.tokenIds[j]);
-                    if (owner != order.maker) {
-                        return uint(OrderStatus.MakerNoLongerOwnsToken);
+                    try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+                        if (a != order.maker) {
+                            return uint(OrderStatus.MakerNoLongerOwnsToken);
+                        }
+                    } catch {
+                        return uint(OrderStatus.UnknownError);
                     }
                 }
             }
@@ -256,5 +250,4 @@ contract Nix {
     function getOrderByIndex(uint i) public view returns (Order memory order, bytes32 orderKey, uint _orderStatus) {
         return (orders[ordersIndex[i]], ordersIndex[i], uint(orderStatus(i)));
     }
-
 }
