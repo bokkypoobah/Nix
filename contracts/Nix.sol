@@ -223,17 +223,20 @@ contract Nix {
                     } catch {
                         return uint(OrderStatus.UnknownError);
                     }
-                    // uint balanceOf = IERC721Partial(order.token).balanceOf(order.maker);
-                    // if (balanceOf == 0) {
-                    //     return uint(OrderStatus.MakerNoLongerOwnsToken);
-                    // }
                 } else {
                     bool found = false;
                     for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-                        address owner = IERC721Partial(order.token).ownerOf(order.tokenIds[j]);
-                        if (owner == order.maker) {
-                            found = true;
+                        try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+                            if (a == order.maker) {
+                                found = true;
+                            }
+                        } catch {
+                            return uint(OrderStatus.UnknownError);
                         }
+                        // address owner = IERC721Partial(order.token).ownerOf(order.tokenIds[j]);
+                        // if (owner == order.maker) {
+                        //     found = true;
+                        // }
                     }
                     if (!found) {
                         return uint(OrderStatus.MakerNoLongerOwnsToken);
