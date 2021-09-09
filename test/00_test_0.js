@@ -173,12 +173,12 @@ describe("Nix", function () {
     }
 
     const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
-    nftA = await ERC721PresetMinterPauserAutoId.deploy("name", "symbol", "uri");
+    nftA = await ERC721PresetMinterPauserAutoId.deploy("NFTeeA", "NFTA", "uri");
     contracts.push(nftA);
-    addAccount(nftA.address, "NFT1");
+    addAccount(nftA.address, "NFTA");
     const nftATransactionReceipt = await nftA.deployTransaction.wait();
     if (DETAILS > 0) {
-      await printEvents("Deployed NFT1", nftATransactionReceipt);
+      await printEvents("Deployed NFTA", nftATransactionReceipt);
     }
 
     const mint0Tx = await nftA.mint(maker0);
@@ -188,12 +188,12 @@ describe("Nix", function () {
     const mint4Tx = await nftA.mint(taker0);
     const mint5Tx = await nftA.mint(taker0);
     if (DETAILS > 0) {
-      await printEvents("Minted NFT1", await mint0Tx.wait());
-      await printEvents("Minted NFT1", await mint1Tx.wait());
-      await printEvents("Minted NFT1", await mint2Tx.wait());
-      await printEvents("Minted NFT1", await mint3Tx.wait());
-      await printEvents("Minted NFT1", await mint4Tx.wait());
-      await printEvents("Minted NFT1", await mint5Tx.wait());
+      await printEvents("Minted NFTA", await mint0Tx.wait());
+      await printEvents("Minted NFTA", await mint1Tx.wait());
+      await printEvents("Minted NFTA", await mint2Tx.wait());
+      await printEvents("Minted NFTA", await mint3Tx.wait());
+      await printEvents("Minted NFTA", await mint4Tx.wait());
+      await printEvents("Minted NFTA", await mint5Tx.wait());
     }
 
     const Nix = await ethers.getContractFactory("Nix");
@@ -216,26 +216,27 @@ describe("Nix", function () {
     }
 
     const approve0Tx = await nftA.connect(maker0Signer).setApprovalForAll(nix.address, true);
-    console.log();
-    const approve1Tx = await nftA.connect(taker0Signer).setApprovalForAll(nix.address, true);
+    const approve1Tx = await nftA.connect(maker1Signer).setApprovalForAll(nix.address, true);
+    const approve2Tx = await nftA.connect(taker0Signer).setApprovalForAll(nix.address, true);
+    const approve3Tx = await nftA.connect(taker1Signer).setApprovalForAll(nix.address, true);
     if (DETAILS > 0) {
       printEvents("Approved Nix To Transfer", await approve0Tx.wait());
       printEvents("Approved Nix To Transfer", await approve1Tx.wait());
-      console.log();
+      printEvents("Approved Nix To Transfer", await approve2Tx.wait());
+      printEvents("Approved Nix To Transfer", await approve3Tx.wait());
     }
     await printState("After Maker Approve Nix To Transfer");
-    console.log();
   })
 
 
   it("1. BuyAny Test", async function () {
 
-    console.log("    ==== Maker Added Order #0 - BuyAny NFT1:{3|4|5} for 12.3456e === ");
+    console.log("    ==== Maker Added Order #0 - BuyAny NFTA:{3|4|5} for 12.3456e === ");
     const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("12.3456"), ORDERTYPE_BUYANY, 0);
     await printEvents("Maker Added Order", await makerAddOrder1Tx.wait());
     console.log();
 
-    console.log("    ==== Maker Added Order #1 - BuyAny NFT1:* for 1.23456e === ");
+    console.log("    ==== Maker Added Order #1 - BuyAny NFTA:* for 1.23456e === ");
     const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
     const makerAddOrder2Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ ], ethers.utils.parseEther("1.23456"), ORDERTYPE_BUYANY, expiry2);
     console.log();
@@ -244,14 +245,14 @@ describe("Nix", function () {
     await printState("After Maker Added Orders");
     console.log();
 
-    console.log("    ==== Taker Executed Order #1 - BuyAny NFT1:{3|4|5} for 12.3456e === ");
+    console.log("    ==== Taker Executed Order #1 - BuyAny NFTA:{3|4|5} for 12.3456e === ");
     const takerExecuteOrder1Tx = await nix.connect(taker0Signer).takerExecuteOrder(0, [ 3 ], ethers.utils.parseEther("12.3456"));
     await printEvents("Taker Executed", await takerExecuteOrder1Tx.wait());
     console.log();
     await printState("After Taker Executed Order #1");
     console.log();
 
-    console.log("    ==== Taker Executed Order #2 - BuyAny NFT1:* for 1.23456e === ");
+    console.log("    ==== Taker Executed Order #2 - BuyAny NFTA:* for 1.23456e === ");
     const takerExecuteOrder2Tx = await nix.connect(taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("1.23456"));
     await printEvents("Taker Executed", await takerExecuteOrder2Tx.wait());
     console.log();
