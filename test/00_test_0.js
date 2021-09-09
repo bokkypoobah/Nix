@@ -71,6 +71,7 @@ describe("Nix", function () {
         console.log("      + " + getShortAccountName(log.address) + " " + JSON.stringify(log.topics));
       }
     });
+    console.log();
   }
 
   function padLeft(s, n) {
@@ -91,7 +92,7 @@ describe("Nix", function () {
   async function printState(prefix) {
     if (nftA != null) {
       const totalSupply = await nftA.totalSupply();
-      console.log("      --- " + prefix + " - ERC721 '" + await nftA.name() + "' '" + await nftA.symbol() + "' " + totalSupply + " ---");
+      console.log("      --- " + prefix + " ---");
       const owners = {};
       for (let i = 0; i < totalSupply; i++) {
         const ownerOf = await nftA.ownerOf(i);
@@ -100,7 +101,7 @@ describe("Nix", function () {
         }
         owners[ownerOf].push(i);
       }
-      console.log("        Owner                            WETH NFTA");
+      console.log("        Owner                            WETH " + await nftA.symbol() + " (totalSupply: " + totalSupply + ")");
       console.log("        ---------------- -------------------- -------------------------");
       var checkAccounts = [owner, maker0, maker1, taker0, taker1];
       for (let i = 0; i < checkAccounts.length; i++) {
@@ -108,13 +109,14 @@ describe("Nix", function () {
         const wethBalance = weth == null ? 0 : await weth.balanceOf(checkAccounts[i]);
         console.log("        " + padRight(getShortAccountName(checkAccounts[i]), 16) + " " + padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
       }
+      console.log();
     }
 
     if (nix != null) {
       const ordersLength = await nix.ordersLength();
       if (ordersLength > 0) {
-        console.log("           # Maker         Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds");
-        console.log("         --- ------------- ------------ --------------------------------- --------------- ------------------------ ------------ ---------- -----------------------");
+        console.log("          # Maker         Taker        Token                        WETH OrderType       Expiry                   Order Status Key        TokenIds");
+        console.log("        --- ------------- ------------ --------------------------------- --------------- ------------------------ ------------ ---------- -----------------------");
         for (let i = 0; i < ordersLength; i++) {
           const order = await nix.getOrderByIndex(i);
           const maker = order[0][0];
@@ -127,7 +129,7 @@ describe("Nix", function () {
           const expiryString = expiry == 0 ? "(none)" : new Date(expiry * 1000).toISOString();
           const orderStatus = order[0][7];
           const orderKey = order[1];
-          console.log("           " + padLeft(i, 3) + " " + padRight(getShortAccountName(maker), 12) + " " +
+          console.log("          " + padLeft(i, 3) + " " + padRight(getShortAccountName(maker), 12) + " " +
             padRight(getShortAccountName(taker), 12) + " " + padRight(getShortAccountName(token), 12) + " " +
             padLeft(ethers.utils.formatEther(weth), 20) + " " + padRight(orderTypes[orderType], 15) + " " +
             padRight(expiryString, 24) + " " +
@@ -136,6 +138,7 @@ describe("Nix", function () {
             JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
         }
       }
+      console.log();
     }
   }
 
@@ -143,8 +146,7 @@ describe("Nix", function () {
   before(async function () {
     [owner, maker0, maker1, taker0, taker1] = await web3.eth.getAccounts();
     [ownerSigner, maker0Signer, maker1Signer, taker0Signer, taker1Signer] = await ethers.getSigners();
-
-    console.log("    --- Setup Accounts ---");
+    console.log("    ==== Setup Accounts, WETH, NFT and Nix Contracts === ");
     addAccount("0x0000000000000000000000000000000000000000", "null");
     addAccount(owner, "owner");
     addAccount(maker0, "maker0");
@@ -230,34 +232,23 @@ describe("Nix", function () {
 
 
   it("1. BuyAny Test", async function () {
-
-    console.log("    ==== Maker Added Order #0 - BuyAny NFTA:{3|4|5} for 12.3456e === ");
+    console.log("    ==== Maker Add Orders === ");
     const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("12.3456"), ORDERTYPE_BUYANY, 0);
-    await printEvents("Maker Added Order", await makerAddOrder1Tx.wait());
-    console.log();
-
-    console.log("    ==== Maker Added Order #1 - BuyAny NFTA:* for 1.23456e === ");
+    await printEvents("Maker Added Order #0 - BuyAny NFTA:{3|4|5} for 12.3456e", await makerAddOrder1Tx.wait());
     const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
     const makerAddOrder2Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ ], ethers.utils.parseEther("1.23456"), ORDERTYPE_BUYANY, expiry2);
-    console.log();
-    await printEvents("Maker Added Order", await makerAddOrder2Tx.wait());
-    console.log();
+    await printEvents("Maker Added Order #1 - BuyAny NFTA:* for 1.23456e", await makerAddOrder2Tx.wait());
     await printState("After Maker Added Orders");
-    console.log();
 
-    console.log("    ==== Taker Executed Order #1 - BuyAny NFTA:{3|4|5} for 12.3456e === ");
+    console.log("    ==== Taker Executed Order #1 - Buy #3 from BuyAny NFTA:{3|4|5} for 12.3456e === ");
     const takerExecuteOrder1Tx = await nix.connect(taker0Signer).takerExecuteOrder(0, [ 3 ], ethers.utils.parseEther("12.3456"));
     await printEvents("Taker Executed", await takerExecuteOrder1Tx.wait());
-    console.log();
     await printState("After Taker Executed Order #1");
-    console.log();
 
-    console.log("    ==== Taker Executed Order #2 - BuyAny NFTA:* for 1.23456e === ");
+    console.log("    ==== Taker Executed Order #2 - Buy #4 from BuyAny NFTA:* for 1.23456e === ");
     const takerExecuteOrder2Tx = await nix.connect(taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("1.23456"));
     await printEvents("Taker Executed", await takerExecuteOrder2Tx.wait());
-    console.log();
     await printState("After Taker Executed Order #2");
-    console.log();
   });
 });
 
