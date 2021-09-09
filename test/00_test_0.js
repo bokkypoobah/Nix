@@ -115,7 +115,7 @@ describe("Nix", function () {
     if (nix != null) {
       const ordersLength = await nix.ordersLength();
       if (ordersLength > 0) {
-        console.log("          # Maker         Taker        Token                        WETH OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds");
+        console.log("          # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds");
         console.log("        --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------");
         for (let i = 0; i < ordersLength; i++) {
           const order = await nix.getOrderByIndex(i);
