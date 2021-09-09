@@ -176,9 +176,9 @@ contract Nix {
         require(order.weth == _weth, "Order weth unexpected");
 
         if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
-            require(weth.transferFrom(msg.sender, order.maker, _weth), "transferFrom failure");
-        } else {
             require(weth.transferFrom(order.maker, msg.sender, _weth), "transferFrom failure");
+        } else {
+            require(weth.transferFrom(msg.sender, order.maker, _weth), "transferFrom failure");
         }
         if (order.orderType == OrderType.BuyAny) {
             bool found = false;
