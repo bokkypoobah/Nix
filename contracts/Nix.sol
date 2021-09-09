@@ -45,7 +45,7 @@ contract Nix {
 
         address token;
         uint[] tokenIds;
-        uint weth;
+        uint wethAmount;
 
         OrderType orderType;
         uint64 expiry;
@@ -67,7 +67,7 @@ contract Nix {
         address taker,
         address token,
         uint[] memory tokenIds,
-        uint _weth,
+        uint _wethAmount,
         OrderType orderType,
         uint64 expiry,
         uint64 tradeMax
@@ -87,7 +87,7 @@ contract Nix {
         order.taker = taker;
         order.token = token;
         order.tokenIds = tokenIds;
-        order.weth = _weth;
+        order.wethAmount = _wethAmount;
         order.orderType = orderType;
         order.expiry = expiry;
         order.tradeMax = tradeMax;
@@ -104,12 +104,13 @@ contract Nix {
     }
 
     event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateOrder(uint orderIndex, uint _weth, uint64 expiry, int64 tradeMaxAdjustment) public {
+    function makerUpdateOrder(uint orderIndex, uint _wethAmount, uint64 expiry, int64 tradeMaxAdjustment) public {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Only maker can update");
-        order.weth = _weth;
+        order.wethAmount = _wethAmount;
         order.expiry = expiry;
+        // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
         if (tradeMaxAdjustment < 0) {
             uint64 subtract = uint64(-tradeMaxAdjustment);
             if (subtract > (order.tradeMax - order.tradeCount)) {
@@ -124,52 +125,56 @@ contract Nix {
     }
 
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    function takerExecuteOrder(uint orderIndex, uint tokenId, uint _weth) public {
+    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint _wethAmount) public {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
         require(order.taker == address(0) || order.taker == msg.sender, "Not the specified taker");
         require(order.expiry == 0 || order.expiry >= block.timestamp, "Order expired");
-        require(order.weth == _weth, "Order weth unexpected");
+        require(order.wethAmount == _wethAmount, "Order weth unexpected");
         require(order.tradeCount < order.tradeMax, "Max trades already executed");
 
         if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
-            require(weth.transferFrom(order.maker, msg.sender, _weth), "transferFrom failure");
+            require(weth.transferFrom(order.maker, msg.sender, _wethAmount), "transferFrom failure");
         } else {
-            require(weth.transferFrom(msg.sender, order.maker, _weth), "transferFrom failure");
+            require(weth.transferFrom(msg.sender, order.maker, _wethAmount), "transferFrom failure");
         }
         if (order.orderType == OrderType.BuyAny) {
+            // TODO: Array of tokenIds
             bool found = false;
             if (order.tokenIds.length == 0) {
                 found = true;
             } else {
                 for (uint i = 0; i < order.tokenIds.length && !found; i++) {
-                    if (tokenId == order.tokenIds[i]) {
+                    if (tokenIds[0] == order.tokenIds[i]) {
                         found = true;
                     }
                 }
             }
             require(found, "tokenId invalid");
-            IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenId);
+            IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[0]);
         } else if (order.orderType == OrderType.SellAny) {
+            // TODO: Array of tokenIds
             bool found = false;
             if (order.tokenIds.length == 0) {
                 found = true;
             } else {
                 for (uint i = 0; i < order.tokenIds.length && !found; i++) {
-                    if (tokenId == order.tokenIds[i]) {
+                    if (tokenIds[0] == order.tokenIds[i]) {
                         found = true;
                     }
                 }
             }
             require(found, "tokenId invalid");
-            IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenId);
+            IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[0]);
         } else if (order.orderType == OrderType.BuyAll) {
             for (uint i = 0; i < order.tokenIds.length; i++) {
+                require(tokenIds[i] == order.tokenIds[i], "TokenId mismatch");
                 IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
             }
         } else { // SellAll
             for (uint i = 0; i < order.tokenIds.length; i++) {
+                require(tokenIds[i] == order.tokenIds[i], "TokenId mismatch");
                 IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
             }
         }
@@ -194,11 +199,11 @@ contract Nix {
         }
         if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
             uint wethBalance = weth.balanceOf(order.maker);
-            if (wethBalance < order.weth) {
+            if (wethBalance < order.wethAmount) {
                 return uint(OrderStatus.MakerHasUnsufficientWeth);
             }
             uint wethAllowance = weth.allowance(order.maker, address(this));
-            if (wethAllowance < order.weth) {
+            if (wethAllowance < order.wethAmount) {
                 return uint(OrderStatus.MakerHasUnsufficientWethAllowance);
             }
         } else {
