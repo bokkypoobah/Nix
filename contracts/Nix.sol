@@ -302,23 +302,23 @@ contract Nix {
         tokenIds = new uint[][](orderIndices.length);
         prices = new uint[](orderIndices.length);
         data = new uint64[5][](orderIndices.length);
-        // orderStatuses = new uint[](orderIndices.length);
         for (uint i = 0; i < orderIndices.length; i++) {
             uint orderIndex = orderIndices[i];
-            bytes32 orderKey = ordersIndex[orderIndex];
-            Order memory order = orders[orderKey];
-            orderKeys[i] = orderKey;
-            makers[i] = order.maker;
-            takers[i] = order.taker;
-            tokens[i] = order.token;
-            tokenIds[i] = order.tokenIds;
-            prices[i] = order.price;
-            data[i][0] = uint64(order.orderType);
-            data[i][1] = uint64(order.expiry);
-            data[i][2] = uint64(order.tradeCount);
-            data[i][3] = uint64(order.tradeMax);
-            data[i][4] = uint64(orderStatus(i));
-            // orderStatuses[i] = uint(orderStatus(i));
+            if (orderIndex < ordersIndex.length) {
+                bytes32 orderKey = ordersIndex[orderIndex];
+                Order memory order = orders[orderKey];
+                orderKeys[i] = orderKey;
+                makers[i] = order.maker;
+                takers[i] = order.taker;
+                tokens[i] = order.token;
+                tokenIds[i] = order.tokenIds;
+                prices[i] = order.price;
+                data[i][0] = uint64(order.orderType);
+                data[i][1] = uint64(order.expiry);
+                data[i][2] = uint64(order.tradeCount);
+                data[i][3] = uint64(order.tradeMax);
+                data[i][4] = uint64(orderStatus(i));
+            }
         }
     }
 }
