@@ -125,7 +125,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         OrderType orderType,
         uint64 expiry,
         uint64 tradeMax
-    ) external payable checkForTip {
+    ) external payable reentrancyGuard checkForTip {
         bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, orderType, expiry));
         require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
         require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
@@ -165,7 +165,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
 
     event MakerTokenIdsUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds) external payable {
+    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds) external payable checkForTip {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Only maker can update");
@@ -195,7 +195,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
 
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice) external payable checkForTip {
+    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice) external payable reentrancyGuard checkForTip {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
@@ -366,13 +366,18 @@ contract Nix is Owned, ERC721TokenReceiver {
         }
     }
 
+
     uint256 private _status;
-    event ThankYou(uint tip);
-    modifier checkForTip() {
+    modifier reentrancyGuard() {
         require(_status != 1, "Reentrancy attempted");
         _status = 1;
         _;
         _status = 2;
+    }
+
+    event ThankYou(uint tip);
+    modifier checkForTip() {
+        _;
         if (msg.value > 0) {
             emit ThankYou(msg.value);
         }
