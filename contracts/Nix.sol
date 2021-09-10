@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 // ----------------------------------------------------------------------------
 // Nix v0.9.0
@@ -23,6 +23,7 @@ import "hardhat/console.sol";
 interface IERC20Partial {
     function balanceOf(address tokenOwner) external view returns (uint balance);
     function allowance(address tokenOwner, address spender) external view returns (uint remaining);
+    function transfer(address to, uint tokens) external returns (bool success);
     function transferFrom(address from, address to, uint tokens) external returns (bool success);
 }
 
@@ -37,8 +38,51 @@ interface IERC721Partial is IERC165 {
     function safeTransferFrom(address _from, address _to, uint256 _tokenId) external payable;
 }
 
+interface ERC721TokenReceiver {
+    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data) external returns(bytes4);
+}
 
-contract Nix {
+/// @notice Ownership
+contract Owned {
+    address public owner;
+    address public newOwner;
+
+    event OwnershipTransferred(address indexed _from, address indexed _to);
+
+    modifier onlyOwner {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+    function transferOwnership(address _newOwner) public onlyOwner {
+        newOwner = _newOwner;
+    }
+    function acceptOwnership() public {
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+        newOwner = address(0);
+    }
+
+    event TipsWithdrawn(address indexed token, uint tokens, uint tokenId);
+    function withdrawTips(address token, uint tokens, uint tokenId) public onlyOwner {
+        if (tokenId == 0) {
+            if (token == address(0)) {
+                payable(owner).transfer((tokens == 0 ? address(this).balance : tokens));
+            } else {
+                IERC20Partial(token).transfer(owner, tokens == 0 ? IERC20Partial(token).balanceOf(address(this)) : tokens);
+            }
+        } else {
+            IERC721Partial(token).safeTransferFrom(address(this), owner, tokenId);
+        }
+        emit TipsWithdrawn(address(token), tokens, tokenId);
+    }
+}
+
+
+contract Nix is Owned, ERC721TokenReceiver {
 
     enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
 
@@ -68,6 +112,10 @@ contract Nix {
         weth = _weth;
     }
 
+    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data) external override returns(bytes4) {
+
+    }
+
     event MakerOrderAdded(bytes32 orderKey, uint orderIndex);
     function makerAddOrder(
         address taker,
@@ -77,7 +125,7 @@ contract Nix {
         OrderType orderType,
         uint64 expiry,
         uint64 tradeMax
-    ) public {
+    ) external payable checkForTip {
         bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, orderType, expiry));
         require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
         require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
@@ -102,10 +150,10 @@ contract Nix {
         order.taker = taker;
         order.token = token;
 
-        try IERC721Partial(order.token).supportsInterface(ERC721INTERFACE) returns (bool b) {
-            console.log("Result %s", b);
+        try IERC721Partial(order.token).supportsInterface(ERC721INTERFACE) returns (bool /*b*/) {
+            // console.log("Result %s", b);
         } catch {
-            console.log("ERROR ");
+            // console.log("ERROR ");
         }
 
         order.tokenIds = tokenIds;
@@ -117,7 +165,7 @@ contract Nix {
     }
 
     event MakerTokenIdsUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds) public {
+    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds) external payable {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Only maker can update");
@@ -126,7 +174,7 @@ contract Nix {
     }
 
     event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment) public {
+    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment) external payable checkForTip {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Only maker can update");
@@ -147,7 +195,7 @@ contract Nix {
     }
 
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice) public {
+    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice) external payable checkForTip {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Cannot execute against own order");
@@ -316,5 +364,20 @@ contract Nix {
                 data[i][4] = uint64(orderStatus(i));
             }
         }
+    }
+
+    uint256 private _status;
+    event ThankYou(uint tip);
+    modifier checkForTip() {
+        require(_status != 1, "Reentrancy attempted");
+        _status = 1;
+        _;
+        _status = 2;
+        if (msg.value > 0) {
+            emit ThankYou(msg.value);
+        }
+    }
+
+    receive() external payable checkForTip {
     }
 }
