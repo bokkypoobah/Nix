@@ -117,24 +117,28 @@ describe("Nix", function () {
       if (ordersLength > 0) {
         console.log("          # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds");
         console.log("        --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------");
+        const orderIndices = [];
         for (let i = 0; i < ordersLength; i++) {
-          const order = await nix.getOrderByIndex(i);
-          // console.log(order);
-          const maker = order[0][0];
-          const taker = order[0][1];
-          const token = order[0][2];
-          const tokenIds = order[0][3];
-          const weth = order[0][4];
-          const orderType = order[0][5];
-          const expiry = order[0][6];
+          orderIndices.push(i);
+        }
+        const orders = await nix.getOrders(orderIndices);
+        for (let i = 0; i < ordersLength; i++) {
+          const orderKey = orders[0][i];
+          const maker = orders[1][i];
+          const taker = orders[2][i];
+          const token = orders[3][i];
+          const tokenIds = orders[4][i];
+          const price = orders[5][i];
+          const data = orders[6][i];
+          const orderType = data[0];
+          const expiry = data[1];
           const expiryString = expiry == 0 ? "(none)" : new Date(expiry * 1000).toISOString();
-          const tradeCount = order[0][7];
-          const tradeMax = order[0][8];
-          const orderKey = order[1];
-          const orderStatus = order[2];
+          const tradeCount = data[2];
+          const tradeMax = data[3];
+          const orderStatus = data[4];
           console.log("          " + padLeft(i, 3) + " " + padRight(getShortAccountName(maker), 12) + " " +
             padRight(getShortAccountName(taker), 12) + " " + padRight(getShortAccountName(token), 12) + " " +
-            padLeft(ethers.utils.formatEther(weth), 20) + " " + padRight(orderTypes[orderType], 15) + " " +
+            padLeft(ethers.utils.formatEther(price), 20) + " " + padRight(orderTypes[orderType], 15) + " " +
             padRight(expiryString, 24) + " " +
             padLeft(tradeCount.toString(), 8) + " " +
             padLeft(tradeMax.toString(), 8) + " " +
@@ -142,15 +146,32 @@ describe("Nix", function () {
             orderKey.substring(0, 10) + " " +
             JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
         }
-
-        console.log();
-        const orderIndices = [];
-        for (let i = 0; i < ordersLength; i++) {
-          orderIndices.push(i);
-        }
-        console.log("orderIndices: " + JSON.stringify(orderIndices));
-        const orders = await nix.getOrders(orderIndices);
-        console.log("orders: " + JSON.stringify(orders.map((x) => { return x.toString(); })));
+        // for (let i = 0; i < ordersLength; i++) {
+        //   const order = await nix.getOrderByIndex(i);
+        //   // console.log(order);
+        //   const maker = order[0][0];
+        //   const taker = order[0][1];
+        //   const token = order[0][2];
+        //   const tokenIds = order[0][3];
+        //   const price = order[0][4];
+        //   const orderType = order[0][5];
+        //   const expiry = order[0][6];
+        //   const expiryString = expiry == 0 ? "(none)" : new Date(expiry * 1000).toISOString();
+        //   const tradeCount = order[0][7];
+        //   const tradeMax = order[0][8];
+        //   const orderKey = order[1];
+        //   const orderStatus = order[2];
+        //   console.log("          " + padLeft(i, 3) + " " + padRight(getShortAccountName(maker), 12) + " " +
+        //     padRight(getShortAccountName(taker), 12) + " " + padRight(getShortAccountName(token), 12) + " " +
+        //     padLeft(ethers.utils.formatEther(price), 20) + " " + padRight(orderTypes[orderType], 15) + " " +
+        //     padRight(expiryString, 24) + " " +
+        //     padLeft(tradeCount.toString(), 8) + " " +
+        //     padLeft(tradeMax.toString(), 8) + " " +
+        //     padLeft(orderStatus.toString(), 8) + " " +
+        //     orderKey.substring(0, 10) + " " +
+        //     JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
+        // }
+        // console.log();
       }
       console.log();
     }

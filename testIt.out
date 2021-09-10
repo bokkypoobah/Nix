@@ -1,5 +1,3 @@
-Compiling 1 file with 0.8.4
-Compilation finished successfully
 
 
   Nix
@@ -23,7 +21,7 @@ Result true
 
 Result true
       > Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e - gasUsed: 157863
-        + Nix:0x0DCd 26.0 MakerOrderAdded(orderKey: 0x100338f8dd99e68178c22d3c66b0ffb3fe5060675a59c8a5024fc91356286899, orderIndex: 1)
+        + Nix:0x0DCd 26.0 MakerOrderAdded(orderKey: 0x05ccadd106298b3af1d3ad273101f77aadc184c3ea15f1d26c8d8b6087511ae1, orderIndex: 1)
 
       --- After Maker Added Orders ---
         Owner                            WETH NFTA (totalSupply: 6)
@@ -37,10 +35,7 @@ Result true
           # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0x0165                  11.0 BuyAny          (none)                          0        2        0 0x8944d477 [3,4,5]
-          1 maker0:0x7099 null:0x0000  NFTA:0x0165                0.0011 BuyAny          2021-09-11T02:48:08.000Z        0        2        0 0x100338f8 []
-
-orderIndices: [0,1]
-orders: ["0x8944d4772f9ee680ced2152629aab344dfcda36f8f874872bf23416adf0f53ad,0x100338f8dd99e68178c22d3c66b0ffb3fe5060675a59c8a5024fc91356286899","0x70997970C51812dc3A010C7d01b50e0d17dc79C8,0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000","0x0165878A594ca255338adfa4d48449f69242Eb8F,0x0165878A594ca255338adfa4d48449f69242Eb8F","3,4,5,","11000000000000000000,1100000000000000","0,0,0,2,0,0,1631328488,0,2,0"]
+          1 maker0:0x7099 null:0x0000  NFTA:0x0165                0.0011 BuyAny          2021-09-11T06:27:10.000Z        0        2        0 0x05ccadd1 []
 
     ==== Taker Execute Against Orders === 
       > Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e - gasUsed: 186215
@@ -55,7 +50,7 @@ orders: ["0x8944d4772f9ee680ced2152629aab344dfcda36f8f874872bf23416adf0f53ad,0x1
         + WETH:0xe7f1 28.0 Transfer(from: maker0:0x7099, to: taker0:0x90F7, tokens: 0.0011)
         + NFTA:0x0165 28.1 Approval(owner: taker0:0x90F7, approved: null:0x0000, tokenId: 4)
         + NFTA:0x0165 28.2 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokenId: 4)
-        + Nix:0x0DCd 28.3 TakerOrderExecuted(orderKey: 0x100338f8dd99e68178c22d3c66b0ffb3fe5060675a59c8a5024fc91356286899, orderIndex: 1)
+        + Nix:0x0DCd 28.3 TakerOrderExecuted(orderKey: 0x05ccadd106298b3af1d3ad273101f77aadc184c3ea15f1d26c8d8b6087511ae1, orderIndex: 1)
 
       --- After Taker Executed Orders ---
         Owner                            WETH NFTA (totalSupply: 6)
@@ -69,12 +64,9 @@ orders: ["0x8944d4772f9ee680ced2152629aab344dfcda36f8f874872bf23416adf0f53ad,0x1
           # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0x0165                  11.0 BuyAny          (none)                          1        2        0 0x8944d477 [3,4,5]
-          1 maker0:0x7099 null:0x0000  NFTA:0x0165                0.0011 BuyAny          2021-09-11T02:48:08.000Z        1        2        0 0x100338f8 []
+          1 maker0:0x7099 null:0x0000  NFTA:0x0165                0.0011 BuyAny          2021-09-11T06:27:10.000Z        1        2        0 0x05ccadd1 []
 
-orderIndices: [0,1]
-orders: ["0x8944d4772f9ee680ced2152629aab344dfcda36f8f874872bf23416adf0f53ad,0x100338f8dd99e68178c22d3c66b0ffb3fe5060675a59c8a5024fc91356286899","0x70997970C51812dc3A010C7d01b50e0d17dc79C8,0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000","0x0165878A594ca255338adfa4d48449f69242Eb8F,0x0165878A594ca255338adfa4d48449f69242Eb8F","3,4,5,","11000000000000000000,1100000000000000","0,0,1,2,0,0,1631328488,1,2,0"]
-
-    ✓ 0. Maker BuyAny Test (452ms)
+    ✓ 0. Maker BuyAny Test (342ms)
 
 
     ==== Setup Accounts, WETH, NFT and Nix Contracts === 
@@ -95,7 +87,7 @@ Result true
 
 Result true
       > Maker Added Order #1 - SellAny NFTA:* for 1.23456e - gasUsed: 157875
-        + Nix:0x0963 52.0 MakerOrderAdded(orderKey: 0x98ec8985b7461aeaabf9720c043016db65c81617fed99e8f19e47c904c718757, orderIndex: 1)
+        + Nix:0x0963 52.0 MakerOrderAdded(orderKey: 0xc11c5403b26173ed7eda4119822293228d27290f3d1e195259dcda212b1b2623, orderIndex: 1)
 
       --- After Maker Added Orders ---
         Owner                            WETH NFTA (totalSupply: 6)
@@ -109,10 +101,7 @@ Result true
           # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0xc6e7               12.3456 SellAny         (none)                          0        1        0 0x857533f9 [0,1,2]
-          1 maker0:0x7099 null:0x0000  NFTA:0xc6e7               1.23456 SellAny         2021-09-11T02:48:09.000Z        0        1        0 0x98ec8985 []
-
-orderIndices: [0,1]
-orders: ["0x857533f9e7c0e831afd6b4816f2ecc5706ea435721c1640df88e8e19c2a8d4c7,0x98ec8985b7461aeaabf9720c043016db65c81617fed99e8f19e47c904c718757","0x70997970C51812dc3A010C7d01b50e0d17dc79C8,0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000","0xc6e7DF5E7b4f2A278906862b61205850344D4e7d,0xc6e7DF5E7b4f2A278906862b61205850344D4e7d","0,1,2,","12345600000000000000,1234560000000000000","1,0,0,1,0,1,1631328489,0,1,0"]
+          1 maker0:0x7099 null:0x0000  NFTA:0xc6e7               1.23456 SellAny         2021-09-11T06:27:11.000Z        0        1        0 0xc11c5403 []
 
     ==== Taker Execute Against Orders === 
       > Taker Bought #1 against SellAny NFTA:{0|1|2} for 12.3456e - gasUsed: 140411
@@ -125,7 +114,7 @@ orders: ["0x857533f9e7c0e831afd6b4816f2ecc5706ea435721c1640df88e8e19c2a8d4c7,0x9
         + WETH:0x0B30 54.0 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokens: 1.23456)
         + NFTA:0xc6e7 54.1 Approval(owner: maker0:0x7099, approved: null:0x0000, tokenId: 2)
         + NFTA:0xc6e7 54.2 Transfer(from: maker0:0x7099, to: taker0:0x90F7, tokenId: 2)
-        + Nix:0x0963 54.3 TakerOrderExecuted(orderKey: 0x98ec8985b7461aeaabf9720c043016db65c81617fed99e8f19e47c904c718757, orderIndex: 1)
+        + Nix:0x0963 54.3 TakerOrderExecuted(orderKey: 0xc11c5403b26173ed7eda4119822293228d27290f3d1e195259dcda212b1b2623, orderIndex: 1)
 
       --- After Taker Executed Orders ---
         Owner                            WETH NFTA (totalSupply: 6)
@@ -139,12 +128,9 @@ orders: ["0x857533f9e7c0e831afd6b4816f2ecc5706ea435721c1640df88e8e19c2a8d4c7,0x9
           # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0xc6e7               12.3456 SellAny         (none)                          1        1        2 0x857533f9 [0,1,2]
-          1 maker0:0x7099 null:0x0000  NFTA:0xc6e7               1.23456 SellAny         2021-09-11T02:48:09.000Z        1        1        2 0x98ec8985 []
+          1 maker0:0x7099 null:0x0000  NFTA:0xc6e7               1.23456 SellAny         2021-09-11T06:27:11.000Z        1        1        2 0xc11c5403 []
 
-orderIndices: [0,1]
-orders: ["0x857533f9e7c0e831afd6b4816f2ecc5706ea435721c1640df88e8e19c2a8d4c7,0x98ec8985b7461aeaabf9720c043016db65c81617fed99e8f19e47c904c718757","0x70997970C51812dc3A010C7d01b50e0d17dc79C8,0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000","0xc6e7DF5E7b4f2A278906862b61205850344D4e7d,0xc6e7DF5E7b4f2A278906862b61205850344D4e7d","0,1,2,","12345600000000000000,1234560000000000000","1,0,1,1,2,1,1631328489,1,1,2"]
-
-    ✓ 1. Maker SellAny Test (256ms)
+    ✓ 1. Maker SellAny Test (221ms)
 
 
     ==== Setup Accounts, WETH, NFT and Nix Contracts === 
@@ -176,9 +162,6 @@ Result true
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0xa82f               12.3456 BuyAll          (none)                          0        1        0 0xe48048bf [3,4,5]
 
-orderIndices: [0]
-orders: ["0xe48048bf19c02ce650d32cedb55ab29d2f1c888dff48155ad8cf2e950bf8cb4b","0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000","0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9","3,4,5","12345600000000000000","2,0,0,1,0"]
-
     ==== Taker Execute Against Orders === 
       > Taker Sold #3,#4&#5 against BuyAll NFTA:{3&4&5} for 12.3456e - gasUsed: 211753
         + WETH:0x67d2 78.0 Transfer(from: maker0:0x7099, to: taker0:0x90F7, tokens: 12.3456)
@@ -203,10 +186,7 @@ orders: ["0xe48048bf19c02ce650d32cedb55ab29d2f1c888dff48155ad8cf2e950bf8cb4b","0
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0xa82f               12.3456 BuyAll          (none)                          1        1        2 0xe48048bf [3,4,5]
 
-orderIndices: [0]
-orders: ["0xe48048bf19c02ce650d32cedb55ab29d2f1c888dff48155ad8cf2e950bf8cb4b","0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000","0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9","3,4,5","12345600000000000000","2,0,1,1,2"]
-
-    ✓ 2. Maker BuyAll Test (160ms)
+    ✓ 2. Maker BuyAll Test (187ms)
 
 
     ==== Setup Accounts, WETH, NFT and Nix Contracts === 
@@ -238,9 +218,6 @@ Result true
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0x809d               12.3456 SellAll         (none)                          0        1        0 0xc34fbf76 [0,1,2]
 
-orderIndices: [0]
-orders: ["0xc34fbf76972f42809d5e33c1fc6b7f8815d3da7d61d1df48cf16412d04fb0009","0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000","0x809d550fca64d94Bd9F66E60752A544199cfAC3D","0,1,2","12345600000000000000","3,0,0,1,0"]
-
     ==== Taker Execute Against Orders === 
       > Taker Bought #0,#1&#2 against SellAll NFTA:{0&1&2} for 12.3456e - gasUsed: 201531
         + WETH:0x0E80 102.0 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokens: 12.3456)
@@ -265,11 +242,8 @@ orders: ["0xc34fbf76972f42809d5e33c1fc6b7f8815d3da7d61d1df48cf16412d04fb0009","0
         --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
           0 maker0:0x7099 null:0x0000  NFTA:0x809d               12.3456 SellAll         (none)                          1        1        2 0xc34fbf76 [0,1,2]
 
-orderIndices: [0]
-orders: ["0xc34fbf76972f42809d5e33c1fc6b7f8815d3da7d61d1df48cf16412d04fb0009","0x70997970C51812dc3A010C7d01b50e0d17dc79C8","0x0000000000000000000000000000000000000000","0x809d550fca64d94Bd9F66E60752A544199cfAC3D","0,1,2","12345600000000000000","3,0,1,1,2"]
-
-    ✓ 3. Maker SellAll Test (199ms)
+    ✓ 3. Maker SellAll Test (153ms)
 
 
-  4 passing (4s)
+  4 passing (5s)
 
