@@ -282,4 +282,56 @@ contract Nix {
     function getOrderByIndex(uint i) public view returns (Order memory order, bytes32 orderKey, uint _orderStatus) {
         return (orders[ordersIndex[i]], ordersIndex[i], uint(orderStatus(i)));
     }
+
+    function getOrders(
+        uint[] memory orderIndices
+    ) public view returns (
+        bytes32[] memory orderKeys,
+        address[] memory makers,
+        address[] memory takers,
+        address[] memory tokens,
+        uint[][] memory tokenIds,
+        uint[] memory prices,
+        uint64[5][] memory data //,
+        // uint[] memory orderStatuses
+    ) {
+        orderKeys = new bytes32[](orderIndices.length);
+        makers = new address[](orderIndices.length);
+        takers = new address[](orderIndices.length);
+        tokens = new address[](orderIndices.length);
+        tokenIds = new uint[][](orderIndices.length);
+        prices = new uint[](orderIndices.length);
+        data = new uint64[5][](orderIndices.length);
+        // orderStatuses = new uint[](orderIndices.length);
+        for (uint i = 0; i < orderIndices.length; i++) {
+            uint orderIndex = orderIndices[i];
+            bytes32 orderKey = ordersIndex[orderIndex];
+            Order memory order = orders[orderKey];
+            orderKeys[i] = orderKey;
+            makers[i] = order.maker;
+            takers[i] = order.taker;
+            tokens[i] = order.token;
+            tokenIds[i] = order.tokenIds;
+            prices[i] = order.price;
+            data[i][0] = uint64(order.orderType);
+            data[i][1] = uint64(order.expiry);
+            data[i][2] = uint64(order.tradeCount);
+            data[i][3] = uint64(order.tradeMax);
+            data[i][4] = uint64(orderStatus(i));
+            // orderStatuses[i] = uint(orderStatus(i));
+        }
+    }
 }
+
+// struct Order {
+//     address maker;
+//     address taker;
+//
+//     address token;
+//     uint[] tokenIds;
+//     uint price;
+//
+//     OrderType orderType;
+//     uint64 expiry;
+//     uint64 tradeCount;
+//     uint64 tradeMax;

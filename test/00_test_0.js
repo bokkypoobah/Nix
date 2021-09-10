@@ -142,6 +142,15 @@ describe("Nix", function () {
             orderKey.substring(0, 10) + " " +
             JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
         }
+
+        console.log();
+        const orderIndices = [];
+        for (let i = 0; i < ordersLength; i++) {
+          orderIndices.push(i);
+        }
+        console.log("orderIndices: " + JSON.stringify(orderIndices));
+        const orders = await nix.getOrders(orderIndices);
+        console.log("orders: " + JSON.stringify(orders.map((x) => { return x.toString(); })));
       }
       console.log();
     }
@@ -236,7 +245,7 @@ describe("Nix", function () {
     await printState("After Maker Approve Nix To Transfer");
   })
 
-  it.only("0. Maker BuyAny Test", async function () {
+  it("0. Maker BuyAny Test", async function () {
     console.log("    ==== Maker Add Orders === ");
     const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("11"), ORDERTYPE_BUYANY, 0, 2);
     await printEvents("Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e", await makerAddOrder1Tx.wait());
