@@ -146,32 +146,6 @@ describe("Nix", function () {
             orderKey.substring(0, 10) + " " +
             JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
         }
-        // for (let i = 0; i < ordersLength; i++) {
-        //   const order = await nix.getOrderByIndex(i);
-        //   // console.log(order);
-        //   const maker = order[0][0];
-        //   const taker = order[0][1];
-        //   const token = order[0][2];
-        //   const tokenIds = order[0][3];
-        //   const price = order[0][4];
-        //   const orderType = order[0][5];
-        //   const expiry = order[0][6];
-        //   const expiryString = expiry == 0 ? "(none)" : new Date(expiry * 1000).toISOString();
-        //   const tradeCount = order[0][7];
-        //   const tradeMax = order[0][8];
-        //   const orderKey = order[1];
-        //   const orderStatus = order[2];
-        //   console.log("          " + padLeft(i, 3) + " " + padRight(getShortAccountName(maker), 12) + " " +
-        //     padRight(getShortAccountName(taker), 12) + " " + padRight(getShortAccountName(token), 12) + " " +
-        //     padLeft(ethers.utils.formatEther(price), 20) + " " + padRight(orderTypes[orderType], 15) + " " +
-        //     padRight(expiryString, 24) + " " +
-        //     padLeft(tradeCount.toString(), 8) + " " +
-        //     padLeft(tradeMax.toString(), 8) + " " +
-        //     padLeft(orderStatus.toString(), 8) + " " +
-        //     orderKey.substring(0, 10) + " " +
-        //     JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
-        // }
-        // console.log();
       }
       console.log();
     }

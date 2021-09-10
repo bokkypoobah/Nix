@@ -279,9 +279,6 @@ contract Nix {
         }
         return uint(OrderStatus.Executable);
     }
-    function getOrderByIndex(uint i) public view returns (Order memory order, bytes32 orderKey, uint _orderStatus) {
-        return (orders[ordersIndex[i]], ordersIndex[i], uint(orderStatus(i)));
-    }
 
     function getOrders(
         uint[] memory orderIndices
@@ -292,8 +289,7 @@ contract Nix {
         address[] memory tokens,
         uint[][] memory tokenIds,
         uint[] memory prices,
-        uint64[5][] memory data //,
-        // uint[] memory orderStatuses
+        uint64[5][] memory data
     ) {
         orderKeys = new bytes32[](orderIndices.length);
         makers = new address[](orderIndices.length);
@@ -322,16 +318,3 @@ contract Nix {
         }
     }
 }
-
-// struct Order {
-//     address maker;
-//     address taker;
-//
-//     address token;
-//     uint[] tokenIds;
-//     uint price;
-//
-//     OrderType orderType;
-//     uint64 expiry;
-//     uint64 tradeCount;
-//     uint64 tradeMax;
