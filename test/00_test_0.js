@@ -150,20 +150,34 @@ describe("Nix", function () {
     await data.printEvents("Taker Bought #0,#1&#2 against SellAll NFTA:{0&1&2} for 12.3456e" , await takerExecuteOrder1Tx.wait());
     await data.printState("After Taker Executed Orders");
 
+    console.log("        --- Send Nix ETH Tip ---");
+    const sendNixTip0Tx = await data.deployerSigner.sendTransaction({ to: data.nix.address, value: ethers.utils.parseEther("8.888") });
+    await data.printEvents("txFee Send Nix ETH Tip" , await sendNixTip0Tx.wait());
+    await data.printState("After Send Nix ETH Tip");
+
     console.log("        --- Owner Withdraw Tips ---");
     const ownerWithdrawTips0Tx = await data.nix.connect(data.deployerSigner).withdrawTips(ZERO_ADDRESS, 0, 0);
     await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawTips0Tx.wait());
     await data.printState("After Owner Withdrawn Tips");
 
+    console.log("        --- Send Nix WETH Tip ---");
+    const sendNixWETHTip0Tx = await data.weth.connect(data.taker0Signer).transfer(data.nix.address, ethers.utils.parseEther("3.33"));
+    await data.printEvents("txFee Send Nix WETH Tip" , await sendNixWETHTip0Tx.wait());
+    await data.printState("After Send Nix WETH Tip");
+
+    console.log("        --- Owner Withdraw WETH Tips ---");
+    const ownerWithdrawWETHTips0Tx = await data.nix.connect(data.deployerSigner).withdrawTips(data.weth.address, 0, 0);
+    await data.printEvents("txFee Owner Withdrawn WETH Tips" , await ownerWithdrawWETHTips0Tx.wait());
+    await data.printState("After Owner Withdrawn WETH Tips");
+
     console.log("        --- Taker0 Transfer NFTA To Nix For Donation ---");
-    console.log("data.taker0: " + data.taker0 + ", data.nix.address: " + data.nix.address + ", 3)");
     const takerTransferNFTToNixTx = await data.nftA.connect(data.taker0Signer)["safeTransferFrom(address,address,uint256)"](data.taker0, data.nix.address, 3);
     await data.printEvents("Taker0 Transfer NFTA To Nix For Donation" , await takerTransferNFTToNixTx.wait());
     await data.printState("After Taker0 Transfer NFTA To Nix For Donation");
 
     console.log("        --- Owner Withdraw NFT Tips ---");
-    const ownerWithdrawTips1Tx = await data.nix.connect(data.deployerSigner).withdrawTips(data.nftA.address, 0, 3);
-    await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawTips1Tx.wait());
+    const ownerWithdrawNFTTips1Tx = await data.nix.connect(data.deployerSigner).withdrawTips(data.nftA.address, 0, 3);
+    await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawNFTTips1Tx.wait());
     await data.printState("After Owner Withdrawn Tips");
 
   });
