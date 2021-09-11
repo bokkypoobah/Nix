@@ -127,7 +127,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         uint64 tradeMax
     ) external payable reentrancyGuard checkForTip {
         bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, orderType, expiry));
-        require(orders[_orderKey].maker == address(0), "Cannot add duplicate");
+        require(orders[_orderKey].maker == address(0), "Duplicate");
         require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
         if (orderType == OrderType.BuyAll || orderType == OrderType.SellAll) {
             require(tokenIds.length > 0, "No tokenIds specified");
@@ -168,7 +168,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds) external payable checkForTip {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
-        require(msg.sender == order.maker, "Only maker can update");
+        require(msg.sender == order.maker, "Not maker");
         order.tokenIds = tokenIds;
         emit MakerTokenIdsUpdated(orderKey, orderIndex);
     }
@@ -177,7 +177,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment) external payable checkForTip {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
-        require(msg.sender == order.maker, "Only maker can update");
+        require(msg.sender == order.maker, "Not maker");
         order.price = price;
         order.expiry = expiry;
         // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
@@ -198,15 +198,15 @@ contract Nix is Owned, ERC721TokenReceiver {
     function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice) external payable reentrancyGuard checkForTip {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
-        require(msg.sender != order.maker, "Cannot execute against own order");
-        require(order.taker == address(0) || order.taker == msg.sender, "Not the specified taker");
-        require(order.expiry == 0 || order.expiry >= block.timestamp, "Order expired");
-        require(order.tradeCount < order.tradeMax, "Max trades already executed");
-        require(tokenIds.length > 0, "At least one tokenId must be specified");
+        require(msg.sender != order.maker, "Own oeder");
+        require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
+        require(order.expiry == 0 || order.expiry >= block.timestamp, "Expired");
+        require(order.tradeCount < order.tradeMax, "Maxxed");
+        require(tokenIds.length > 0, "TokenIds");
 
         if (order.orderType == OrderType.BuyAny) {
-            require(order.price * tokenIds.length == totalPrice, "Order weth unexpected");
-            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "transferFrom failure");
+            require(order.price * tokenIds.length == totalPrice, "Weth");
+            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "Weth tx");
             for (uint i = 0; i < tokenIds.length; i++) {
                 bool found = false;
                 if (order.tokenIds.length == 0) {
@@ -218,12 +218,12 @@ contract Nix is Owned, ERC721TokenReceiver {
                         }
                     }
                 }
-                require(found, "tokenId invalid");
+                require(found, "TokenId");
                 IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[i]);
             }
         } else if (order.orderType == OrderType.SellAny) {
-            require(order.price * tokenIds.length == totalPrice, "Order weth unexpected");
-            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "transferFrom failure");
+            require(order.price * tokenIds.length == totalPrice, "Weth");
+            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "Weth tx");
             for (uint i = 0; i < tokenIds.length; i++) {
                 bool found = false;
                 if (order.tokenIds.length == 0) {
@@ -235,21 +235,21 @@ contract Nix is Owned, ERC721TokenReceiver {
                         }
                     }
                 }
-                require(found, "tokenId invalid");
+                require(found, "TokenId");
                 IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[i]);
             }
         } else if (order.orderType == OrderType.BuyAll) {
-            require(order.price == totalPrice, "Order weth unexpected");
-            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "transferFrom failure");
+            require(order.price == totalPrice, "Weth");
+            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "Weth tx");
             for (uint i = 0; i < order.tokenIds.length; i++) {
-                require(tokenIds[i] == order.tokenIds[i], "TokenId mismatch");
+                require(tokenIds[i] == order.tokenIds[i], "TokenIds");
                 IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
             }
         } else { // SellAll
-            require(order.price == totalPrice, "Order weth unexpected");
-            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "transferFrom failure");
+            require(order.price == totalPrice, "Weth");
+            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "Weth tx");
             for (uint i = 0; i < order.tokenIds.length; i++) {
-                require(tokenIds[i] == order.tokenIds[i], "TokenId mismatch");
+                require(tokenIds[i] == order.tokenIds[i], "TokenIds");
                 IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
             }
         }
@@ -263,40 +263,40 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
     enum OrderStatus { Executable, Expired, Maxxed, MakerHasUnsufficientWeth, MakerHasUnsufficientWethAllowance,
         MakerNoLongerOwnsToken, MakerHasNotApprovedNix, UnknownError }
-    function orderStatus(uint i) internal view returns (uint) {
+    function orderStatus(uint i) internal view returns (OrderStatus) {
         bytes32 orderKey = ordersIndex[i];
         Order memory order = orders[orderKey];
         if (order.expiry > 0 && order.expiry < block.timestamp) {
-            return uint(OrderStatus.Expired);
+            return OrderStatus.Expired;
         }
         if (order.tradeCount >= order.tradeMax) {
-            return uint(OrderStatus.Maxxed);
+            return OrderStatus.Maxxed;
         }
         if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
             uint wethBalance = weth.balanceOf(order.maker);
             if (wethBalance < order.price) {
-                return uint(OrderStatus.MakerHasUnsufficientWeth);
+                return OrderStatus.MakerHasUnsufficientWeth;
             }
             uint wethAllowance = weth.allowance(order.maker, address(this));
             if (wethAllowance < order.price) {
-                return uint(OrderStatus.MakerHasUnsufficientWethAllowance);
+                return OrderStatus.MakerHasUnsufficientWethAllowance;
             }
         } else {
             try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
                 if (!b) {
-                    return uint(OrderStatus.MakerHasNotApprovedNix);
+                    return OrderStatus.MakerHasNotApprovedNix;
                 }
             } catch {
-                return uint(OrderStatus.UnknownError);
+                return OrderStatus.UnknownError;
             }
             if (order.orderType == OrderType.SellAny) {
                 if (order.tokenIds.length == 0) {
                     try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
                         if (b == 0) {
-                            return uint(OrderStatus.MakerNoLongerOwnsToken);
+                            return OrderStatus.MakerNoLongerOwnsToken;
                         }
                     } catch {
-                        return uint(OrderStatus.UnknownError);
+                        return OrderStatus.UnknownError;
                     }
                 } else {
                     bool found = false;
@@ -306,26 +306,26 @@ contract Nix is Owned, ERC721TokenReceiver {
                                 found = true;
                             }
                         } catch {
-                            return uint(OrderStatus.UnknownError);
+                            return OrderStatus.UnknownError;
                         }
                     }
                     if (!found) {
-                        return uint(OrderStatus.MakerNoLongerOwnsToken);
+                        return OrderStatus.MakerNoLongerOwnsToken;
                     }
                 }
             } else { // SellAll
                 for (uint j = 0; j < order.tokenIds.length; j++) {
                     try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
                         if (a != order.maker) {
-                            return uint(OrderStatus.MakerNoLongerOwnsToken);
+                            return OrderStatus.MakerNoLongerOwnsToken;
                         }
                     } catch {
-                        return uint(OrderStatus.UnknownError);
+                        return OrderStatus.UnknownError;
                     }
                 }
             }
         }
-        return uint(OrderStatus.Executable);
+        return OrderStatus.Executable;
     }
 
     function getOrders(
@@ -369,7 +369,7 @@ contract Nix is Owned, ERC721TokenReceiver {
 
     uint256 private _status;
     modifier reentrancyGuard() {
-        require(_status != 1, "Reentrancy attempted");
+        require(_status != 1, "Reentrancy");
         _status = 1;
         _;
         _status = 2;
