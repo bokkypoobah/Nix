@@ -66,7 +66,7 @@ class Data {
   printEvents(prefix, receipt) {
     var fee = receipt.gasUsed.mul(this.gasPrice);
     var feeUsd = fee.mul(this.ethUsd).div(ethers.utils.parseUnits("1", 18)).div(ethers.utils.parseUnits("1", 18));
-    console.log("      > " + prefix + " - gasUsed: " + receipt.gasUsed + " ~ ETH " + ethers.utils.formatEther(fee) + " ~ USD " + feeUsd);
+    console.log("        > " + prefix + " - gasUsed: " + receipt.gasUsed + " ~ ETH " + ethers.utils.formatEther(fee) + " ~ USD " + feeUsd);
     receipt.logs.forEach((log) => {
       let found = false;
       for (let i = 0; i < this.contracts.length && !found; i++) {
@@ -90,16 +90,15 @@ class Data {
             separator = ", ";
           });
           result = result + ")";
-          console.log("        + " + this.getShortAccountName(log.address) + " " + log.blockNumber + "." + log.logIndex + " " + result);
+          console.log("          + " + this.getShortAccountName(log.address) + " " + log.blockNumber + "." + log.logIndex + " " + result);
           found = true;
         } catch (e) {
         }
       }
       if (!found) {
-        console.log("      + " + this.getShortAccountName(log.address) + " " + JSON.stringify(log.topics));
+        console.log("        + " + this.getShortAccountName(log.address) + " " + JSON.stringify(log.topics));
       }
     });
-    console.log();
   }
 
   padLeft(s, n) {
@@ -140,7 +139,7 @@ class Data {
   async printState(prefix) {
     if (this.nftA != null) {
       const totalSupply = await this.nftA.totalSupply();
-      console.log("      --- " + prefix + " ---");
+      console.log("        --- " + prefix + " ---");
       const owners = {};
       for (let i = 0; i < totalSupply; i++) {
         const ownerOf = await this.nftA.ownerOf(i);
@@ -149,8 +148,8 @@ class Data {
         }
         owners[ownerOf].push(i);
       }
-      console.log("        Owner                             ETH                 WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
-      console.log("        ---------------- -------------------- -------------------- -------------------------");
+      console.log("          Owner                             ETH                 WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
+      console.log("          ---------------- -------------------- -------------------- -------------------------");
       const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1];
       if (this.nix != null) {
         checkAccounts.push(this.nix.address);
@@ -159,7 +158,7 @@ class Data {
         const ownerData = owners[checkAccounts[i]] || [];
         const balance = await ethers.provider.getBalance(checkAccounts[i]);
         const wethBalance = this.weth == null ? 0 : await this.weth.balanceOf(checkAccounts[i]);
-        console.log("        " + this.padRight(this.getShortAccountName(checkAccounts[i]), 16) + " " + this.padLeft(ethers.utils.formatEther(balance), 20) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
+        console.log("          " + this.padRight(this.getShortAccountName(checkAccounts[i]), 16) + " " + this.padLeft(ethers.utils.formatEther(balance), 20) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
       }
       console.log();
     }
@@ -167,8 +166,8 @@ class Data {
     if (this.nix != null) {
       const ordersLength = await this.nix.ordersLength();
       if (ordersLength > 0) {
-        console.log("          # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds");
-        console.log("        --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------");
+        console.log("            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds");
+        console.log("          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------");
         const orderIndices = [];
         for (let i = 0; i < ordersLength; i++) {
           orderIndices.push(i);
@@ -188,7 +187,7 @@ class Data {
           const tradeCount = data[2];
           const tradeMax = data[3];
           const orderStatus = data[4];
-          console.log("        " + this.padLeft(i, 3) + " " + this.padRight(this.getShortAccountName(maker), 12) + " " +
+          console.log("          " + this.padLeft(i, 3) + " " + this.padRight(this.getShortAccountName(maker), 12) + " " +
             this.padRight(this.getShortAccountName(taker), 12) + " " + this.padRight(this.getShortAccountName(token), 12) + " " +
             this.padLeft(ethers.utils.formatEther(price), 20) + " " + this.padRight(ORDERTYPESTRING[orderType], 15) + " " +
             this.padRight(expiryString, 24) + " " +

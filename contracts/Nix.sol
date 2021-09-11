@@ -112,7 +112,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         weth = _weth;
     }
 
-    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data) external override returns(bytes4) {
+    function onERC721Received(address /*_operator*/, address /*_from*/, uint256 _tokenId, bytes memory /*_data*/) external override returns(bytes4) {
         emit ThankYou(_tokenId);
         return this.onERC721Received.selector;
     }
@@ -205,13 +205,22 @@ contract Nix is Owned, ERC721TokenReceiver {
         require(order.tradeCount < order.tradeMax, "Maxxed");
         require(tokenIds.length > 0, "TokenIds");
 
-        uint expectedTotalPrice = ((order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) ? 1 : tokenIds.length) * order.price;
-        require(expectedTotalPrice == totalPrice, "TotalPrice");
-        if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
-            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "Weth tx");
-        } else {
-            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "Weth tx");
+        address nftFrom;
+        address nftTo;
+        uint priceMultiple;
+
+        if (order.orderType == OrderType.BuyAny) {
+            (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, tokenIds.length);
+        } else if (order.orderType == OrderType.SellAny) {
+            (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, tokenIds.length);
+        } else if (order.orderType == OrderType.BuyAll) {
+            (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, 1);
+        } else { // SellAll
+            (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, 1);
         }
+
+        require(order.price * priceMultiple == totalPrice, "TotalPrice");
+        require(weth.transferFrom(nftTo, nftFrom, totalPrice), "Weth tx");
 
         if (order.orderType == OrderType.BuyAny) {
             for (uint i = 0; i < tokenIds.length; i++) {
@@ -262,8 +271,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     function ordersLength() public view returns (uint) {
         return ordersIndex.length;
     }
-    enum OrderStatus { Executable, Expired, Maxxed, MakerHasUnsufficientWeth, MakerHasUnsufficientWethAllowance,
-        MakerNoLongerOwnsToken, MakerHasNotApprovedNix, UnknownError }
+    enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
     function orderStatus(uint i) internal view returns (OrderStatus) {
         bytes32 orderKey = ordersIndex[i];
         Order memory order = orders[orderKey];
@@ -276,16 +284,16 @@ contract Nix is Owned, ERC721TokenReceiver {
         if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
             uint wethBalance = weth.balanceOf(order.maker);
             if (wethBalance < order.price) {
-                return OrderStatus.MakerHasUnsufficientWeth;
+                return OrderStatus.MakerNoWeth;
             }
             uint wethAllowance = weth.allowance(order.maker, address(this));
             if (wethAllowance < order.price) {
-                return OrderStatus.MakerHasUnsufficientWethAllowance;
+                return OrderStatus.MakerNoWethAllowance;
             }
         } else {
             try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
                 if (!b) {
-                    return OrderStatus.MakerHasNotApprovedNix;
+                    return OrderStatus.MakerNotApprovedNix;
                 }
             } catch {
                 return OrderStatus.UnknownError;
@@ -294,7 +302,7 @@ contract Nix is Owned, ERC721TokenReceiver {
                 if (order.tokenIds.length == 0) {
                     try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
                         if (b == 0) {
-                            return OrderStatus.MakerNoLongerOwnsToken;
+                            return OrderStatus.MakerNoToken;
                         }
                     } catch {
                         return OrderStatus.UnknownError;
@@ -311,14 +319,14 @@ contract Nix is Owned, ERC721TokenReceiver {
                         }
                     }
                     if (!found) {
-                        return OrderStatus.MakerNoLongerOwnsToken;
+                        return OrderStatus.MakerNoToken;
                     }
                 }
             } else { // SellAll
                 for (uint j = 0; j < order.tokenIds.length; j++) {
                     try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
                         if (a != order.maker) {
-                            return OrderStatus.MakerNoLongerOwnsToken;
+                            return OrderStatus.MakerNoToken;
                         }
                     } catch {
                         return OrderStatus.UnknownError;
