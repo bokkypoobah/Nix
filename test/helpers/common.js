@@ -15,6 +15,8 @@ class Data {
     this.weth = null;
     this.nftA = null;
     this.nix = null;
+
+    this.verbose = false;
   }
 
   async init() {
@@ -33,12 +35,11 @@ class Data {
   addAccount(account, accountName) {
     this.accounts.push(account);
     this.accountNames[account.toLowerCase()] = accountName;
-    console.log("      Mapping account " + account + " => " + this.getShortAccountName(account));
+    if (this.verbose) {
+      console.log("      Mapping account " + account + " => " + this.getShortAccountName(account));
+    }
   }
   getShortAccountName(address) {
-    if (address == ZERO_ADDRESS) {
-      return "ETH|null:" + ZERO_ADDRESS.substring(0, 6);
-    }
     if (address != null) {
       var a = address.toLowerCase();
       var n = this.accountNames[a];
@@ -50,11 +51,12 @@ class Data {
   }
   addContract(contract, contractName) {
     const address = contract.address;
-    // console.log("addContract address: " + address);
     this.accounts.push(address);
     this.accountNames[address.toLowerCase()] = contractName;
     this.contracts.push(contract);
-    console.log("      Mapping contract " + address + " => " + this.getShortAccountName(address));
+    if (this.verbose) {
+      console.log("      Mapping contract " + address + " => " + this.getShortAccountName(address));
+    }
   }
 
 
@@ -95,6 +97,28 @@ class Data {
     console.log();
   }
 
+  padLeft(s, n) {
+    var o = s.toString();
+    while (o.length < n) {
+      o = " " + o;
+    }
+    return o;
+  }
+  padLeft0(s, n) {
+    var result = s.toString();
+    while (result.length < n) {
+      result = "0" + result;
+    }
+    return result;
+  }
+  padRight(s, n) {
+    var o = s;
+    while (o.length < n) {
+      o = o + " ";
+    }
+    return o;
+  }
+
   async setWeth(weth) {
     this.weth = weth;
     this.addContract(weth, "WETH");
@@ -106,29 +130,6 @@ class Data {
   async setNix(nix) {
     this.nix = nix;
     this.addContract(nix, "Nix");
-  }
-  padLeft(s, n) {
-    var o = s.toString();
-    while (o.length < n) {
-      o = " " + o;
-    }
-    return o;
-  }
-
-  padLeft0(s, n) {
-    var result = s.toString();
-    while (result.length < n) {
-      result = "0" + result;
-    }
-    return result;
-  }
-
-  padRight(s, n) {
-    var o = s;
-    while (o.length < n) {
-      o = o + " ";
-    }
-    return o;
   }
 
   async printState(prefix) {
@@ -143,7 +144,7 @@ class Data {
         }
         owners[ownerOf].push(i);
       }
-      console.log("        XXXOwner                            WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
+      console.log("        Owner                            WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
       console.log("        ---------------- -------------------- -------------------------");
       var checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1];
       for (let i = 0; i < checkAccounts.length; i++) {
@@ -178,7 +179,7 @@ class Data {
           const tradeCount = data[2];
           const tradeMax = data[3];
           const orderStatus = data[4];
-          console.log("          " + this.padLeft(i, 3) + " " + this.padRight(this.getShortAccountName(maker), 12) + " " +
+          console.log("        " + this.padLeft(i, 3) + " " + this.padRight(this.getShortAccountName(maker), 12) + " " +
             this.padRight(this.getShortAccountName(taker), 12) + " " + this.padRight(this.getShortAccountName(token), 12) + " " +
             this.padLeft(ethers.utils.formatEther(price), 20) + " " + this.padRight(ORDERTYPESTRING[orderType], 15) + " " +
             this.padRight(expiryString, 24) + " " +
