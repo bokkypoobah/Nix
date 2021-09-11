@@ -113,7 +113,8 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
 
     function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data) external override returns(bytes4) {
-
+        emit ThankYou(_tokenId);
+        return this.onERC721Received.selector;
     }
 
     event MakerOrderAdded(bytes32 orderKey, uint orderIndex);
@@ -204,9 +205,15 @@ contract Nix is Owned, ERC721TokenReceiver {
         require(order.tradeCount < order.tradeMax, "Maxxed");
         require(tokenIds.length > 0, "TokenIds");
 
-        if (order.orderType == OrderType.BuyAny) {
-            require(order.price * tokenIds.length == totalPrice, "Weth");
+        uint expectedTotalPrice = ((order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) ? 1 : tokenIds.length) * order.price;
+        require(expectedTotalPrice == totalPrice, "TotalPrice");
+        if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
             require(weth.transferFrom(order.maker, msg.sender, totalPrice), "Weth tx");
+        } else {
+            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "Weth tx");
+        }
+
+        if (order.orderType == OrderType.BuyAny) {
             for (uint i = 0; i < tokenIds.length; i++) {
                 bool found = false;
                 if (order.tokenIds.length == 0) {
@@ -222,8 +229,6 @@ contract Nix is Owned, ERC721TokenReceiver {
                 IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[i]);
             }
         } else if (order.orderType == OrderType.SellAny) {
-            require(order.price * tokenIds.length == totalPrice, "Weth");
-            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "Weth tx");
             for (uint i = 0; i < tokenIds.length; i++) {
                 bool found = false;
                 if (order.tokenIds.length == 0) {
@@ -239,15 +244,11 @@ contract Nix is Owned, ERC721TokenReceiver {
                 IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[i]);
             }
         } else if (order.orderType == OrderType.BuyAll) {
-            require(order.price == totalPrice, "Weth");
-            require(weth.transferFrom(order.maker, msg.sender, totalPrice), "Weth tx");
             for (uint i = 0; i < order.tokenIds.length; i++) {
                 require(tokenIds[i] == order.tokenIds[i], "TokenIds");
                 IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
             }
         } else { // SellAll
-            require(order.price == totalPrice, "Weth");
-            require(weth.transferFrom(msg.sender, order.maker, totalPrice), "Weth tx");
             for (uint i = 0; i < order.tokenIds.length; i++) {
                 require(tokenIds[i] == order.tokenIds[i], "TokenIds");
                 IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
