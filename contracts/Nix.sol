@@ -125,8 +125,9 @@ contract Nix is Owned, ERC721TokenReceiver {
         uint price,
         OrderType orderType,
         uint64 expiry,
-        uint64 tradeMax
-    ) external payable reentrancyGuard checkForTip {
+        uint64 tradeMax,
+        address integrator
+    ) external payable reentrancyGuard {
         bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, orderType, expiry));
         require(orders[_orderKey].maker == address(0), "Duplicate");
         require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
@@ -163,19 +164,21 @@ contract Nix is Owned, ERC721TokenReceiver {
         order.expiry = expiry;
         order.tradeMax = tradeMax;
         emit MakerOrderAdded(_orderKey, ordersIndex.length - 1);
+        handleTips(integrator);
     }
 
     event MakerTokenIdsUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds) external payable checkForTip {
+    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds, address integrator) external payable {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
         order.tokenIds = tokenIds;
         emit MakerTokenIdsUpdated(orderKey, orderIndex);
+        handleTips(integrator);
     }
 
     event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment) external payable checkForTip {
+    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, address integrator) external payable {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
@@ -193,10 +196,11 @@ contract Nix is Owned, ERC721TokenReceiver {
             order.tradeMax += uint64(tradeMaxAdjustment);
         }
         emit MakerOrderUpdated(orderKey, orderIndex);
+        handleTips(integrator);
     }
 
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice) external payable reentrancyGuard checkForTip {
+    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice, address integrator) external payable reentrancyGuard {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender != order.maker, "Own oeder");
@@ -266,6 +270,7 @@ contract Nix is Owned, ERC721TokenReceiver {
 
         order.tradeCount++;
         emit TakerOrderExecuted(orderKey, orderIndex);
+        handleTips(integrator);
     }
 
     function ordersLength() public view returns (uint) {
@@ -385,13 +390,19 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
 
     event ThankYou(uint tip);
-    modifier checkForTip() {
-        _;
+    function handleTips(address integrator) private {
         if (msg.value > 0) {
+            uint integratorTip;
+            if (integrator != address(0) && integrator != owner) {
+                integratorTip = msg.value / 2;
+                if (integratorTip > 0) {
+                    payable(integrator).transfer(integratorTip);
+                }
+            }
             emit ThankYou(msg.value);
         }
     }
 
-    receive() external payable checkForTip {
+    receive() external payable {
     }
 }

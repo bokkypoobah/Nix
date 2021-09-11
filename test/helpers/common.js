@@ -23,8 +23,8 @@ class Data {
   }
 
   async init() {
-    [this.deployerSigner, this.maker0Signer, this.maker1Signer, this.taker0Signer, this.taker1Signer] = await ethers.getSigners();
-    [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1] = await Promise.all([this.deployerSigner.getAddress(), this.maker0Signer.getAddress(), this.maker1Signer.getAddress(), this.taker0Signer.getAddress(), this.taker1Signer.getAddress()]);
+    [this.deployerSigner, this.maker0Signer, this.maker1Signer, this.taker0Signer, this.taker1Signer, this.integratorSigner] = await ethers.getSigners();
+    [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.integrator] = await Promise.all([this.deployerSigner.getAddress(), this.maker0Signer.getAddress(), this.maker1Signer.getAddress(), this.taker0Signer.getAddress(), this.taker1Signer.getAddress(), this.integratorSigner.getAddress()]);
 
     this.addAccount("0x0000000000000000000000000000000000000000", "null");
     this.addAccount(this.deployer, "deployer");
@@ -32,6 +32,7 @@ class Data {
     this.addAccount(this.maker1, "maker1");
     this.addAccount(this.taker0, "taker0");
     this.addAccount(this.taker1, "taker1");
+    this.addAccount(this.integrator, "integrator");
     this.baseBlock = await ethers.provider.getBlockNumber();
   }
 
@@ -148,9 +149,9 @@ class Data {
         }
         owners[ownerOf].push(i);
       }
-      console.log("          Owner                             ETH                 WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
-      console.log("          ---------------- -------------------- -------------------- -------------------------");
-      const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1];
+      console.log("          Account                               ETH                 WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
+      console.log("          -------------------- -------------------- -------------------- -------------------------");
+      const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.integrator];
       if (this.nix != null) {
         checkAccounts.push(this.nix.address);
       }
@@ -158,7 +159,7 @@ class Data {
         const ownerData = owners[checkAccounts[i]] || [];
         const balance = await ethers.provider.getBalance(checkAccounts[i]);
         const wethBalance = this.weth == null ? 0 : await this.weth.balanceOf(checkAccounts[i]);
-        console.log("          " + this.padRight(this.getShortAccountName(checkAccounts[i]), 16) + " " + this.padLeft(ethers.utils.formatEther(balance), 20) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
+        console.log("          " + this.padRight(this.getShortAccountName(checkAccounts[i]), 20) + " " + this.padLeft(ethers.utils.formatEther(balance), 20) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
       }
       console.log();
     }
