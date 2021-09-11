@@ -1,15 +1,12 @@
+const { ZERO_ADDRESS, ORDERTYPE, ORDERTYPESTRING, Data } = require('./helpers/common');
 const { singletons, expectRevert } = require("@openzeppelin/test-helpers");
 const { expect, assert } = require("chai");
 const { BigNumber } = require("ethers");
 const util = require('util');
 
+let data;
+
 describe("Nix", function () {
-  const NULLACCOUNT = "0x0000000000000000000000000000000000000000";
-  const orderTypes = [ "BuyAny", "SellAny", "BuyAll", "SellAll" ];
-  const ORDERTYPE_BUYANY = 0;
-  const ORDERTYPE_SELLANY = 1;
-  const ORDERTYPE_BUYALL = 2;
-  const ORDERTYPE_SELLALL = 3;
   const orderStatuses = [ "Active", "Cancelled", "Executed", "NotExecutable" ];
   const DETAILS = 0;
 
@@ -138,7 +135,7 @@ describe("Nix", function () {
           const orderStatus = data[4];
           console.log("          " + padLeft(i, 3) + " " + padRight(getShortAccountName(maker), 12) + " " +
             padRight(getShortAccountName(taker), 12) + " " + padRight(getShortAccountName(token), 12) + " " +
-            padLeft(ethers.utils.formatEther(price), 20) + " " + padRight(orderTypes[orderType], 15) + " " +
+            padLeft(ethers.utils.formatEther(price), 20) + " " + padRight(ORDERTYPESTRING[orderType], 15) + " " +
             padRight(expiryString, 24) + " " +
             padLeft(tradeCount.toString(), 8) + " " +
             padLeft(tradeMax.toString(), 8) + " " +
@@ -152,6 +149,9 @@ describe("Nix", function () {
   }
 
   beforeEach(async function () {
+    data = new Data();
+    await data.init();
+
     [deployer, maker0, maker1, taker0, taker1] = await web3.eth.getAccounts();
     [deployerSigner, maker0Signer, maker1Signer, taker0Signer, taker1Signer] = await ethers.getSigners();
     console.log();
@@ -240,12 +240,14 @@ describe("Nix", function () {
     await printState("After Maker Approve Nix To Transfer");
   })
 
-  it("0. Maker BuyAny Test", async function () {
+  it.only("0. Maker BuyAny Test", async function () {
     console.log("    ==== Maker Add Orders === ");
-    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("11"), ORDERTYPE_BUYANY, 0, 2, { value: ethers.utils.parseEther("0.000000001") });
+    // const ORDERTYPE = { BUYANY: 0, SELLANY: 1, BUYALL: 2, SELLALL: 3 };
+
+    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(ZERO_ADDRESS, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("11"), ORDERTYPE.BUYANY, 0, 2, { value: ethers.utils.parseEther("0.000000001") });
     await printEvents("Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e", await makerAddOrder1Tx.wait());
     const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
-    const makerAddOrder2Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ ], ethers.utils.parseEther("0.0011"), ORDERTYPE_BUYANY, expiry2, 2, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder2Tx = await nix.connect(maker0Signer).makerAddOrder(ZERO_ADDRESS, nftA.address, [ ], ethers.utils.parseEther("0.0011"), ORDERTYPE.BUYANY, expiry2, 2, { value: ethers.utils.parseEther("0.000000001") });
     await printEvents("Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e", await makerAddOrder2Tx.wait());
     await printState("After Maker Added Orders");
 
@@ -259,10 +261,10 @@ describe("Nix", function () {
 
   it("1. Maker SellAny Test", async function () {
     console.log("    ==== Maker Add Orders === ");
-    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), ORDERTYPE_SELLANY, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(ZERO_ADDRESS, nftA.address, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), ORDERTYPE.SELLANY, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
     await printEvents("Maker Added Order #0 - SellAny NFTA:{0|1|2} for 12.3456e", await makerAddOrder1Tx.wait());
     const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
-    const makerAddOrder2Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ ], ethers.utils.parseEther("1.23456"), ORDERTYPE_SELLANY, expiry2, 1, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder2Tx = await nix.connect(maker0Signer).makerAddOrder(ZERO_ADDRESS, nftA.address, [ ], ethers.utils.parseEther("1.23456"), ORDERTYPE.SELLANY, expiry2, 1, { value: ethers.utils.parseEther("0.000000001") });
     await printEvents("Maker Added Order #1 - SellAny NFTA:* for 1.23456e", await makerAddOrder2Tx.wait());
     await printState("After Maker Added Orders");
 
@@ -276,7 +278,7 @@ describe("Nix", function () {
 
   it("2. Maker BuyAll Test", async function () {
     console.log("    ==== Maker Add Orders === ");
-    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("12.3456"), ORDERTYPE_BUYALL, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(ZERO_ADDRESS, nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("12.3456"), ORDERTYPE.BUYALL, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
     await printEvents("Maker Added Order #0 - BuyAll NFTA:{3&4&5} for 12.3456e", await makerAddOrder1Tx.wait());
     await printState("After Maker Added Orders");
 
@@ -288,7 +290,7 @@ describe("Nix", function () {
 
   it("3. Maker SellAll Test", async function () {
     console.log("    ==== Maker Add Orders === ");
-    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(NULLACCOUNT, nftA.address, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), ORDERTYPE_SELLALL, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder1Tx = await nix.connect(maker0Signer).makerAddOrder(ZERO_ADDRESS, nftA.address, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), ORDERTYPE.SELLALL, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
     await printEvents("Maker Added Order #0 - SellAll NFTA:{0&1&2} for 12.3456e", await makerAddOrder1Tx.wait());
     await printState("After Maker Added Orders");
 
