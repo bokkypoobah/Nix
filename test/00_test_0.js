@@ -11,17 +11,17 @@ describe("Nix", function () {
   const DETAILS = 0;
 
   beforeEach(async function () {
+    const TestERC20 = await ethers.getContractFactory("TestERC20");
+    const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
+    const Nix = await ethers.getContractFactory("Nix");
+
+    console.log("    ==== Setup Accounts, WETH, NFT and Nix Contracts === ");
     data = new Data();
     await data.init();
-
-    console.log();
-    console.log();
-    console.log("    ==== Setup Accounts, WETH, NFT and Nix Contracts === ");
 
     erc1820Registry = await singletons.ERC1820Registry(data.deployer);
     await data.addAccount(erc1820Registry.address, "ERC1820Registry");
 
-    const TestERC20 = await ethers.getContractFactory("TestERC20");
     const fixedSupply = ethers.utils.parseEther("500");
     const weth = await TestERC20.deploy("WETH", "Wrapped ETH", 18, fixedSupply);
     await weth.deployed();
@@ -37,9 +37,7 @@ describe("Nix", function () {
       await data.printEvents("Transfer WETH", await transferWeth3Tx.wait());
     }
 
-    const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
     const nftA = await ERC721PresetMinterPauserAutoId.deploy("NFTeeA", "NFTA", "uri");
-    await data.addContract(nftA, "NFTA");
     await data.setNFTA(nftA);
     const nftATransactionReceipt = await data.nftA.deployTransaction.wait();
     if (DETAILS > 0) {
@@ -61,10 +59,13 @@ describe("Nix", function () {
       await data.printEvents("Minted NFTA", await mint5Tx.wait());
     }
 
-    const Nix = await ethers.getContractFactory("Nix");
     const nix = await Nix.deploy(weth.address);
     await nix.deployed();
     await data.setNix(nix);
+    const nixTransactionReceipt = await data.nix.deployTransaction.wait();
+    if (DETAILS >= 0) {
+      await data.printEvents("Deployed Nix", nixTransactionReceipt);
+    }
 
     const wethApproveNix0Tx = await weth.connect(data.deployerSigner).approve(nix.address, ethers.utils.parseEther("100"));
     const wethApproveNix1Tx = await weth.connect(data.maker0Signer).approve(nix.address, ethers.utils.parseEther("100"));

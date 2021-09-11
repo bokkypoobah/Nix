@@ -16,6 +16,9 @@ class Data {
     this.nftA = null;
     this.nix = null;
 
+    this.gasPrice = ethers.utils.parseUnits("84", "gwei");
+    this.ethUsd = ethers.utils.parseUnits("3233.35", 18);
+
     this.verbose = false;
   }
 
@@ -61,7 +64,9 @@ class Data {
 
 
   printEvents(prefix, receipt) {
-    console.log("      > " + prefix + " - gasUsed: " + receipt.gasUsed);
+    var fee = receipt.gasUsed.mul(this.gasPrice);
+    var feeUsd = fee.mul(this.ethUsd).div(ethers.utils.parseUnits("1", 18)).div(ethers.utils.parseUnits("1", 18));
+    console.log("      > " + prefix + " - gasUsed: " + receipt.gasUsed + " ~ ETH " + ethers.utils.formatEther(fee) + " ~ USD " + feeUsd);
     receipt.logs.forEach((log) => {
       let found = false;
       for (let i = 0; i < this.contracts.length && !found; i++) {
