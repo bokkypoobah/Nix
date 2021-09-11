@@ -94,7 +94,7 @@ describe("Nix", function () {
     await data.printState("After Maker Approve Nix To Transfer");
   })
 
-  it.only("0. Maker BuyAny Test", async function () {
+  it("0. Maker BuyAny Test", async function () {
     console.log("    ==== Maker Add Orders === ");
 
     const makerAddOrder1Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(ZERO_ADDRESS, data.nftA.address, [ 3, 4, 5 ], ethers.utils.parseEther("11"), ORDERTYPE.BUYANY, 0, 2, { value: ethers.utils.parseEther("0.000000001") });
@@ -110,13 +110,6 @@ describe("Nix", function () {
     const takerExecuteOrder2Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("0.0011"), { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Taker Sold #4 against BuyAny Max 2 NFTA:* for 0.0011e", await takerExecuteOrder2Tx.wait());
     await data.printState("After Taker Executed Orders");
-
-
-    console.log("    ==== Owner Withdraw Tips === ");
-    const ownerWithdrawTipsTx = await data.nix.connect(data.deployerSigner).withdrawTips(ZERO_ADDRESS, 0, 0);
-    await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawTipsTx.wait());
-    await data.printState("After Owner Withdrawn Tips");
-
   });
 
   it("1. Maker SellAny Test", async function () {
@@ -148,7 +141,7 @@ describe("Nix", function () {
     await data.printState("After Taker Executed Orders");
   });
 
-  it("3. Maker SellAll Test", async function () {
+  it("3. Maker SellAll Test & Owner Withdraw Tips", async function () {
     console.log("    ==== Maker Add Orders === ");
     const makerAddOrder1Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(ZERO_ADDRESS, data.nftA.address, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), ORDERTYPE.SELLALL, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Maker Added Order #0 - SellAll NFTA:{0&1&2} for 12.3456e", await makerAddOrder1Tx.wait());
@@ -158,6 +151,11 @@ describe("Nix", function () {
     const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrder(0, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Taker Bought #0,#1&#2 against SellAll NFTA:{0&1&2} for 12.3456e" , await takerExecuteOrder1Tx.wait());
     await data.printState("After Taker Executed Orders");
+
+    console.log("    ==== Owner Withdraw Tips === ");
+    const ownerWithdrawTipsTx = await data.nix.connect(data.deployerSigner).withdrawTips(ZERO_ADDRESS, 0, 0);
+    await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawTipsTx.wait());
+    await data.printState("After Owner Withdrawn Tips");
   });
 });
 
