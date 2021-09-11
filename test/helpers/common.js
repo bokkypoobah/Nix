@@ -149,13 +149,17 @@ class Data {
         }
         owners[ownerOf].push(i);
       }
-      console.log("        Owner                            WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
-      console.log("        ---------------- -------------------- -------------------------");
-      var checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1];
+      console.log("        Owner                             ETH                 WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
+      console.log("        ---------------- -------------------- -------------------- -------------------------");
+      const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1];
+      if (this.nix != null) {
+        checkAccounts.push(this.nix.address);
+      }
       for (let i = 0; i < checkAccounts.length; i++) {
         const ownerData = owners[checkAccounts[i]] || [];
+        const balance = await ethers.provider.getBalance(checkAccounts[i]);
         const wethBalance = this.weth == null ? 0 : await this.weth.balanceOf(checkAccounts[i]);
-        console.log("        " + this.padRight(this.getShortAccountName(checkAccounts[i]), 16) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
+        console.log("        " + this.padRight(this.getShortAccountName(checkAccounts[i]), 16) + " " + this.padLeft(ethers.utils.formatEther(balance), 20) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
       }
       console.log();
     }
