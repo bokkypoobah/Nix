@@ -139,7 +139,7 @@ describe("Nix", function () {
     await data.printState("After Taker Executed Orders");
   });
 
-  it.only("3. Maker SellAll Test & Owner Withdraw Tips", async function () {
+  it("3. Maker SellAll Test & Owner Withdraw Tips", async function () {
     console.log("        --- Maker Add Orders ---");
     const makerAddOrder1Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(ZERO_ADDRESS, data.nftA.address, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), ORDERTYPE.SELLALL, 0, 1, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Maker Added Order #0 - SellAll NFTA:{0&1&2} for 12.3456e", await makerAddOrder1Tx.wait());
