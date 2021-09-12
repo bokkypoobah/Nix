@@ -1,6 +1,8 @@
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const ORDERTYPE = { BUYANY: 0, SELLANY: 1, BUYALL: 2, SELLALL: 3 };
 const ORDERTYPESTRING = [ "BuyAny", "SellAny", "BuyAll", "SellAll" ];
+const ORDERSTATUSSTRING = [ "Executable", "Expired", "Maxxed", "MakerNoWeth", "MakerNoWethAllowance", "MakerNoToken", "MakerNotApprovedNix", "UnknownError" ];
+
 const { BigNumber } = require("ethers");
 const util = require('util');
 const { expect, assert } = require("chai");
@@ -167,8 +169,8 @@ class Data {
     if (this.nix != null) {
       const ordersLength = await this.nix.ordersLength();
       if (ordersLength > 0) {
-        console.log("            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds");
-        console.log("          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------");
+        console.log("            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds");
+        console.log("          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------");
         const orderIndices = [];
         for (let i = 0; i < ordersLength; i++) {
           orderIndices.push(i);
@@ -188,13 +190,14 @@ class Data {
           const tradeCount = data[2];
           const tradeMax = data[3];
           const orderStatus = data[4];
+          const orderStatusString = ORDERSTATUSSTRING[orderStatus];
           console.log("          " + this.padLeft(i, 3) + " " + this.padRight(this.getShortAccountName(maker), 12) + " " +
             this.padRight(this.getShortAccountName(taker), 12) + " " + this.padRight(this.getShortAccountName(token), 12) + " " +
-            this.padLeft(ethers.utils.formatEther(price), 20) + " " + this.padRight(ORDERTYPESTRING[orderType], 15) + " " +
+            this.padLeft(ethers.utils.formatEther(price), 20) + " " + this.padRight(ORDERTYPESTRING[orderType], 8) + " " +
             this.padRight(expiryString, 24) + " " +
             this.padLeft(tradeCount.toString(), 8) + " " +
             this.padLeft(tradeMax.toString(), 8) + " " +
-            this.padLeft(orderStatus.toString(), 8) + " " +
+            this.padRight(orderStatusString.toString(), 20) + " " +
             orderKey.substring(0, 10) + " " +
             JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
         }

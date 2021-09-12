@@ -2,11 +2,11 @@
 
   Nix
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
-        > txFee Deployed Nix - gasUsed: 5114924 ~ ETH 0.429653616 ~ USD 1389
+        > txFee Deployed Nix - gasUsed: 5151457 ~ ETH 0.432722388 ~ USD 1399
         --- Setup Completed ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.82691008                100.0 [] 
+          deployer:0xf39F            9999.826617816                100.0 [] 
           maker0:0x7099               9999.99925244                100.0 [0,1,2] 
           maker1:0x3C44               9999.99925244                100.0 [] 
           taker0:0x90F7               9999.99925244                100.0 [3,4,5] 
@@ -20,12 +20,12 @@
           + Nix:0xCf7E 25.0 MakerOrderAdded(orderKey: 0xbb7f8833b96db08f54357c635bd4c50fdadbd51ad52a8b651b0b1f79c75f50ff, orderIndex: 0)
           + Nix:0xCf7E 25.1 ThankYou(tip: 1000000000)
         > Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e - gasUsed: 170304 ~ ETH 0.014305536 ~ USD 46
-          + Nix:0xCf7E 26.0 MakerOrderAdded(orderKey: 0x7d8da8abbce76e08dda7319e657f21287e44fe4c0c89d207b41b6dc64b89d4e8, orderIndex: 1)
+          + Nix:0xCf7E 26.0 MakerOrderAdded(orderKey: 0xb32e645ace7d6dfbaa1108dd1fb2e06e524b6f6f9eb8f68cf27549dc52628c8b, orderIndex: 1)
           + Nix:0xCf7E 26.1 ThankYou(tip: 1000000000)
         --- After Maker Added Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.82691008                100.0 [] 
+          deployer:0xf39F            9999.826617816                100.0 [] 
           maker0:0x7099              9999.995524638                100.0 [0,1,2] 
           maker1:0x3C44               9999.99925244                100.0 [] 
           taker0:0x90F7               9999.99925244                100.0 [3,4,5] 
@@ -33,10 +33,10 @@
           integrator:0x9965         10000.000000001                  0.0 [] 
           Nix:0xCf7E                    0.000000001                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x9fE4                  11.0 BuyAny          (none)                          0        2        0 0xbb7f8833 [3,4,5]
-            1 maker0:0x7099 null:0x0000  NFTA:0x9fE4                0.0011 BuyAny          2021-09-12T08:29:39.000Z        0        2        0 0x7d8da8ab []
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x9fE4                  11.0 BuyAny   (none)                          0        2 Executable           0xbb7f8833 [3,4,5]
+            1 maker0:0x7099 null:0x0000  NFTA:0x9fE4                0.0011 BuyAny   2021-09-13T01:21:11.000Z        0        2 Executable           0xb32e645a []
 
         --- Taker Execute Against Orders ---
         > txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e - gasUsed: 202507 ~ ETH 0.017010588 ~ USD 55
@@ -51,12 +51,12 @@
           + WETH:0xe7f1 28.0 Transfer(from: maker0:0x7099, to: taker0:0x90F7, tokens: 0.0011)
           + NFTA:0x9fE4 28.1 Approval(owner: taker0:0x90F7, approved: null:0x0000, tokenId: 4)
           + NFTA:0x9fE4 28.2 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokenId: 4)
-          + Nix:0xCf7E 28.3 TakerOrderExecuted(orderKey: 0x7d8da8abbce76e08dda7319e657f21287e44fe4c0c89d207b41b6dc64b89d4e8, orderIndex: 1)
+          + Nix:0xCf7E 28.3 TakerOrderExecuted(orderKey: 0xb32e645ace7d6dfbaa1108dd1fb2e06e524b6f6f9eb8f68cf27549dc52628c8b, orderIndex: 1)
           + Nix:0xCf7E 28.4 ThankYou(tip: 1000000000)
         --- After Taker Executed Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.82691008                100.0 [] 
+          deployer:0xf39F            9999.826617816                100.0 [] 
           maker0:0x7099              9999.995524638              77.9989 [0,1,2,3,4,5] 
           maker1:0x3C44               9999.99925244                100.0 [] 
           taker0:0x90F7              9999.996469806             122.0011 [] 
@@ -64,18 +64,18 @@
           integrator:0x9965         10000.000000002                  0.0 [] 
           Nix:0xCf7E                    0.000000002                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x9fE4                  11.0 BuyAny          (none)                          1        2        0 0xbb7f8833 [3,4,5]
-            1 maker0:0x7099 null:0x0000  NFTA:0x9fE4                0.0011 BuyAny          2021-09-12T08:29:39.000Z        1        2        0 0x7d8da8ab []
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x9fE4                  11.0 BuyAny   (none)                          1        2 Executable           0xbb7f8833 [3,4,5]
+            1 maker0:0x7099 null:0x0000  NFTA:0x9fE4                0.0011 BuyAny   2021-09-13T01:21:11.000Z        1        2 Executable           0xb32e645a []
 
-    ✓ 0. Maker BuyAny Test (421ms)
+    ✓ 0. Maker BuyAny Test (442ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
-        > txFee Deployed Nix - gasUsed: 5114924 ~ ETH 0.429653616 ~ USD 1389
+        > txFee Deployed Nix - gasUsed: 5151457 ~ ETH 0.432722388 ~ USD 1399
         --- Setup Completed ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.73398816                100.0 [] 
+          deployer:0xf39F            9999.733403632                100.0 [] 
           maker0:0x7099              9999.994777078                100.0 [0,1,2] 
           maker1:0x3C44               9999.99850488                100.0 [] 
           taker0:0x90F7              9999.995722246                100.0 [3,4,5] 
@@ -89,12 +89,12 @@
           + Nix:0x9A9f 51.0 MakerOrderAdded(orderKey: 0x73dbf74a5163bd9c843a010feb81c3231e580e9746664ca7551855c62f11ecf2, orderIndex: 0)
           + Nix:0x9A9f 51.1 ThankYou(tip: 1000000000)
         > Maker Added Order #1 - SellAny NFTA:* for 1.23456e - gasUsed: 170316 ~ ETH 0.014306544 ~ USD 46
-          + Nix:0x9A9f 52.0 MakerOrderAdded(orderKey: 0xfe711ce6ebe53347b96e10712f88fadf79e074a1f3d798ba078f4af5f1d0415e, orderIndex: 1)
+          + Nix:0x9A9f 52.0 MakerOrderAdded(orderKey: 0x08e6d28be8d73b755d5d88fb3e27cd971af2267829308a0a1c920e7a6fbcb5c3, orderIndex: 1)
           + Nix:0x9A9f 52.1 ThankYou(tip: 1000000000)
         --- After Maker Added Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.73398816                100.0 [] 
+          deployer:0xf39F            9999.733403632                100.0 [] 
           maker0:0x7099               9999.99120838                100.0 [0,1,2] 
           maker1:0x3C44               9999.99850488                100.0 [] 
           taker0:0x90F7              9999.995722246                100.0 [3,4,5] 
@@ -102,10 +102,10 @@
           integrator:0x9965         10000.000000003                  0.0 [] 
           Nix:0x9A9f                    0.000000001                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x9599               12.3456 SellAny         (none)                          0        1        0 0x73dbf74a [0,1,2]
-            1 maker0:0x7099 null:0x0000  NFTA:0x9599               1.23456 SellAny         2021-09-12T08:29:39.000Z        0        1        0 0xfe711ce6 []
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x9599               12.3456 SellAny  (none)                          0        1 Executable           0x73dbf74a [0,1,2]
+            1 maker0:0x7099 null:0x0000  NFTA:0x9599               1.23456 SellAny  2021-09-13T01:21:12.000Z        0        1 Executable           0x08e6d28b []
 
         --- Taker Execute Against Orders ---
         > Taker Bought #1 against SellAny NFTA:{0|1|2} for 12.3456e - gasUsed: 156924 ~ ETH 0.013181616 ~ USD 42
@@ -118,12 +118,12 @@
           + WETH:0x0B30 54.0 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokens: 1.23456)
           + NFTA:0x9599 54.1 Approval(owner: maker0:0x7099, approved: null:0x0000, tokenId: 2)
           + NFTA:0x9599 54.2 Transfer(from: maker0:0x7099, to: taker0:0x90F7, tokenId: 2)
-          + Nix:0x9A9f 54.3 TakerOrderExecuted(orderKey: 0xfe711ce6ebe53347b96e10712f88fadf79e074a1f3d798ba078f4af5f1d0415e, orderIndex: 1)
+          + Nix:0x9A9f 54.3 TakerOrderExecuted(orderKey: 0x08e6d28be8d73b755d5d88fb3e27cd971af2267829308a0a1c920e7a6fbcb5c3, orderIndex: 1)
           + Nix:0x9A9f 54.4 ThankYou(tip: 1000000000)
         --- After Taker Executed Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.73398816                100.0 [] 
+          deployer:0xf39F            9999.733403632                100.0 [] 
           maker0:0x7099               9999.99120838            113.58016 [0] 
           maker1:0x3C44               9999.99850488                100.0 [] 
           taker0:0x90F7               9999.99333754             86.41984 [1,2,3,4,5] 
@@ -131,18 +131,18 @@
           integrator:0x9965         10000.000000004                  0.0 [] 
           Nix:0x9A9f                    0.000000002                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x9599               12.3456 SellAny         (none)                          1        1        2 0x73dbf74a [0,1,2]
-            1 maker0:0x7099 null:0x0000  NFTA:0x9599               1.23456 SellAny         2021-09-12T08:29:39.000Z        1        1        2 0xfe711ce6 []
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x9599               12.3456 SellAny  (none)                          1        1 Maxxed               0x73dbf74a [0,1,2]
+            1 maker0:0x7099 null:0x0000  NFTA:0x9599               1.23456 SellAny  2021-09-13T01:21:12.000Z        1        1 Maxxed               0x08e6d28b []
 
-    ✓ 1. Maker SellAny Test (239ms)
+    ✓ 1. Maker SellAny Test (280ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
-        > txFee Deployed Nix - gasUsed: 5114924 ~ ETH 0.429653616 ~ USD 1389
+        > txFee Deployed Nix - gasUsed: 5151457 ~ ETH 0.432722388 ~ USD 1399
         --- Setup Completed ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.64106624                100.0 [] 
+          deployer:0xf39F            9999.640189448                100.0 [] 
           maker0:0x7099               9999.99046082                100.0 [0,1,2] 
           maker1:0x3C44               9999.99775732                100.0 [] 
           taker0:0x90F7               9999.99258998                100.0 [3,4,5] 
@@ -158,7 +158,7 @@
         --- After Maker Added Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.64106624                100.0 [] 
+          deployer:0xf39F            9999.640189448                100.0 [] 
           maker0:0x7099              9999.988095571                100.0 [0,1,2] 
           maker1:0x3C44               9999.99775732                100.0 [] 
           taker0:0x90F7               9999.99258998                100.0 [3,4,5] 
@@ -166,9 +166,9 @@
           integrator:0x9965        10000.0000000045                  0.0 [] 
           Nix:0xc3e5                   0.0000000005                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0xE6E3               12.3456 BuyAll          (none)                          0        1        0 0x8771caad [3,4,5]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0xE6E3               12.3456 BuyAll   (none)                          0        1 Executable           0x8771caad [3,4,5]
 
         --- Taker Execute Against Orders ---
         > Taker Sold #3,#4&#5 against BuyAll NFTA:{3&4&5} for 12.3456e - gasUsed: 228697 ~ ETH 0.019210548 ~ USD 62
@@ -184,7 +184,7 @@
         --- After Taker Executed Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.64106624                100.0 [] 
+          deployer:0xf39F            9999.640189448                100.0 [] 
           maker0:0x7099              9999.988095571              87.6544 [0,1,2,3,4,5] 
           maker1:0x3C44               9999.99775732                100.0 [] 
           taker0:0x90F7              9999.990760403             112.3456 [] 
@@ -192,17 +192,17 @@
           integrator:0x9965         10000.000000005                  0.0 [] 
           Nix:0xc3e5                    0.000000001                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0xE6E3               12.3456 BuyAll          (none)                          1        1        2 0x8771caad [3,4,5]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0xE6E3               12.3456 BuyAll   (none)                          1        1 Maxxed               0x8771caad [3,4,5]
 
-    ✓ 2. Maker BuyAll Test (228ms)
+    ✓ 2. Maker BuyAll Test (208ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
-        > txFee Deployed Nix - gasUsed: 5114924 ~ ETH 0.429653616 ~ USD 1389
+        > txFee Deployed Nix - gasUsed: 5151457 ~ ETH 0.432722388 ~ USD 1399
         --- Setup Completed ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.54814432                100.0 [] 
+          deployer:0xf39F            9999.546975264                100.0 [] 
           maker0:0x7099              9999.987348011                100.0 [0,1,2] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.990012843                100.0 [3,4,5] 
@@ -218,7 +218,7 @@
         --- After Maker Added Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.54814432                100.0 [] 
+          deployer:0xf39F            9999.546975264                100.0 [] 
           maker0:0x7099              9999.985141554                100.0 [0,1,2] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.990012843                100.0 [3,4,5] 
@@ -226,9 +226,9 @@
           integrator:0x9965        10000.0000000055                  0.0 [] 
           Nix:0x9d44                   0.0000000005                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          0        1        0 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          0        1 Executable           0xd62c4392 [0,1,2]
 
         --- Taker Execute Against Orders ---
         > Taker Bought #0,#1&#2 against SellAll NFTA:{0&1&2} for 12.3456e - gasUsed: 218465 ~ ETH 0.01835106 ~ USD 59
@@ -244,7 +244,7 @@
         --- After Taker Executed Orders ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9999.54814432                100.0 [] 
+          deployer:0xf39F            9999.546975264                100.0 [] 
           maker0:0x7099              9999.985141554             112.3456 [] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.988265122              87.6544 [0,1,2,3,4,5] 
@@ -252,16 +252,16 @@
           integrator:0x9965         10000.000000006                  0.0 [] 
           Nix:0x9d44                    0.000000001                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          1        1        2 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          1        1 Maxxed               0xd62c4392 [0,1,2]
 
         --- Send Nix ETH Tip ---
         > txFee Send Nix ETH Tip - gasUsed: 21055 ~ ETH 0.00176862 ~ USD 5
         --- After Send Nix ETH Tip ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F             9990.65997588                100.0 [] 
+          deployer:0xf39F            9990.658806824                100.0 [] 
           maker0:0x7099              9999.985141554             112.3456 [] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.988265122              87.6544 [0,1,2,3,4,5] 
@@ -269,9 +269,9 @@
           integrator:0x9965         10000.000000006                  0.0 [] 
           Nix:0x9d44                    8.888000001                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          1        1        2 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          1        1 Maxxed               0xd62c4392 [0,1,2]
 
         --- Owner Withdraw Tips ---
         > txFee Owner Withdrawn Tips - gasUsed: 33540 ~ ETH 0.00281736 ~ USD 9
@@ -279,7 +279,7 @@
         --- After Owner Withdrawn Tips ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F            9999.547707561                100.0 [] 
+          deployer:0xf39F            9999.546538505                100.0 [] 
           maker0:0x7099              9999.985141554             112.3456 [] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.988265122              87.6544 [0,1,2,3,4,5] 
@@ -287,9 +287,9 @@
           integrator:0x9965         10000.000000006                  0.0 [] 
           Nix:0x9d44                            0.0                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          1        1        2 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          1        1 Maxxed               0xd62c4392 [0,1,2]
 
         --- Send Nix WETH Tip ---
         > txFee Send Nix WETH Tip - gasUsed: 52195 ~ ETH 0.00438438 ~ USD 14
@@ -297,7 +297,7 @@
         --- After Send Nix WETH Tip ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F            9999.547707561                100.0 [] 
+          deployer:0xf39F            9999.546538505                100.0 [] 
           maker0:0x7099              9999.985141554             112.3456 [] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.987847562              84.3244 [0,1,2,3,4,5] 
@@ -305,9 +305,9 @@
           integrator:0x9965         10000.000000006                  0.0 [] 
           Nix:0x9d44                            0.0                 3.33 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          1        1        2 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          1        1 Maxxed               0xd62c4392 [0,1,2]
 
         --- Owner Withdraw WETH Tips ---
         > txFee Owner Withdrawn WETH Tips - gasUsed: 30449 ~ ETH 0.002557716 ~ USD 8
@@ -316,7 +316,7 @@
         --- After Owner Withdrawn WETH Tips ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F            9999.547463969               103.33 [] 
+          deployer:0xf39F            9999.546294913               103.33 [] 
           maker0:0x7099              9999.985141554             112.3456 [] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.987847562              84.3244 [0,1,2,3,4,5] 
@@ -324,9 +324,9 @@
           integrator:0x9965         10000.000000006                  0.0 [] 
           Nix:0x9d44                            0.0                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          1        1        2 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          1        1 Maxxed               0xd62c4392 [0,1,2]
 
         --- Taker0 Transfer NFTA To Nix For Donation ---
         > Taker0 Transfer NFTA To Nix For Donation - gasUsed: 84683 ~ ETH 0.007113372 ~ USD 23
@@ -336,7 +336,7 @@
         --- After Taker0 Transfer NFTA To Nix For Donation ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F            9999.547463969               103.33 [] 
+          deployer:0xf39F            9999.546294913               103.33 [] 
           maker0:0x7099              9999.985141554             112.3456 [] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.987170098              84.3244 [0,1,2,4,5] 
@@ -344,9 +344,9 @@
           integrator:0x9965         10000.000000006                  0.0 [] 
           Nix:0x9d44                            0.0                  0.0 [3] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          1        1        2 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          1        1 Maxxed               0xd62c4392 [0,1,2]
 
         --- Owner Withdraw NFT Tips ---
         > txFee Owner Withdrawn Tips - gasUsed: 75325 ~ ETH 0.0063273 ~ USD 20
@@ -356,7 +356,7 @@
         --- After Owner Withdrawn Tips ---
           Account                               ETH                 WETH NFTA (totalSupply: 6)
           -------------------- -------------------- -------------------- -------------------------
-          deployer:0xf39F            9999.546861369               103.33 [3] 
+          deployer:0xf39F            9999.545692313               103.33 [3] 
           maker0:0x7099              9999.985141554             112.3456 [] 
           maker1:0x3C44               9999.99700976                100.0 [] 
           taker0:0x90F7              9999.987170098              84.3244 [0,1,2,4,5] 
@@ -364,11 +364,11 @@
           integrator:0x9965         10000.000000006                  0.0 [] 
           Nix:0x9d44                            0.0                  0.0 [] 
 
-            # Maker         Taker        Token                       Price OrderType       Expiry                   Tx Count   Tx Max   Status Key        TokenIds
-          --- ------------- ------------ ------------ -------------------- --------------- ------------------------ -------- -------- -------- ---------- -----------------------
-            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll         (none)                          1        1        2 0xd62c4392 [0,1,2]
+            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds
+          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------
+            0 maker0:0x7099 null:0x0000  NFTA:0x8f86               12.3456 SellAll  (none)                          1        1 Maxxed               0xd62c4392 [0,1,2]
 
-    ✓ 3. Maker SellAll Test & Owner Withdraw Tips (589ms)
+    ✓ 3. Maker SellAll Test & Owner Withdraw Tips (678ms)
 
 
   4 passing (5s)

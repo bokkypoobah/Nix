@@ -7,7 +7,6 @@ const util = require('util');
 let data;
 
 describe("Nix", function () {
-  const orderStatuses = [ "Active", "Cancelled", "Executed", "NotExecutable" ];
   const DETAILS = 0;
 
   beforeEach(async function () {

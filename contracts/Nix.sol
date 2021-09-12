@@ -168,7 +168,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
 
     event MakerTokenIdsUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds, address integrator) external payable {
+    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds, address integrator) external payable reentrancyGuard {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
@@ -178,7 +178,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
 
     event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, address integrator) external payable {
+    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, address integrator) external payable reentrancyGuard {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
@@ -277,7 +277,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         return ordersIndex.length;
     }
     enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
-    function orderStatus(uint i) internal view returns (OrderStatus) {
+    function orderStatus(uint i) private view returns (OrderStatus) {
         bytes32 orderKey = ordersIndex[i];
         Order memory order = orders[orderKey];
         if (order.expiry > 0 && order.expiry < block.timestamp) {
