@@ -100,7 +100,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         uint64 tradeMax;
     }
 
-    bytes4 constant ERC721INTERFACE = 0x80ac58cd;
+    bytes4 constant ERC721INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
 
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
     IERC20Partial public weth;
@@ -203,7 +203,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice, address integrator) external payable reentrancyGuard {
         bytes32 orderKey = ordersIndex[orderIndex];
         Order storage order = orders[orderKey];
-        require(msg.sender != order.maker, "Own oeder");
+        require(msg.sender != order.maker, "Own order");
         require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
         require(order.expiry == 0 || order.expiry >= block.timestamp, "Expired");
         require(order.tradeCount < order.tradeMax, "Maxxed");
@@ -349,17 +349,20 @@ contract Nix is Owned, ERC721TokenReceiver {
         address[] memory makers,
         address[] memory takers,
         address[] memory tokens,
+        // address[3][] memory addresses,
         uint[][] memory tokenIds,
         uint[] memory prices,
         uint64[5][] memory data
     ) {
-        orderKeys = new bytes32[](orderIndices.length);
-        makers = new address[](orderIndices.length);
-        takers = new address[](orderIndices.length);
-        tokens = new address[](orderIndices.length);
-        tokenIds = new uint[][](orderIndices.length);
-        prices = new uint[](orderIndices.length);
-        data = new uint64[5][](orderIndices.length);
+        uint length = orderIndices.length;
+        orderKeys = new bytes32[](length);
+        makers = new address[](length);
+        takers = new address[](length);
+        tokens = new address[](length);
+        // addresses = new address[3][](length);
+        tokenIds = new uint[][](length);
+        prices = new uint[](length);
+        data = new uint64[5][](length);
         for (uint i = 0; i < orderIndices.length; i++) {
             uint orderIndex = orderIndices[i];
             if (orderIndex < ordersIndex.length) {
@@ -369,6 +372,9 @@ contract Nix is Owned, ERC721TokenReceiver {
                 makers[i] = order.maker;
                 takers[i] = order.taker;
                 tokens[i] = order.token;
+                // addresses[0][i] = order.maker;
+                // addresses[1][i] = order.taker;
+                // addresses[2][i] = order.token;
                 tokenIds[i] = order.tokenIds;
                 prices[i] = order.price;
                 data[i][0] = uint64(order.orderType);
