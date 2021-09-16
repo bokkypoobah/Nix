@@ -104,7 +104,7 @@ describe("Nix", function () {
     await data.printState("After Maker Added Orders");
 
     console.log("        --- Taker Execute Against Orders ---");
-    const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e" , await takerExecuteOrder1Tx.wait());
     // const takerExecuteOrder2Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     // await data.printEvents("Taker Sold #4 against BuyAny Max 2 NFTA:* for 0.0011e", await takerExecuteOrder2Tx.wait());
