@@ -167,35 +167,88 @@ contract Nix is Owned, ERC721TokenReceiver {
         handleTips(integrator);
     }
 
-    event MakerTokenIdsUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds, address integrator) external payable reentrancyGuard {
-        bytes32 orderKey = ordersIndex[orderIndex];
-        Order storage order = orders[orderKey];
-        require(msg.sender == order.maker, "Not maker");
-        order.tokenIds = tokenIds;
-        emit MakerTokenIdsUpdated(orderKey, orderIndex);
-        handleTips(integrator);
-    }
+    // event MakerTokenIdsUpdated(bytes32 orderKey, uint orderIndex);
+    // function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds, address integrator) external payable reentrancyGuard {
+    //     bytes32 orderKey = ordersIndex[orderIndex];
+    //     Order storage order = orders[orderKey];
+    //     require(msg.sender == order.maker, "Not maker");
+    //     order.tokenIds = tokenIds;
+    //     emit MakerTokenIdsUpdated(orderKey, orderIndex);
+    //     handleTips(integrator);
+    // }
 
-    event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
-    function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, address integrator) external payable reentrancyGuard {
-        bytes32 orderKey = ordersIndex[orderIndex];
-        Order storage order = orders[orderKey];
-        require(msg.sender == order.maker, "Not maker");
-        order.price = price;
-        order.expiry = expiry;
-        // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
-        if (tradeMaxAdjustment < 0) {
-            uint64 subtract = uint64(-tradeMaxAdjustment);
-            if (subtract > (order.tradeMax - order.tradeCount)) {
-                order.tradeMax -= subtract;
-            } else {
-                order.tradeMax = order.tradeCount;
+    // event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
+    // function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, address integrator) external payable reentrancyGuard {
+    //     bytes32 orderKey = ordersIndex[orderIndex];
+    //     Order storage order = orders[orderKey];
+    //     require(msg.sender == order.maker, "Not maker");
+    //     order.price = price;
+    //     order.expiry = expiry;
+    //     // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
+    //     if (tradeMaxAdjustment < 0) {
+    //         uint64 subtract = uint64(-tradeMaxAdjustment);
+    //         if (subtract > (order.tradeMax - order.tradeCount)) {
+    //             order.tradeMax -= subtract;
+    //         } else {
+    //             order.tradeMax = order.tradeCount;
+    //         }
+    //     } else {
+    //         order.tradeMax += uint64(tradeMaxAdjustment);
+    //     }
+    //     emit MakerOrderUpdated(orderKey, orderIndex);
+    //     handleTips(integrator);
+    // }
+
+    function takerExecuteOrders(uint[] memory orderIndexes, uint[][] memory tokenIdsList, int totalPrice, address integrator) external payable reentrancyGuard {
+        require(orderIndexes.length > 0);
+        require(orderIndexes.length == tokenIdsList.length);
+        for (uint i = 0; i < orderIndexes.length; i++) {
+            bytes32 orderKey = ordersIndex[orderIndexes[i]];
+            Order storage order = orders[orderKey];
+            uint[] memory tokenIds = tokenIdsList[i];
+            require(tokenIds.length > 0, "TokenIds");
+            require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
+            require(order.expiry == 0 || order.expiry >= block.timestamp, "Expired");
+            require(order.tradeCount < order.tradeMax, "Maxxed");
+
+            address nftFrom;
+            address nftTo;
+            uint priceMultiple;
+
+            if (order.orderType == OrderType.BuyAny) {
+                (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, tokenIds.length);
+            } else if (order.orderType == OrderType.SellAny) {
+                (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, tokenIds.length);
+            } else if (order.orderType == OrderType.BuyAll) {
+                (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, 1);
+            } else { // SellAll
+                (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, 1);
             }
-        } else {
-            order.tradeMax += uint64(tradeMaxAdjustment);
+
+            if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) {
+                for (uint j = 0; j < tokenIds.length; j++) {
+                    bool found = false;
+                    if (order.tokenIds.length == 0) {
+                        found = true;
+                    } else {
+                        for (uint k = 0; k < order.tokenIds.length && !found; k++) {
+                            if (tokenIds[j] == order.tokenIds[k]) {
+                                found = true;
+                            }
+                        }
+                    }
+                    require(found, "TokenId");
+                    IERC721Partial(order.token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
+                }
+            } else if (order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) {
+                for (uint j = 0; j < order.tokenIds.length; j++) {
+                    require(tokenIds[j] == order.tokenIds[j], "TokenIds");
+                    IERC721Partial(order.token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
+                }
+            }
+            order.tradeCount++;
+            emit TakerOrderExecuted(orderKey, i);
         }
-        emit MakerOrderUpdated(orderKey, orderIndex);
         handleTips(integrator);
     }
 
@@ -226,49 +279,49 @@ contract Nix is Owned, ERC721TokenReceiver {
         require(order.price * priceMultiple == totalPrice, "TotalPrice");
         require(weth.transferFrom(nftTo, nftFrom, totalPrice), "Weth tx");
 
-        if (order.orderType == OrderType.BuyAny) {
-            for (uint i = 0; i < tokenIds.length; i++) {
-                bool found = false;
-                if (order.tokenIds.length == 0) {
-                    found = true;
-                } else {
-                    for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-                        if (tokenIds[i] == order.tokenIds[j]) {
-                            found = true;
-                        }
-                    }
-                }
-                require(found, "TokenId");
-                IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[i]);
-            }
-        } else if (order.orderType == OrderType.SellAny) {
-            for (uint i = 0; i < tokenIds.length; i++) {
-                bool found = false;
-                if (order.tokenIds.length == 0) {
-                    found = true;
-                } else {
-                    for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-                        if (tokenIds[i] == order.tokenIds[j]) {
-                            found = true;
-                        }
-                    }
-                }
-                require(found, "TokenId");
-                IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[i]);
-            }
-        } else if (order.orderType == OrderType.BuyAll) {
-            for (uint i = 0; i < order.tokenIds.length; i++) {
-                require(tokenIds[i] == order.tokenIds[i], "TokenIds");
-                IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
-            }
-        } else { // SellAll
-            for (uint i = 0; i < order.tokenIds.length; i++) {
-                require(tokenIds[i] == order.tokenIds[i], "TokenIds");
-                IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
-            }
-        }
-
-        order.tradeCount++;
+        // if (order.orderType == OrderType.BuyAny) {
+        //     for (uint i = 0; i < tokenIds.length; i++) {
+        //         bool found = false;
+        //         if (order.tokenIds.length == 0) {
+        //             found = true;
+        //         } else {
+        //             for (uint j = 0; j < order.tokenIds.length && !found; j++) {
+        //                 if (tokenIds[i] == order.tokenIds[j]) {
+        //                     found = true;
+        //                 }
+        //             }
+        //         }
+        //         require(found, "TokenId");
+        //         IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[i]);
+        //     }
+        // } else if (order.orderType == OrderType.SellAny) {
+        //     for (uint i = 0; i < tokenIds.length; i++) {
+        //         bool found = false;
+        //         if (order.tokenIds.length == 0) {
+        //             found = true;
+        //         } else {
+        //             for (uint j = 0; j < order.tokenIds.length && !found; j++) {
+        //                 if (tokenIds[i] == order.tokenIds[j]) {
+        //                     found = true;
+        //                 }
+        //             }
+        //         }
+        //         require(found, "TokenId");
+        //         IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[i]);
+        //     }
+        // } else if (order.orderType == OrderType.BuyAll) {
+        //     for (uint i = 0; i < order.tokenIds.length; i++) {
+        //         require(tokenIds[i] == order.tokenIds[i], "TokenIds");
+        //         IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
+        //     }
+        // } else { // SellAll
+        //     for (uint i = 0; i < order.tokenIds.length; i++) {
+        //         require(tokenIds[i] == order.tokenIds[i], "TokenIds");
+        //         IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
+        //     }
+        // }
+        //
+        // order.tradeCount++;
         emit TakerOrderExecuted(orderKey, orderIndex);
         handleTips(integrator);
     }
