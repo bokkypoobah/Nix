@@ -204,48 +204,50 @@ contract Nix is Owned, ERC721TokenReceiver {
         address accounts;
         int amount;
     }
+    struct Trade {
+        address taker;
+        address[] uniqueAddresses;
+        mapping(address => bool) seen;
+        mapping(address => int) netting;
+    }
+    Trade[] public trades;
 
-    // bytes32[] public ordersIndex;
-    // mapping(bytes32 => Order) public orders;
-    // mapping(account => Netting) public Nettings;
-    address[] uniqueAddresses;
-
-    // Netting memory netting = Netting((address[])[], 0);
-
-    mapping(address => bool) public seen;
-    mapping(address => int) public netting;
+    function tradesLength() public view returns (uint) {
+        return trades.length;
+    }
 
     // event NettingEvent(address wethFrom, address wethTo, int netFrom, int netTo);
     event NettingEvent(address account, int amount);
-    function addNetting(address wethFrom, address wethTo, uint amount) internal {
-        if (!seen[wethFrom]) {
-            uniqueAddresses.push(wethFrom);
-            seen[wethFrom] = true;
+    function addNetting(Trade storage trade, address wethFrom, address wethTo, uint amount) internal {
+        if (!trade.seen[wethFrom]) {
+            trade.uniqueAddresses.push(wethFrom);
+            trade.seen[wethFrom] = true;
         }
-        if (!seen[wethTo]) {
-            uniqueAddresses.push(wethTo);
-            seen[wethTo] = true;
+        if (!trade.seen[wethTo]) {
+            trade.uniqueAddresses.push(wethTo);
+            trade.seen[wethTo] = true;
         }
 
-        netting[wethFrom] -= int(amount);
-        emit NettingEvent(wethFrom, netting[wethFrom]);
-        netting[wethTo] += int(amount);
-        emit NettingEvent(wethTo, netting[wethTo]);
+        trade.netting[wethFrom] -= int(amount);
+        emit NettingEvent(wethFrom, trade.netting[wethFrom]);
+        trade.netting[wethTo] += int(amount);
+        emit NettingEvent(wethTo, trade.netting[wethTo]);
     }
 
-    event TransferFrom(address from, address to, uint amount);
-    function transferNetted() internal {
-        for (uint i = 0; i < uniqueAddresses.length; i++) {
-            address account = uniqueAddresses[i];
-            if (netting[account] < 0) {
-                require(weth.transferFrom(account, address(this), uint(-netting[account])), "-Weth tx");
+    // event TransferFrom(address from, address to, uint amount);
+    function transferNetted(Trade storage trade) internal {
+        for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
+            address account = trade.uniqueAddresses[i];
+            delete trade.seen[account];
+            if (trade.netting[account] < 0) {
+                require(weth.transferFrom(account, address(this), uint(-trade.netting[account])), "-Weth tx");
                 // emit TransferFrom(account, address(this), uint(-netting[account]));
             }
         }
-        for (uint i = 0; i < uniqueAddresses.length; i++) {
-            address account = uniqueAddresses[i];
-            if (netting[account] > 0) {
-                require(weth.transfer(account, uint(netting[account])), "+Weth tx");
+        for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
+            address account = trade.uniqueAddresses[i];
+            if (trade.netting[account] > 0) {
+                require(weth.transfer(account, uint(trade.netting[account])), "+Weth tx");
                 // emit TransferFrom(address(this), account, uint(netting[account]));
             }
         }
@@ -255,6 +257,10 @@ contract Nix is Owned, ERC721TokenReceiver {
     function takerExecuteOrders(uint[] memory orderIndexes, uint[][] memory tokenIdsList, int totalPrice, address integrator) external payable reentrancyGuard {
         require(orderIndexes.length > 0);
         require(orderIndexes.length == tokenIdsList.length);
+
+        trades.push();
+        Trade storage trade = trades[trades.length - 1];
+        trade.taker = msg.sender;
 
         for (uint i = 0; i < orderIndexes.length; i++) {
             bytes32 orderKey = ordersIndex[orderIndexes[i]];
@@ -278,7 +284,7 @@ contract Nix is Owned, ERC721TokenReceiver {
             } else { // SellAll
                 (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, 1);
             }
-            addNetting(nftTo, nftFrom, order.price * priceMultiple);
+            addNetting(trade, nftTo, nftFrom, order.price * priceMultiple);
 
             if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) {
                 for (uint j = 0; j < tokenIds.length; j++) {
@@ -304,8 +310,8 @@ contract Nix is Owned, ERC721TokenReceiver {
             order.tradeCount++;
             emit TakerOrderExecuted(orderKey, i);
         }
-        require(netting[msg.sender] == totalPrice, "TotalPrice");
-        transferNetted();
+        require(trade.netting[msg.sender] == totalPrice, "TotalPrice");
+        transferNetted(trade);
         handleTips(integrator);
     }
 
