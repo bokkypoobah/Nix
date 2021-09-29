@@ -100,7 +100,9 @@ contract Nix is Owned, ERC721TokenReceiver {
         uint64 tradeMax;
     }
 
-    bytes4 constant ERC721INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
+    bytes4 constant ERC721_INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
+    bytes4 constant ERC721METADATA_INTERFACE = 0x5b5e139f;
+    bytes4 constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
 
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
     IERC20Partial public weth;
@@ -152,7 +154,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         order.taker = taker;
         order.token = token;
 
-        try IERC721Partial(order.token).supportsInterface(ERC721INTERFACE) returns (bool /*b*/) {
+        try IERC721Partial(order.token).supportsInterface(ERC721_INTERFACE) returns (bool /*b*/) {
             // console.log("Result %s", b);
         } catch {
             // console.log("ERROR ");
@@ -206,14 +208,36 @@ contract Nix is Owned, ERC721TokenReceiver {
     }
     struct Trade {
         address taker;
+        uint64 blockNumber;
         address[] uniqueAddresses;
         mapping(address => bool) seen;
         mapping(address => int) netting;
+        uint[] orders;
     }
     Trade[] public trades;
 
     function tradesLength() public view returns (uint) {
         return trades.length;
+    }
+    function getTrades(
+        uint[] memory tradeIndexes
+    ) public view returns (
+        address[] memory takers,
+        uint64[] memory blockNumbers,
+        uint[][] memory ordersList
+    ) {
+        uint length = tradeIndexes.length;
+        takers = new address[](length);
+        blockNumbers = new uint64[](length);
+        ordersList = new uint[][](length);
+        for (uint i = 0; i < length; i++) {
+            uint tradeIndex = tradeIndexes[i];
+            if (tradeIndex < trades.length) {
+                takers[i] = trades[tradeIndex].taker;
+                blockNumbers[i] = trades[tradeIndex].blockNumber;
+                ordersList[i] = trades[tradeIndex].orders;
+            }
+        }
     }
 
     // event NettingEvent(address wethFrom, address wethTo, int netFrom, int netTo);
@@ -229,9 +253,9 @@ contract Nix is Owned, ERC721TokenReceiver {
         }
 
         trade.netting[wethFrom] -= int(amount);
-        emit NettingEvent(wethFrom, trade.netting[wethFrom]);
+        // emit NettingEvent(wethFrom, trade.netting[wethFrom]);
         trade.netting[wethTo] += int(amount);
-        emit NettingEvent(wethTo, trade.netting[wethTo]);
+        // emit NettingEvent(wethTo, trade.netting[wethTo]);
     }
 
     // event TransferFrom(address from, address to, uint amount);
@@ -250,7 +274,9 @@ contract Nix is Owned, ERC721TokenReceiver {
                 require(weth.transfer(account, uint(trade.netting[account])), "+Weth tx");
                 // emit TransferFrom(address(this), account, uint(netting[account]));
             }
+            delete trade.netting[account];
         }
+        delete trade.uniqueAddresses;
     }
 
 
@@ -263,6 +289,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         trade.taker = msg.sender;
 
         for (uint i = 0; i < orderIndexes.length; i++) {
+            trade.orders.push(orderIndexes[i]);
             bytes32 orderKey = ordersIndex[orderIndexes[i]];
             Order storage order = orders[orderKey];
             uint[] memory tokenIds = tokenIdsList[i];
@@ -273,17 +300,12 @@ contract Nix is Owned, ERC721TokenReceiver {
 
             address nftFrom;
             address nftTo;
-            uint priceMultiple;
-
-            if (order.orderType == OrderType.BuyAny) {
-                (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, tokenIds.length);
-            } else if (order.orderType == OrderType.SellAny) {
-                (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, tokenIds.length);
-            } else if (order.orderType == OrderType.BuyAll) {
-                (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, 1);
-            } else { // SellAll
-                (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, 1);
+            if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
+                (nftFrom, nftTo) = (msg.sender, order.maker);
+            } else {
+                (nftFrom, nftTo) = (order.maker, msg.sender);
             }
+            uint priceMultiple = (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) ? tokenIds.length : 1;
             addNetting(trade, nftTo, nftFrom, order.price * priceMultiple);
 
             if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) {
@@ -480,7 +502,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         tokenIds = new uint[][](length);
         prices = new uint[](length);
         data = new uint64[5][](length);
-        for (uint i = 0; i < orderIndices.length; i++) {
+        for (uint i = 0; i < length; i++) {
             uint orderIndex = orderIndices[i];
             if (orderIndex < ordersIndex.length) {
                 bytes32 orderKey = ordersIndex[orderIndex];

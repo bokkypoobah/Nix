@@ -203,21 +203,26 @@ class Data {
         }
       }
       console.log();
+    }
 
-      const tradesLength = await this.nix.tradesLength();
+    const tradesLength = await this.nix.tradesLength();
+    if (tradesLength > 0) {
       console.log("tradesLength: " + tradesLength);
       // if (ordersLength > 0) {
       //   console.log("            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds");
       //   console.log("          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------");
-      //   const orderIndices = [];
-      //   for (let i = 0; i < ordersLength; i++) {
-      //     orderIndices.push(i);
+      const tradeIndices = [];
+      for (let i = 0; i < tradesLength; i++) {
+        tradeIndices.push(i);
+      }
+      const trades = await this.nix.getTrades(tradeIndices);
+      console.log("trades: " + JSON.stringify(trades));
+      // //   const orders = await this.nix.getOrders(tradeIndices);
+      //
+      //
+      //   for (let i = 0; i < tradesLength; i++) {
+      //     console.log("trade: " + JSON.stringify(trade));
       //   }
-      //   const orders = await this.nix.getOrders(orderIndices);
-        for (let i = 0; i < tradesLength; i++) {
-          const trade = await this.nix.trades(i);
-          console.log("trade: " + JSON.stringify(trade));
-        }
       // }
     }
   }
