@@ -556,3 +556,12 @@ contract Nix is Owned, ERC721TokenReceiver {
     receive() external payable {
     }
 }
+
+
+contract NixHelper {
+    Nix public nix;
+
+    constructor(Nix _nix) {
+        nix = _nix;
+    }
+}

@@ -17,6 +17,7 @@ class Data {
     this.weth = null;
     this.nftA = null;
     this.nix = null;
+    this.nixHelper = null;
 
     this.gasPrice = ethers.utils.parseUnits("84", "gwei");
     this.ethUsd = ethers.utils.parseUnits("3233.35", 18);
@@ -137,6 +138,10 @@ class Data {
   async setNix(nix) {
     this.nix = nix;
     this.addContract(nix, "Nix");
+  }
+  async setNixHelper(nixHelper) {
+    this.nixHelper = nixHelper;
+    this.addContract(nixHelper, "NixHelper");
   }
 
   async printState(prefix) {

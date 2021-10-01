@@ -13,6 +13,7 @@ describe("Nix", function () {
     const TestERC20 = await ethers.getContractFactory("TestERC20");
     const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
     const Nix = await ethers.getContractFactory("Nix");
+    const NixHelper = await ethers.getContractFactory("NixHelper");
     data = new Data();
     await data.init();
 
@@ -38,6 +39,15 @@ describe("Nix", function () {
     const nixTransactionReceipt = await data.nix.deployTransaction.wait();
     if (DETAILS >= 0) {
       await data.printEvents("txFee Deployed Nix", nixTransactionReceipt);
+    }
+
+    const nixHelper = await NixHelper.deploy(nix.address);
+    console.log(nixHelper);
+    await nixHelper.deployed();
+    await data.setNixHelper(nixHelper);
+    const nixHelperTransactionReceipt = await data.nixHelper.deployTransaction.wait();
+    if (DETAILS >= 0) {
+      await data.printEvents("txFee Deployed NixHelper", nixHelperTransactionReceipt);
     }
 
     const setup1 = [];
