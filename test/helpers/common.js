@@ -216,7 +216,7 @@ class Data {
         tradeIndices.push(i);
       }
       const trades = await this.nix.getTrades(tradeIndices);
-      console.log("trades: " + JSON.stringify(trades));
+      console.log("trades: " + JSON.stringify(trades.map((x) => { return x.toString(); })));
       // //   const orders = await this.nix.getOrders(tradeIndices);
       //
       //

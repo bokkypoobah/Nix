@@ -100,14 +100,14 @@ contract Nix is Owned, ERC721TokenReceiver {
         uint64 tradeMax;
     }
 
-    bytes4 constant ERC721_INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
-    bytes4 constant ERC721METADATA_INTERFACE = 0x5b5e139f;
-    bytes4 constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
+    bytes4 private constant ERC721_INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
+    bytes4 private constant ERC721METADATA_INTERFACE = 0x5b5e139f;
+    bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
 
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
     IERC20Partial public weth;
     bytes32[] public ordersIndex;
-    mapping(bytes32 => Order) public orders;
+    mapping(bytes32 => Order) private orders;
     // TODO mapping(address => bytes32[]) public ordersIndices;
 
     constructor(IERC20Partial _weth) {
@@ -154,11 +154,11 @@ contract Nix is Owned, ERC721TokenReceiver {
         order.taker = taker;
         order.token = token;
 
-        try IERC721Partial(order.token).supportsInterface(ERC721_INTERFACE) returns (bool /*b*/) {
-            // console.log("Result %s", b);
-        } catch {
-            // console.log("ERROR ");
-        }
+        // try IERC721Partial(order.token).supportsInterface(ERC721_INTERFACE) returns (bool /*b*/) {
+        //     // console.log("Result %s", b);
+        // } catch {
+        //     // console.log("ERROR ");
+        // }
 
         order.tokenIds = tokenIds;
         order.price = price;
@@ -214,7 +214,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         mapping(address => int) netting;
         uint[] orders;
     }
-    Trade[] public trades;
+    Trade[] private trades;
 
     function tradesLength() public view returns (uint) {
         return trades.length;
@@ -287,6 +287,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         trades.push();
         Trade storage trade = trades[trades.length - 1];
         trade.taker = msg.sender;
+        trade.blockNumber = uint64(block.number);
 
         for (uint i = 0; i < orderIndexes.length; i++) {
             trade.orders.push(orderIndexes[i]);
