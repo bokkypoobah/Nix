@@ -105,8 +105,8 @@ contract Nix is Owned, ERC721TokenReceiver {
     bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
 
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
-    IERC20Partial public weth;
-    bytes32[] public ordersIndex;
+    IERC20Partial private weth;
+    bytes32[] private ordersIndex;
     mapping(bytes32 => Order) private orders;
     // TODO mapping(address => bytes32[]) public ordersIndices;
 
@@ -206,13 +206,17 @@ contract Nix is Owned, ERC721TokenReceiver {
         address accounts;
         int amount;
     }
+    struct OrderInfo {
+        address token;
+        uint64 orderIndex;
+    }
     struct Trade {
         address taker;
         uint64 blockNumber;
         address[] uniqueAddresses;
         mapping(address => bool) seen;
         mapping(address => int) netting;
-        uint[] orders;
+        OrderInfo[] orders;
     }
     Trade[] private trades;
 
@@ -224,12 +228,12 @@ contract Nix is Owned, ERC721TokenReceiver {
     ) public view returns (
         address[] memory takers,
         uint64[] memory blockNumbers,
-        uint[][] memory ordersList
+        OrderInfo[][] memory ordersList
     ) {
         uint length = tradeIndexes.length;
         takers = new address[](length);
         blockNumbers = new uint64[](length);
-        ordersList = new uint[][](length);
+        ordersList = new OrderInfo[][](length);
         for (uint i = 0; i < length; i++) {
             uint tradeIndex = tradeIndexes[i];
             if (tradeIndex < trades.length) {
@@ -290,9 +294,9 @@ contract Nix is Owned, ERC721TokenReceiver {
         trade.blockNumber = uint64(block.number);
 
         for (uint i = 0; i < orderIndexes.length; i++) {
-            trade.orders.push(orderIndexes[i]);
             bytes32 orderKey = ordersIndex[orderIndexes[i]];
             Order storage order = orders[orderKey];
+            trade.orders.push(OrderInfo(order.token, uint64(orderIndexes[i])));
             uint[] memory tokenIds = tokenIdsList[i];
             require(tokenIds.length > 0, "TokenIds");
             require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
