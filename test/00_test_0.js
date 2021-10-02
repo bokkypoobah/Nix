@@ -101,7 +101,7 @@ describe("Nix", function () {
       });
     }
     // console.log("bytecode ~" + JSON.stringify(nix.deployTransaction.data.length/2, null, 2));
-    await data.printState("Setup Completed. Nix bytecode ~" + nix.deployTransaction.data.length/2);
+    await data.printState("Setup Completed. Nix bytecode ~" + nix.deployTransaction.data.length/2 + ", NixHelper bytecode ~" + nixHelper.deployTransaction.data.length/2);
   })
 
   it.only("00. Maker BuyAny Test", async function () {

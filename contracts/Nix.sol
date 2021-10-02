@@ -83,9 +83,9 @@ contract Owned {
 }
 
 
-contract Nix is Owned, ERC721TokenReceiver {
+enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
 
-    enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
+contract Nix is Owned, ERC721TokenReceiver {
 
     struct Order {
         address maker;
@@ -106,7 +106,7 @@ contract Nix is Owned, ERC721TokenReceiver {
     bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
 
     // TODO: Segregate by NFT contract addresses. Or multi-NFTs
-    IERC20Partial private weth;
+    IERC20Partial public weth;
     bytes32[] private ordersIndex;
     mapping(bytes32 => Order) private orders;
     // TODO mapping(address => bytes32[]) public ordersIndices;
@@ -426,71 +426,71 @@ contract Nix is Owned, ERC721TokenReceiver {
     function ordersLength() public view returns (uint) {
         return ordersIndex.length;
     }
-    enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
-    function orderStatus(uint i) public view returns (OrderStatus) {
-        bytes32 orderKey = ordersIndex[i];
-        Order memory order = orders[orderKey];
-        if (order.expiry > 0 && order.expiry < block.timestamp) {
-            return OrderStatus.Expired;
-        }
-        if (order.tradeCount >= order.tradeMax) {
-            return OrderStatus.Maxxed;
-        }
-        if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
-            uint wethBalance = weth.balanceOf(order.maker);
-            if (wethBalance < order.price) {
-                return OrderStatus.MakerNoWeth;
-            }
-            uint wethAllowance = weth.allowance(order.maker, address(this));
-            if (wethAllowance < order.price) {
-                return OrderStatus.MakerNoWethAllowance;
-            }
-        } else {
-            try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
-                if (!b) {
-                    return OrderStatus.MakerNotApprovedNix;
-                }
-            } catch {
-                return OrderStatus.UnknownError;
-            }
-            if (order.orderType == OrderType.SellAny) {
-                if (order.tokenIds.length == 0) {
-                    try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
-                        if (b == 0) {
-                            return OrderStatus.MakerNoToken;
-                        }
-                    } catch {
-                        return OrderStatus.UnknownError;
-                    }
-                } else {
-                    bool found = false;
-                    for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-                        try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
-                            if (a == order.maker) {
-                                found = true;
-                            }
-                        } catch {
-                            return OrderStatus.UnknownError;
-                        }
-                    }
-                    if (!found) {
-                        return OrderStatus.MakerNoToken;
-                    }
-                }
-            } else { // SellAll
-                for (uint j = 0; j < order.tokenIds.length; j++) {
-                    try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
-                        if (a != order.maker) {
-                            return OrderStatus.MakerNoToken;
-                        }
-                    } catch {
-                        return OrderStatus.UnknownError;
-                    }
-                }
-            }
-        }
-        return OrderStatus.Executable;
-    }
+    // enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
+    // function orderStatus(uint i) public view returns (OrderStatus) {
+    //     bytes32 orderKey = ordersIndex[i];
+    //     Order memory order = orders[orderKey];
+    //     if (order.expiry > 0 && order.expiry < block.timestamp) {
+    //         return OrderStatus.Expired;
+    //     }
+    //     if (order.tradeCount >= order.tradeMax) {
+    //         return OrderStatus.Maxxed;
+    //     }
+    //     if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
+    //         uint wethBalance = weth.balanceOf(order.maker);
+    //         if (wethBalance < order.price) {
+    //             return OrderStatus.MakerNoWeth;
+    //         }
+    //         uint wethAllowance = weth.allowance(order.maker, address(this));
+    //         if (wethAllowance < order.price) {
+    //             return OrderStatus.MakerNoWethAllowance;
+    //         }
+    //     } else {
+    //         try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
+    //             if (!b) {
+    //                 return OrderStatus.MakerNotApprovedNix;
+    //             }
+    //         } catch {
+    //             return OrderStatus.UnknownError;
+    //         }
+    //         if (order.orderType == OrderType.SellAny) {
+    //             if (order.tokenIds.length == 0) {
+    //                 try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
+    //                     if (b == 0) {
+    //                         return OrderStatus.MakerNoToken;
+    //                     }
+    //                 } catch {
+    //                     return OrderStatus.UnknownError;
+    //                 }
+    //             } else {
+    //                 bool found = false;
+    //                 for (uint j = 0; j < order.tokenIds.length && !found; j++) {
+    //                     try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+    //                         if (a == order.maker) {
+    //                             found = true;
+    //                         }
+    //                     } catch {
+    //                         return OrderStatus.UnknownError;
+    //                     }
+    //                 }
+    //                 if (!found) {
+    //                     return OrderStatus.MakerNoToken;
+    //                 }
+    //             }
+    //         } else { // SellAll
+    //             for (uint j = 0; j < order.tokenIds.length; j++) {
+    //                 try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+    //                     if (a != order.maker) {
+    //                         return OrderStatus.MakerNoToken;
+    //                     }
+    //                 } catch {
+    //                     return OrderStatus.UnknownError;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return OrderStatus.Executable;
+    // }
 
     // function getOrders(
     //     uint[] memory orderIndices
@@ -566,9 +566,75 @@ contract Nix is Owned, ERC721TokenReceiver {
 
 contract NixHelper {
     Nix public nix;
+    IERC20Partial immutable public weth;
 
     constructor(Nix _nix) {
         nix = _nix;
+        weth = _nix.weth();
+    }
+
+    enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
+    function orderStatus(Nix.Order memory order) public view returns (OrderStatus) {
+        if (order.expiry > 0 && order.expiry < block.timestamp) {
+            return OrderStatus.Expired;
+        }
+        if (order.tradeCount >= order.tradeMax) {
+            return OrderStatus.Maxxed;
+        }
+        if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
+            uint wethBalance = weth.balanceOf(order.maker);
+            if (wethBalance < order.price) {
+                return OrderStatus.MakerNoWeth;
+            }
+            uint wethAllowance = weth.allowance(order.maker, address(this));
+            if (wethAllowance < order.price) {
+                return OrderStatus.MakerNoWethAllowance;
+            }
+        } else {
+            try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
+                if (!b) {
+                    return OrderStatus.MakerNotApprovedNix;
+                }
+            } catch {
+                return OrderStatus.UnknownError;
+            }
+            if (order.orderType == OrderType.SellAny) {
+                if (order.tokenIds.length == 0) {
+                    try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
+                        if (b == 0) {
+                            return OrderStatus.MakerNoToken;
+                        }
+                    } catch {
+                        return OrderStatus.UnknownError;
+                    }
+                } else {
+                    bool found = false;
+                    for (uint j = 0; j < order.tokenIds.length && !found; j++) {
+                        try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+                            if (a == order.maker) {
+                                found = true;
+                            }
+                        } catch {
+                            return OrderStatus.UnknownError;
+                        }
+                    }
+                    if (!found) {
+                        return OrderStatus.MakerNoToken;
+                    }
+                }
+            } else { // SellAll
+                for (uint j = 0; j < order.tokenIds.length; j++) {
+                    try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+                        if (a != order.maker) {
+                            return OrderStatus.MakerNoToken;
+                        }
+                    } catch {
+                        return OrderStatus.UnknownError;
+                    }
+                }
+            }
+        }
+        return OrderStatus.Executable;
     }
 
     function getOrders(
@@ -609,7 +675,7 @@ contract NixHelper {
                 data[i][1] = uint64(order.expiry);
                 data[i][2] = uint64(order.tradeCount);
                 data[i][3] = uint64(order.tradeMax);
-                data[i][4] = uint64(nix.orderStatus(i));
+                data[i][4] = uint64(orderStatus(order));
             }
         }
     }
