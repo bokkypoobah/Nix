@@ -162,6 +162,9 @@ class Data {
       if (this.nix != null) {
         checkAccounts.push(this.nix.address);
       }
+      if (this.nixHelper != null) {
+        checkAccounts.push(this.nixHelper.address);
+      }
       for (let i = 0; i < checkAccounts.length; i++) {
         const ownerData = owners[checkAccounts[i]] || [];
         const balance = await ethers.provider.getBalance(checkAccounts[i]);

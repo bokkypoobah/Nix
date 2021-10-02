@@ -42,7 +42,7 @@ describe("Nix", function () {
     }
 
     const nixHelper = await NixHelper.deploy(nix.address);
-    console.log(nixHelper);
+    // console.log(nixHelper);
     await nixHelper.deployed();
     await data.setNixHelper(nixHelper);
     const nixHelperTransactionReceipt = await data.nixHelper.deployTransaction.wait();
