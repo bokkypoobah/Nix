@@ -57,14 +57,15 @@ contract Owned {
     constructor() {
         owner = msg.sender;
     }
-    function transferOwnership(address _newOwner) public onlyOwner {
-        newOwner = _newOwner;
-    }
-    function acceptOwnership() public {
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-        newOwner = address(0);
-    }
+    // TODO
+    // function transferOwnership(address _newOwner) public onlyOwner {
+    //     newOwner = _newOwner;
+    // }
+    // function acceptOwnership() public {
+    //     emit OwnershipTransferred(owner, newOwner);
+    //     owner = newOwner;
+    //     newOwner = address(0);
+    // }
 
     event TipsWithdrawn(address indexed token, uint tokens, uint tokenId);
     function withdrawTips(address token, uint tokens, uint tokenId) public onlyOwner {
@@ -117,6 +118,11 @@ contract Nix is Owned, ERC721TokenReceiver {
     function onERC721Received(address /*_operator*/, address /*_from*/, uint256 _tokenId, bytes memory /*_data*/) external override returns(bytes4) {
         emit ThankYou(_tokenId);
         return this.onERC721Received.selector;
+    }
+
+    function getOrder(uint orderIndex) external view returns (bytes32 orderKey, Order memory order) {
+        orderKey = ordersIndex[orderIndex];
+        order = orders[orderKey];
     }
 
     event MakerOrderAdded(bytes32 orderKey, uint orderIndex);
@@ -421,7 +427,7 @@ contract Nix is Owned, ERC721TokenReceiver {
         return ordersIndex.length;
     }
     enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
-    function orderStatus(uint i) private view returns (OrderStatus) {
+    function orderStatus(uint i) public view returns (OrderStatus) {
         bytes32 orderKey = ordersIndex[i];
         Order memory order = orders[orderKey];
         if (order.expiry > 0 && order.expiry < block.timestamp) {
@@ -486,49 +492,49 @@ contract Nix is Owned, ERC721TokenReceiver {
         return OrderStatus.Executable;
     }
 
-    function getOrders(
-        uint[] memory orderIndices
-    ) public view returns (
-        bytes32[] memory orderKeys,
-        address[] memory makers,
-        address[] memory takers,
-        address[] memory tokens,
-        // address[3][] memory addresses,
-        uint[][] memory tokenIds,
-        uint[] memory prices,
-        uint64[5][] memory data
-    ) {
-        uint length = orderIndices.length;
-        orderKeys = new bytes32[](length);
-        makers = new address[](length);
-        takers = new address[](length);
-        tokens = new address[](length);
-        // addresses = new address[3][](length);
-        tokenIds = new uint[][](length);
-        prices = new uint[](length);
-        data = new uint64[5][](length);
-        for (uint i = 0; i < length; i++) {
-            uint orderIndex = orderIndices[i];
-            if (orderIndex < ordersIndex.length) {
-                bytes32 orderKey = ordersIndex[orderIndex];
-                Order memory order = orders[orderKey];
-                orderKeys[i] = orderKey;
-                makers[i] = order.maker;
-                takers[i] = order.taker;
-                tokens[i] = order.token;
-                // addresses[0][i] = order.maker;
-                // addresses[1][i] = order.taker;
-                // addresses[2][i] = order.token;
-                tokenIds[i] = order.tokenIds;
-                prices[i] = order.price;
-                data[i][0] = uint64(order.orderType);
-                data[i][1] = uint64(order.expiry);
-                data[i][2] = uint64(order.tradeCount);
-                data[i][3] = uint64(order.tradeMax);
-                data[i][4] = uint64(orderStatus(i));
-            }
-        }
-    }
+    // function getOrders(
+    //     uint[] memory orderIndices
+    // ) public view returns (
+    //     bytes32[] memory orderKeys,
+    //     address[] memory makers,
+    //     address[] memory takers,
+    //     address[] memory tokens,
+    //     // address[3][] memory addresses,
+    //     uint[][] memory tokenIds,
+    //     uint[] memory prices,
+    //     uint64[5][] memory data
+    // ) {
+    //     uint length = orderIndices.length;
+    //     orderKeys = new bytes32[](length);
+    //     makers = new address[](length);
+    //     takers = new address[](length);
+    //     tokens = new address[](length);
+    //     // addresses = new address[3][](length);
+    //     tokenIds = new uint[][](length);
+    //     prices = new uint[](length);
+    //     data = new uint64[5][](length);
+    //     for (uint i = 0; i < length; i++) {
+    //         uint orderIndex = orderIndices[i];
+    //         if (orderIndex < ordersIndex.length) {
+    //             bytes32 orderKey = ordersIndex[orderIndex];
+    //             Order memory order = orders[orderKey];
+    //             orderKeys[i] = orderKey;
+    //             makers[i] = order.maker;
+    //             takers[i] = order.taker;
+    //             tokens[i] = order.token;
+    //             // addresses[0][i] = order.maker;
+    //             // addresses[1][i] = order.taker;
+    //             // addresses[2][i] = order.token;
+    //             tokenIds[i] = order.tokenIds;
+    //             prices[i] = order.price;
+    //             data[i][0] = uint64(order.orderType);
+    //             data[i][1] = uint64(order.expiry);
+    //             data[i][2] = uint64(order.tradeCount);
+    //             data[i][3] = uint64(order.tradeMax);
+    //             data[i][4] = uint64(orderStatus(i));
+    //         }
+    //     }
+    // }
 
 
     uint256 private _status;
@@ -563,5 +569,48 @@ contract NixHelper {
 
     constructor(Nix _nix) {
         nix = _nix;
+    }
+
+    function getOrders(
+        uint[] memory orderIndices
+    ) public view returns (
+        bytes32[] memory orderKeys,
+        address[] memory makers,
+        address[] memory takers,
+        address[] memory tokens,
+        // address[3][] memory addresses,
+        uint[][] memory tokenIds,
+        uint[] memory prices,
+        uint64[5][] memory data
+    ) {
+        uint length = orderIndices.length;
+        orderKeys = new bytes32[](length);
+        makers = new address[](length);
+        takers = new address[](length);
+        tokens = new address[](length);
+        // addresses = new address[3][](length);
+        tokenIds = new uint[][](length);
+        prices = new uint[](length);
+        data = new uint64[5][](length);
+        for (uint i = 0; i < length; i++) {
+            uint orderIndex = orderIndices[i];
+            if (orderIndex < nix.ordersLength()) {
+                (bytes32 orderKey, Nix.Order memory order) = nix.getOrder(orderIndex);
+                orderKeys[i] = orderKey;
+                makers[i] = order.maker;
+                takers[i] = order.taker;
+                tokens[i] = order.token;
+        //         // addresses[0][i] = order.maker;
+        //         // addresses[1][i] = order.taker;
+        //         // addresses[2][i] = order.token;
+                tokenIds[i] = order.tokenIds;
+                prices[i] = order.price;
+                data[i][0] = uint64(order.orderType);
+                data[i][1] = uint64(order.expiry);
+                data[i][2] = uint64(order.tradeCount);
+                data[i][3] = uint64(order.tradeMax);
+                data[i][4] = uint64(nix.orderStatus(i));
+            }
+        }
     }
 }

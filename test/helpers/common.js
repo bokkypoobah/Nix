@@ -183,7 +183,7 @@ class Data {
         for (let i = 0; i < ordersLength; i++) {
           orderIndices.push(i);
         }
-        const orders = await this.nix.getOrders(orderIndices);
+        const orders = await this.nixHelper.getOrders(orderIndices);
         for (let i = 0; i < ordersLength; i++) {
           const orderKey = orders[0][i];
           const maker = orders[1][i];
