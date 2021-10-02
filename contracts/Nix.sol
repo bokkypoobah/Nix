@@ -83,9 +83,9 @@ contract Owned {
 }
 
 
-enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
-
 contract Nix is Owned, ERC721TokenReceiver {
+
+    enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
 
     struct Order {
         address maker;
@@ -581,24 +581,24 @@ contract NixHelper {
         if (order.tradeCount >= order.tradeMax) {
             return OrderStatus.Maxxed;
         }
-        if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
+        if (order.orderType == Nix.OrderType.BuyAny || order.orderType == Nix.OrderType.BuyAll) {
             uint wethBalance = weth.balanceOf(order.maker);
             if (wethBalance < order.price) {
                 return OrderStatus.MakerNoWeth;
             }
-            uint wethAllowance = weth.allowance(order.maker, address(this));
+            uint wethAllowance = weth.allowance(order.maker, address(nix));
             if (wethAllowance < order.price) {
                 return OrderStatus.MakerNoWethAllowance;
             }
         } else {
-            try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
+            try IERC721Partial(order.token).isApprovedForAll(order.maker, address(nix)) returns (bool b) {
                 if (!b) {
                     return OrderStatus.MakerNotApprovedNix;
                 }
             } catch {
                 return OrderStatus.UnknownError;
             }
-            if (order.orderType == OrderType.SellAny) {
+            if (order.orderType == Nix.OrderType.SellAny) {
                 if (order.tokenIds.length == 0) {
                     try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
                         if (b == 0) {
