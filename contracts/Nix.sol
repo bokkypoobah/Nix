@@ -164,19 +164,9 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         orderKey = tokenInfos[token].ordersIndex[orderIndex];
         order = tokenInfos[token].orders[orderKey];
     }
-    function getTrades(uint[] memory tradeIndexes) public view returns (address[] memory takers, uint64[] memory blockNumbers, OrderInfo[][] memory ordersList) {
-        uint length = tradeIndexes.length;
-        takers = new address[](length);
-        blockNumbers = new uint64[](length);
-        ordersList = new OrderInfo[][](length);
-        for (uint i = 0; i < length; i++) {
-            uint tradeIndex = tradeIndexes[i];
-            if (tradeIndex < trades.length) {
-                takers[i] = trades[tradeIndex].taker;
-                blockNumbers[i] = trades[tradeIndex].blockNumber;
-                ordersList[i] = trades[tradeIndex].orders;
-            }
-        }
+    function getTrade(uint tradeIndex) external view returns (address taker, uint64 blockNumber, OrderInfo[] memory orders) {
+        Trade storage trade = trades[tradeIndex];
+        return (trade.taker, trade.blockNumber, trade.orders);
     }
 
     function makerAddOrder(
@@ -461,6 +451,7 @@ contract NixHelper {
         data = new uint64[5][](length);
         for (uint i = 0; i < length; i++) {
             uint orderIndex = orderIndices[i];
+            // TODO: Cache next line
             if (orderIndex < nix.ordersLength(token)) {
                 (bytes32 orderKey, Nix.Order memory order) = nix.getOrder(token, orderIndex);
                 orderKeys[i] = orderKey;
@@ -478,6 +469,23 @@ contract NixHelper {
                 data[i][2] = uint64(order.tradeCount);
                 data[i][3] = uint64(order.tradeMax);
                 data[i][4] = uint64(orderStatus(token, order));
+            }
+        }
+    }
+
+    function getTrades(uint[] memory tradeIndexes) public view returns (address[] memory takers, uint64[] memory blockNumbers, Nix.OrderInfo[][] memory ordersList) {
+        uint length = tradeIndexes.length;
+        takers = new address[](length);
+        blockNumbers = new uint64[](length);
+        ordersList = new Nix.OrderInfo[][](length);
+        for (uint i = 0; i < length; i++) {
+            uint tradeIndex = tradeIndexes[i];
+            if (tradeIndex < nix.tradesLength()) {
+                (address taker, uint64 blockNumber, Nix.OrderInfo[] memory orders) = nix.getTrade(tradeIndex);
+                // Nix.Trade memory trade = nix.getTrade(tradeIndex);
+                takers[i] = taker;
+                blockNumbers[i] = blockNumber;
+                ordersList[i] = orders;
             }
         }
     }

@@ -223,7 +223,7 @@ class Data {
       for (let i = 0; i < tradesLength; i++) {
         tradeIndices.push(i);
       }
-      const trades = await this.nix.getTrades(tradeIndices);
+      const trades = await this.nixHelper.getTrades(tradeIndices);
       console.log("trades: " + JSON.stringify(trades.map((x) => { return x.toString(); })));
       // //   const orders = await this.nix.getOrders(tradeIndices);
       //
