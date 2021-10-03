@@ -1,7 +1,5 @@
 pragma solidity ^0.8.0;
 
-// import "hardhat/console.sol";
-
 // ----------------------------------------------------------------------------
 // Nix v0.9.0
 //
@@ -16,10 +14,6 @@ pragma solidity ^0.8.0;
 // (c) BokkyPooBah / Bok Consulting Pty Ltd 2021. The MIT Licence.
 // ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
-// ERC Token Standard #20 Interface
-// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
-// ----------------------------------------------------------------------------
 interface IERC20Partial {
     function balanceOf(address tokenOwner) external view returns (uint balance);
     function allowance(address tokenOwner, address spender) external view returns (uint remaining);
@@ -67,8 +61,8 @@ contract Owned {
         newOwner = address(0);
     }
 
-    event TipsWithdrawn(address indexed token, uint tokens, uint tokenId);
-    function withdrawTips(address token, uint tokens, uint tokenId) public onlyOwner {
+    event Withdrawn(address indexed token, uint tokens, uint tokenId);
+    function withdraw(address token, uint tokens, uint tokenId) public onlyOwner {
         if (tokenId == 0) {
             if (token == address(0)) {
                 payable(owner).transfer((tokens == 0 ? address(this).balance : tokens));
@@ -78,18 +72,18 @@ contract Owned {
         } else {
             IERC721Partial(token).safeTransferFrom(address(this), owner, tokenId);
         }
-        emit TipsWithdrawn(address(token), tokens, tokenId);
+        emit Withdrawn(address(token), tokens, tokenId);
     }
 }
 
 
 contract ReentrancyGuard {
-    uint256 private _executionStatus;
+    uint256 private _executing;
     modifier reentrancyGuard() {
-        require(_executionStatus != 1, "NO!");
-        _executionStatus = 1;
+        require(_executing != 1, "NO!");
+        _executing = 1;
         _;
-        _executionStatus = 2;
+        _executing = 2;
     }
 }
 
