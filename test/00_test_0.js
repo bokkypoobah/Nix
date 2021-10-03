@@ -115,6 +115,7 @@ describe("Nix", function () {
 
     console.log("        --- Taker Execute Against Orders ---");
     const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address, data.nftA.address], [0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    // const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address], [1], [[4]], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     // const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([0], [[ 3]], ethers.utils.parseEther("11.00"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e" , await takerExecuteOrder1Tx.wait());
     // const takerExecuteOrder2Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrder(1, [ 4 ], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });

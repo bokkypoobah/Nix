@@ -160,9 +160,10 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     function tradesLength() public view returns (uint) {
         return trades.length;
     }
-    function getTokenInfo(uint tokenInfoIndex) external view returns (address token, uint64 executed, uint64 volumeToken, uint volumeWeth) {
+    function getTokenInfo(uint tokenInfoIndex) external view returns (address token, uint64 _ordersLength, uint64 executed, uint64 volumeToken, uint volumeWeth) {
         token = tokenInfosIndex[tokenInfoIndex];
         TokenInfo storage tokenInfo = tokenInfos[token];
+        _ordersLength = uint64(tokenInfo.ordersIndex.length);
         executed = tokenInfo.executed;
         volumeToken = tokenInfo.volumeToken;
         volumeWeth = tokenInfo.volumeWeth;
@@ -366,6 +367,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
 
 contract NixHelper {
+
     Nix public nix;
     IERC20Partial immutable public weth;
 
@@ -374,17 +376,19 @@ contract NixHelper {
         weth = _nix.weth();
     }
 
-    function getTokenInfos(uint[] memory tokenInfosIndices) public view returns (address[] memory tokens, uint64[] memory executedList, uint64[] memory volumeTokenList, uint[] memory volumeWethList) {
+    function getTokenInfos(uint[] memory tokenInfosIndices) public view returns (address[] memory tokens, uint64[] memory ordersLengthList, uint64[] memory executedList, uint64[] memory volumeTokenList, uint[] memory volumeWethList) {
         uint length = tokenInfosIndices.length;
         tokens = new address[](length);
+        ordersLengthList = new uint64[](length);
         executedList = new uint64[](length);
         volumeTokenList = new uint64[](length);
         volumeWethList = new uint[](length);
         for (uint i = 0; i < length; i++) {
             uint tokenInfoIndex = tokenInfosIndices[i];
             if (tokenInfoIndex < nix.tokenInfosLength()) {
-                (address token, uint64 executed, uint64 volumeToken, uint volumeWeth) = nix.getTokenInfo(tokenInfoIndex);
+                (address token, uint64 ordersLength, uint64 executed, uint64 volumeToken, uint volumeWeth) = nix.getTokenInfo(tokenInfoIndex);
                 tokens[i] = token;
+                ordersLengthList[i] = ordersLength;
                 executedList[i] = executed;
                 volumeTokenList[i] = volumeToken;
                 volumeWethList[i] = volumeWeth;
@@ -475,10 +479,10 @@ contract NixHelper {
         tokenIds = new uint[][](length);
         prices = new uint[](length);
         data = new uint64[5][](length);
+        uint ordersLength = nix.ordersLength(token);
         for (uint i = 0; i < length; i++) {
             uint orderIndex = orderIndices[i];
-            // TODO: Cache next line
-            if (orderIndex < nix.ordersLength(token)) {
+            if (orderIndex < ordersLength) {
                 (bytes32 orderKey, Nix.Order memory order) = nix.getOrder(token, orderIndex);
                 orderKeys[i] = orderKey;
                 makers[i] = order.maker;
@@ -499,9 +503,10 @@ contract NixHelper {
         takers = new address[](length);
         blockNumbers = new uint64[](length);
         ordersList = new Nix.OrderInfo[][](length);
+        uint tradesLength = nix.tradesLength();
         for (uint i = 0; i < length; i++) {
             uint tradeIndex = tradeIndexes[i];
-            if (tradeIndex < nix.tradesLength()) {
+            if (tradeIndex < tradesLength) {
                 (address taker, uint64 blockNumber, Nix.OrderInfo[] memory orders) = nix.getTrade(tradeIndex);
                 takers[i] = taker;
                 blockNumbers[i] = blockNumber;
