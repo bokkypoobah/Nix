@@ -101,6 +101,20 @@ contract Nix is Owned, ERC721TokenReceiver {
         uint64 tradeMax;
     }
 
+    struct TokenInfo {
+        address token;
+        bytes32[] ordersIndex;
+        mapping(bytes32 => Order) orders;
+        // uint64 blockNumber;
+        // address[] uniqueAddresses;
+        // mapping(address => bool) seen;
+        // mapping(address => int) netting;
+        // OrderInfo[] orders;
+    }
+
+    address[] private tokenInfosIndex;
+    mapping(address => TokenInfo) public tokenInfos;
+
     bytes4 private constant ERC721_INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
     bytes4 private constant ERC721METADATA_INTERFACE = 0x5b5e139f;
     bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
@@ -120,12 +134,21 @@ contract Nix is Owned, ERC721TokenReceiver {
         return this.onERC721Received.selector;
     }
 
+    function tokenInfosLength() public view returns (uint) {
+        return tokenInfosIndex.length;
+    }
+
+    function ordersLength() public view returns (uint) {
+        return ordersIndex.length;
+    }
+
     function getOrder(uint orderIndex) external view returns (bytes32 orderKey, Order memory order) {
         orderKey = ordersIndex[orderIndex];
         order = orders[orderKey];
     }
 
     event MakerOrderAdded(bytes32 orderKey, uint orderIndex);
+    event TokenInfoAdded(address token, uint tokenInfoIndex);
     function makerAddOrder(
         address taker,
         address token,
@@ -146,6 +169,22 @@ contract Nix is Owned, ERC721TokenReceiver {
             require(tradeMax > 0, "Must have at least one trade");
         }
 
+
+        // address[] private tokenInfosIndex;
+        // mapping(address => TokenInfo) public tokenInfos;
+        TokenInfo storage tokenInfo = tokenInfos[token];
+        if (tokenInfo.token != token) {
+            try IERC721Partial(token).supportsInterface(ERC721_INTERFACE) returns (bool b) {
+                require(b, "ERC721");
+                tokenInfosIndex.push(token);
+                tokenInfo.token = token;
+                emit TokenInfoAdded(token, tokenInfosIndex.length - 1);
+            } catch {
+                revert("Not ERC721");
+                // console.log("ERROR ");
+            }
+        }
+
         // TODO
         // bytes32[] memory index = ordersIndices[token];
         // if (ordersIndices[token].length == 0) {
@@ -159,12 +198,6 @@ contract Nix is Owned, ERC721TokenReceiver {
         order.maker = msg.sender;
         order.taker = taker;
         order.token = token;
-
-        // try IERC721Partial(order.token).supportsInterface(ERC721_INTERFACE) returns (bool /*b*/) {
-        //     // console.log("Result %s", b);
-        // } catch {
-        //     // console.log("ERROR ");
-        // }
 
         order.tokenIds = tokenIds;
         order.price = price;
@@ -423,9 +456,6 @@ contract Nix is Owned, ERC721TokenReceiver {
         handleTips(integrator);
     }*/
 
-    function ordersLength() public view returns (uint) {
-        return ordersIndex.length;
-    }
     // enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
     // function orderStatus(uint i) public view returns (OrderStatus) {
     //     bytes32 orderKey = ordersIndex[i];
