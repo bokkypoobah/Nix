@@ -374,14 +374,6 @@ contract NixHelper {
         weth = _nix.weth();
     }
 
-    // struct TokenInfo {
-    //     address token;
-    //     bytes32[] ordersIndex;
-    //     mapping(bytes32 => Order) orders;
-    //     uint64 trades;
-    //     uint64 volumeTokens;
-    //     uint64 volumeWeth;
-    // }
     function getTokenInfos(uint[] memory tokenInfosIndices) public view returns (address[] memory tokens, uint64[] memory executedList, uint64[] memory volumeTokenList, uint[] memory volumeWethList) {
         uint length = tokenInfosIndices.length;
         tokens = new address[](length);
