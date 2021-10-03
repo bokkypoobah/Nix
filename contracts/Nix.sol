@@ -42,7 +42,7 @@ interface ERC721TokenReceiver {
     function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data) external returns(bytes4);
 }
 
-/// @notice Ownership
+
 contract Owned {
     address public owner;
     address public newOwner;
@@ -57,15 +57,15 @@ contract Owned {
     constructor() {
         owner = msg.sender;
     }
-    // TODO
-    // function transferOwnership(address _newOwner) public onlyOwner {
-    //     newOwner = _newOwner;
-    // }
-    // function acceptOwnership() public {
-    //     emit OwnershipTransferred(owner, newOwner);
-    //     owner = newOwner;
-    //     newOwner = address(0);
-    // }
+
+    function transferOwnership(address _newOwner) public onlyOwner {
+        newOwner = _newOwner;
+    }
+    function acceptOwnership() public {
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+        newOwner = address(0);
+    }
 
     event TipsWithdrawn(address indexed token, uint tokens, uint tokenId);
     function withdrawTips(address token, uint tokens, uint tokenId) public onlyOwner {
@@ -83,46 +83,71 @@ contract Owned {
 }
 
 
-contract Nix is Owned, ERC721TokenReceiver {
+contract ReentrancyGuard {
+    uint256 private _executionStatus;
+    modifier reentrancyGuard() {
+        require(_executionStatus != 1, "NO!");
+        _executionStatus = 1;
+        _;
+        _executionStatus = 2;
+    }
+}
+
+
+contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
     enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
 
     struct Order {
         address maker;
         address taker;
-
         address token;
         uint[] tokenIds;
         uint price;
-
         OrderType orderType;
         uint64 expiry;
         uint64 tradeCount;
         uint64 tradeMax;
     }
-
     struct TokenInfo {
         address token;
         bytes32[] ordersIndex;
         mapping(bytes32 => Order) orders;
-        // uint64 blockNumber;
-        // address[] uniqueAddresses;
-        // mapping(address => bool) seen;
-        // mapping(address => int) netting;
-        // OrderInfo[] orders;
+        uint64 trades;
+        uint64 volumeTokens;
+        uint64 volumeWeth;
     }
-
-    address[] private tokenInfosIndex;
-    mapping(address => TokenInfo) public tokenInfos;
+    struct Netting {
+        address accounts;
+        int amount;
+    }
+    struct OrderInfo {
+        address token;
+        uint64 orderIndex;
+    }
+    struct Trade {
+        address taker;
+        uint64 blockNumber;
+        address[] uniqueAddresses;
+        mapping(address => bool) seen;
+        mapping(address => int) netting;
+        OrderInfo[] orders;
+    }
 
     bytes4 private constant ERC721_INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
     bytes4 private constant ERC721METADATA_INTERFACE = 0x5b5e139f;
     bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
 
     IERC20Partial public weth;
-    // bytes32[] private ordersIndex;
-    // mapping(bytes32 => Order) private orders;
-    // // TODO mapping(address => bytes32[]) public ordersIndices;
+
+    address[] private tokenInfosIndex;
+    mapping(address => TokenInfo) public tokenInfos;
+    Trade[] private trades;
+
+    event MakerOrderAdded(address token, bytes32 orderKey, uint orderIndex);
+    event TokenInfoAdded(address token, uint tokenInfoIndex);
+    event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
+    event ThankYou(uint tip);
 
     constructor(IERC20Partial _weth) {
         weth = _weth;
@@ -136,18 +161,31 @@ contract Nix is Owned, ERC721TokenReceiver {
     function tokenInfosLength() public view returns (uint) {
         return tokenInfosIndex.length;
     }
-
     function ordersLength(address token) public view returns (uint) {
         return tokenInfos[token].ordersIndex.length;
     }
-
+    function tradesLength() public view returns (uint) {
+        return trades.length;
+    }
     function getOrder(address token, uint orderIndex) external view returns (bytes32 orderKey, Order memory order) {
         orderKey = tokenInfos[token].ordersIndex[orderIndex];
         order = tokenInfos[token].orders[orderKey];
     }
+    function getTrades(uint[] memory tradeIndexes) public view returns (address[] memory takers, uint64[] memory blockNumbers, OrderInfo[][] memory ordersList) {
+        uint length = tradeIndexes.length;
+        takers = new address[](length);
+        blockNumbers = new uint64[](length);
+        ordersList = new OrderInfo[][](length);
+        for (uint i = 0; i < length; i++) {
+            uint tradeIndex = tradeIndexes[i];
+            if (tradeIndex < trades.length) {
+                takers[i] = trades[tradeIndex].taker;
+                blockNumbers[i] = trades[tradeIndex].blockNumber;
+                ordersList[i] = trades[tradeIndex].orders;
+            }
+        }
+    }
 
-    event MakerOrderAdded(address token, bytes32 orderKey, uint orderIndex);
-    event TokenInfoAdded(address token, uint tokenInfoIndex);
     function makerAddOrder(
         address taker,
         address token,
@@ -166,9 +204,6 @@ contract Nix is Owned, ERC721TokenReceiver {
             require(tradeMax > 0, "Must have at least one trade");
         }
 
-
-        // address[] private tokenInfosIndex;
-        // mapping(address => TokenInfo) public tokenInfos;
         TokenInfo storage tokenInfo = tokenInfos[token];
         if (tokenInfo.token != token) {
             try IERC721Partial(token).supportsInterface(ERC721_INTERFACE) returns (bool b) {
@@ -178,13 +213,11 @@ contract Nix is Owned, ERC721TokenReceiver {
                 emit TokenInfoAdded(token, tokenInfosIndex.length - 1);
             } catch {
                 revert("Not ERC721");
-                // console.log("ERROR ");
             }
         }
 
         bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, orderType, expiry));
         require(tokenInfo.orders[_orderKey].maker == address(0), "Duplicate");
-
 
         tokenInfo.ordersIndex.push(_orderKey);
         Order storage order = tokenInfo.orders[_orderKey];
@@ -232,89 +265,6 @@ contract Nix is Owned, ERC721TokenReceiver {
     //     emit MakerOrderUpdated(orderKey, orderIndex);
     //     handleTips(integrator);
     // }
-
-
-    struct Netting {
-        address accounts;
-        int amount;
-    }
-    struct OrderInfo {
-        address token;
-        uint64 orderIndex;
-    }
-    struct Trade {
-        address taker;
-        uint64 blockNumber;
-        address[] uniqueAddresses;
-        mapping(address => bool) seen;
-        mapping(address => int) netting;
-        OrderInfo[] orders;
-    }
-    Trade[] private trades;
-
-    function tradesLength() public view returns (uint) {
-        return trades.length;
-    }
-    function getTrades(
-        uint[] memory tradeIndexes
-    ) public view returns (
-        address[] memory takers,
-        uint64[] memory blockNumbers,
-        OrderInfo[][] memory ordersList
-    ) {
-        uint length = tradeIndexes.length;
-        takers = new address[](length);
-        blockNumbers = new uint64[](length);
-        ordersList = new OrderInfo[][](length);
-        for (uint i = 0; i < length; i++) {
-            uint tradeIndex = tradeIndexes[i];
-            if (tradeIndex < trades.length) {
-                takers[i] = trades[tradeIndex].taker;
-                blockNumbers[i] = trades[tradeIndex].blockNumber;
-                ordersList[i] = trades[tradeIndex].orders;
-            }
-        }
-    }
-
-    // event NettingEvent(address wethFrom, address wethTo, int netFrom, int netTo);
-    event NettingEvent(address account, int amount);
-    function addNetting(Trade storage trade, address wethFrom, address wethTo, uint amount) internal {
-        if (!trade.seen[wethFrom]) {
-            trade.uniqueAddresses.push(wethFrom);
-            trade.seen[wethFrom] = true;
-        }
-        if (!trade.seen[wethTo]) {
-            trade.uniqueAddresses.push(wethTo);
-            trade.seen[wethTo] = true;
-        }
-
-        trade.netting[wethFrom] -= int(amount);
-        // emit NettingEvent(wethFrom, trade.netting[wethFrom]);
-        trade.netting[wethTo] += int(amount);
-        // emit NettingEvent(wethTo, trade.netting[wethTo]);
-    }
-
-    // event TransferFrom(address from, address to, uint amount);
-    function transferNetted(Trade storage trade) internal {
-        for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
-            address account = trade.uniqueAddresses[i];
-            delete trade.seen[account];
-            if (trade.netting[account] < 0) {
-                require(weth.transferFrom(account, address(this), uint(-trade.netting[account])), "-Weth tx");
-                // emit TransferFrom(account, address(this), uint(-netting[account]));
-            }
-        }
-        for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
-            address account = trade.uniqueAddresses[i];
-            if (trade.netting[account] > 0) {
-                require(weth.transfer(account, uint(trade.netting[account])), "+Weth tx");
-                // emit TransferFrom(address(this), account, uint(netting[account]));
-            }
-            delete trade.netting[account];
-        }
-        delete trade.uniqueAddresses;
-    }
-
 
     function takerExecuteOrders(address[] memory tokenList, uint[] memory orderIndexes, uint[][] memory tokenIdsList, int totalPrice, address integrator) external payable reentrancyGuard {
         require(tokenList.length > 0);
@@ -377,201 +327,35 @@ contract Nix is Owned, ERC721TokenReceiver {
         handleTips(integrator);
     }
 
-    event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
-    /*
-    function takerExecuteOrder(uint orderIndex, uint[] memory tokenIds, uint totalPrice, address integrator) external payable reentrancyGuard {
-        bytes32 orderKey = ordersIndex[orderIndex];
-        Order storage order = orders[orderKey];
-        require(msg.sender != order.maker, "Own order");
-        require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
-        require(order.expiry == 0 || order.expiry >= block.timestamp, "Expired");
-        require(order.tradeCount < order.tradeMax, "Maxxed");
-        require(tokenIds.length > 0, "TokenIds");
-
-        address nftFrom;
-        address nftTo;
-        uint priceMultiple;
-
-        if (order.orderType == OrderType.BuyAny) {
-            (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, tokenIds.length);
-        } else if (order.orderType == OrderType.SellAny) {
-            (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, tokenIds.length);
-        } else if (order.orderType == OrderType.BuyAll) {
-            (nftFrom, nftTo, priceMultiple) = (msg.sender, order.maker, 1);
-        } else { // SellAll
-            (nftFrom, nftTo, priceMultiple) = (order.maker, msg.sender, 1);
+    function addNetting(Trade storage trade, address wethFrom, address wethTo, uint amount) internal {
+        if (!trade.seen[wethFrom]) {
+            trade.uniqueAddresses.push(wethFrom);
+            trade.seen[wethFrom] = true;
         }
-
-        require(order.price * priceMultiple == totalPrice, "TotalPrice");
-        require(weth.transferFrom(nftTo, nftFrom, totalPrice), "Weth tx");
-
-        // if (order.orderType == OrderType.BuyAny) {
-        //     for (uint i = 0; i < tokenIds.length; i++) {
-        //         bool found = false;
-        //         if (order.tokenIds.length == 0) {
-        //             found = true;
-        //         } else {
-        //             for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-        //                 if (tokenIds[i] == order.tokenIds[j]) {
-        //                     found = true;
-        //                 }
-        //             }
-        //         }
-        //         require(found, "TokenId");
-        //         IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, tokenIds[i]);
-        //     }
-        // } else if (order.orderType == OrderType.SellAny) {
-        //     for (uint i = 0; i < tokenIds.length; i++) {
-        //         bool found = false;
-        //         if (order.tokenIds.length == 0) {
-        //             found = true;
-        //         } else {
-        //             for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-        //                 if (tokenIds[i] == order.tokenIds[j]) {
-        //                     found = true;
-        //                 }
-        //             }
-        //         }
-        //         require(found, "TokenId");
-        //         IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, tokenIds[i]);
-        //     }
-        // } else if (order.orderType == OrderType.BuyAll) {
-        //     for (uint i = 0; i < order.tokenIds.length; i++) {
-        //         require(tokenIds[i] == order.tokenIds[i], "TokenIds");
-        //         IERC721Partial(order.token).safeTransferFrom(msg.sender, order.maker, order.tokenIds[i]);
-        //     }
-        // } else { // SellAll
-        //     for (uint i = 0; i < order.tokenIds.length; i++) {
-        //         require(tokenIds[i] == order.tokenIds[i], "TokenIds");
-        //         IERC721Partial(order.token).safeTransferFrom(order.maker, msg.sender, order.tokenIds[i]);
-        //     }
-        // }
-        //
-        // order.tradeCount++;
-        emit TakerOrderExecuted(orderKey, orderIndex);
-        handleTips(integrator);
-    }*/
-
-    // enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
-    // function orderStatus(uint i) public view returns (OrderStatus) {
-    //     bytes32 orderKey = ordersIndex[i];
-    //     Order memory order = orders[orderKey];
-    //     if (order.expiry > 0 && order.expiry < block.timestamp) {
-    //         return OrderStatus.Expired;
-    //     }
-    //     if (order.tradeCount >= order.tradeMax) {
-    //         return OrderStatus.Maxxed;
-    //     }
-    //     if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.BuyAll) {
-    //         uint wethBalance = weth.balanceOf(order.maker);
-    //         if (wethBalance < order.price) {
-    //             return OrderStatus.MakerNoWeth;
-    //         }
-    //         uint wethAllowance = weth.allowance(order.maker, address(this));
-    //         if (wethAllowance < order.price) {
-    //             return OrderStatus.MakerNoWethAllowance;
-    //         }
-    //     } else {
-    //         try IERC721Partial(order.token).isApprovedForAll(order.maker, address(this)) returns (bool b) {
-    //             if (!b) {
-    //                 return OrderStatus.MakerNotApprovedNix;
-    //             }
-    //         } catch {
-    //             return OrderStatus.UnknownError;
-    //         }
-    //         if (order.orderType == OrderType.SellAny) {
-    //             if (order.tokenIds.length == 0) {
-    //                 try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
-    //                     if (b == 0) {
-    //                         return OrderStatus.MakerNoToken;
-    //                     }
-    //                 } catch {
-    //                     return OrderStatus.UnknownError;
-    //                 }
-    //             } else {
-    //                 bool found = false;
-    //                 for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-    //                     try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
-    //                         if (a == order.maker) {
-    //                             found = true;
-    //                         }
-    //                     } catch {
-    //                         return OrderStatus.UnknownError;
-    //                     }
-    //                 }
-    //                 if (!found) {
-    //                     return OrderStatus.MakerNoToken;
-    //                 }
-    //             }
-    //         } else { // SellAll
-    //             for (uint j = 0; j < order.tokenIds.length; j++) {
-    //                 try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
-    //                     if (a != order.maker) {
-    //                         return OrderStatus.MakerNoToken;
-    //                     }
-    //                 } catch {
-    //                     return OrderStatus.UnknownError;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return OrderStatus.Executable;
-    // }
-
-    // function getOrders(
-    //     uint[] memory orderIndices
-    // ) public view returns (
-    //     bytes32[] memory orderKeys,
-    //     address[] memory makers,
-    //     address[] memory takers,
-    //     address[] memory tokens,
-    //     // address[3][] memory addresses,
-    //     uint[][] memory tokenIds,
-    //     uint[] memory prices,
-    //     uint64[5][] memory data
-    // ) {
-    //     uint length = orderIndices.length;
-    //     orderKeys = new bytes32[](length);
-    //     makers = new address[](length);
-    //     takers = new address[](length);
-    //     tokens = new address[](length);
-    //     // addresses = new address[3][](length);
-    //     tokenIds = new uint[][](length);
-    //     prices = new uint[](length);
-    //     data = new uint64[5][](length);
-    //     for (uint i = 0; i < length; i++) {
-    //         uint orderIndex = orderIndices[i];
-    //         if (orderIndex < ordersIndex.length) {
-    //             bytes32 orderKey = ordersIndex[orderIndex];
-    //             Order memory order = orders[orderKey];
-    //             orderKeys[i] = orderKey;
-    //             makers[i] = order.maker;
-    //             takers[i] = order.taker;
-    //             tokens[i] = order.token;
-    //             // addresses[0][i] = order.maker;
-    //             // addresses[1][i] = order.taker;
-    //             // addresses[2][i] = order.token;
-    //             tokenIds[i] = order.tokenIds;
-    //             prices[i] = order.price;
-    //             data[i][0] = uint64(order.orderType);
-    //             data[i][1] = uint64(order.expiry);
-    //             data[i][2] = uint64(order.tradeCount);
-    //             data[i][3] = uint64(order.tradeMax);
-    //             data[i][4] = uint64(orderStatus(i));
-    //         }
-    //     }
-    // }
-
-
-    uint256 private _status;
-    modifier reentrancyGuard() {
-        require(_status != 1, "Reentrancy");
-        _status = 1;
-        _;
-        _status = 2;
+        if (!trade.seen[wethTo]) {
+            trade.uniqueAddresses.push(wethTo);
+            trade.seen[wethTo] = true;
+        }
+        trade.netting[wethFrom] -= int(amount);
+        trade.netting[wethTo] += int(amount);
     }
-
-    event ThankYou(uint tip);
+    function transferNetted(Trade storage trade) internal {
+        for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
+            address account = trade.uniqueAddresses[i];
+            delete trade.seen[account];
+            if (trade.netting[account] < 0) {
+                require(weth.transferFrom(account, address(this), uint(-trade.netting[account])), "-Weth tx");
+            }
+        }
+        for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
+            address account = trade.uniqueAddresses[i];
+            if (trade.netting[account] > 0) {
+                require(weth.transfer(account, uint(trade.netting[account])), "+Weth tx");
+            }
+            delete trade.netting[account];
+        }
+        delete trade.uniqueAddresses;
+    }
     function handleTips(address integrator) private {
         if (msg.value > 0) {
             uint integratorTip;
@@ -584,7 +368,6 @@ contract Nix is Owned, ERC721TokenReceiver {
             emit ThankYou(msg.value);
         }
     }
-
     receive() external payable {
     }
 }
