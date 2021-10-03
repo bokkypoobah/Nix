@@ -175,7 +175,7 @@ class Data {
     }
 
     if (this.nix != null) {
-      const ordersLength = await this.nix.ordersLength();
+      const ordersLength = await this.nix.ordersLength(this.nftA.address);
       if (ordersLength > 0) {
         console.log("            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds");
         console.log("          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------");
@@ -183,7 +183,7 @@ class Data {
         for (let i = 0; i < ordersLength; i++) {
           orderIndices.push(i);
         }
-        const orders = await this.nixHelper.getOrders(orderIndices);
+        const orders = await this.nixHelper.getOrders(this.nftA.address, orderIndices);
         for (let i = 0; i < ordersLength; i++) {
           const orderKey = orders[0][i];
           const maker = orders[1][i];
