@@ -95,7 +95,6 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     struct Order {
         address maker;
         address taker;
-        address token;
         uint[] tokenIds;
         uint price;
         OrderType orderType;
@@ -217,8 +216,6 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         Order storage order = tokenInfo.orders[_orderKey];
         order.maker = msg.sender;
         order.taker = taker;
-        order.token = token;
-
         order.tokenIds = tokenIds;
         order.price = price;
         order.orderType = orderType;
@@ -275,7 +272,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             TokenInfo storage tokenInfo = tokenInfos[token];
             bytes32 orderKey = tokenInfo.ordersIndex[orderIndexes[i]];
             Order storage order = tokenInfo.orders[orderKey];
-            trade.orders.push(OrderInfo(order.token, uint64(orderIndexes[i])));
+            trade.orders.push(OrderInfo(token, uint64(orderIndexes[i])));
             uint[] memory tokenIds = tokenIdsList[i];
             require(tokenIds.length > 0, "TokenIds");
             require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
@@ -305,12 +302,12 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                         }
                     }
                     require(found, "TokenId");
-                    IERC721Partial(order.token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
+                    IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
                 }
             } else { // if (order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) {
                 for (uint j = 0; j < order.tokenIds.length; j++) {
                     require(tokenIds[j] == order.tokenIds[j], "TokenIds");
-                    IERC721Partial(order.token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
+                    IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
                 }
             }
             order.tradeCount++;
@@ -377,7 +374,7 @@ contract NixHelper {
     }
 
     enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
-    function orderStatus(Nix.Order memory order) public view returns (OrderStatus) {
+    function orderStatus(address token, Nix.Order memory order) public view returns (OrderStatus) {
         if (order.expiry > 0 && order.expiry < block.timestamp) {
             return OrderStatus.Expired;
         }
@@ -394,7 +391,7 @@ contract NixHelper {
                 return OrderStatus.MakerNoWethAllowance;
             }
         } else {
-            try IERC721Partial(order.token).isApprovedForAll(order.maker, address(nix)) returns (bool b) {
+            try IERC721Partial(token).isApprovedForAll(order.maker, address(nix)) returns (bool b) {
                 if (!b) {
                     return OrderStatus.MakerNotApprovedNix;
                 }
@@ -403,7 +400,7 @@ contract NixHelper {
             }
             if (order.orderType == Nix.OrderType.SellAny) {
                 if (order.tokenIds.length == 0) {
-                    try IERC721Partial(order.token).balanceOf(order.maker) returns (uint b) {
+                    try IERC721Partial(token).balanceOf(order.maker) returns (uint b) {
                         if (b == 0) {
                             return OrderStatus.MakerNoToken;
                         }
@@ -413,7 +410,7 @@ contract NixHelper {
                 } else {
                     bool found = false;
                     for (uint j = 0; j < order.tokenIds.length && !found; j++) {
-                        try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+                        try IERC721Partial(token).ownerOf(order.tokenIds[j]) returns (address a) {
                             if (a == order.maker) {
                                 found = true;
                             }
@@ -427,7 +424,7 @@ contract NixHelper {
                 }
             } else { // SellAll
                 for (uint j = 0; j < order.tokenIds.length; j++) {
-                    try IERC721Partial(order.token).ownerOf(order.tokenIds[j]) returns (address a) {
+                    try IERC721Partial(token).ownerOf(order.tokenIds[j]) returns (address a) {
                         if (a != order.maker) {
                             return OrderStatus.MakerNoToken;
                         }
@@ -469,7 +466,8 @@ contract NixHelper {
                 orderKeys[i] = orderKey;
                 makers[i] = order.maker;
                 takers[i] = order.taker;
-                tokens[i] = order.token;
+                // TODO: Delete
+                tokens[i] = token;
         //         // addresses[0][i] = order.maker;
         //         // addresses[1][i] = order.taker;
         //         // addresses[2][i] = order.token;
@@ -479,7 +477,7 @@ contract NixHelper {
                 data[i][1] = uint64(order.expiry);
                 data[i][2] = uint64(order.tradeCount);
                 data[i][3] = uint64(order.tradeMax);
-                data[i][4] = uint64(orderStatus(order));
+                data[i][4] = uint64(orderStatus(token, order));
             }
         }
     }
