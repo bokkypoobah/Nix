@@ -106,9 +106,9 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         address token;
         bytes32[] ordersIndex;
         mapping(bytes32 => Order) orders;
-        uint64 trades;
-        uint64 volumeTokens;
-        uint64 volumeWeth;
+        uint64 executed;
+        uint64 volumeToken;
+        uint volumeWeth;
     }
     struct Netting {
         address accounts;
@@ -159,6 +159,13 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     }
     function tradesLength() public view returns (uint) {
         return trades.length;
+    }
+    function getTokenInfo(uint tokenInfoIndex) external view returns (address token, uint64 executed, uint64 volumeToken, uint volumeWeth) {
+        token = tokenInfosIndex[tokenInfoIndex];
+        TokenInfo storage tokenInfo = tokenInfos[token];
+        executed = tokenInfo.executed;
+        volumeToken = tokenInfo.volumeToken;
+        volumeWeth = tokenInfo.volumeWeth;
     }
     function getOrder(address token, uint orderIndex) external view returns (bytes32 orderKey, Order memory order) {
         orderKey = tokenInfos[token].ordersIndex[orderIndex];
@@ -260,6 +267,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         for (uint i = 0; i < orderIndexes.length; i++) {
             address token = tokenList[i];
             TokenInfo storage tokenInfo = tokenInfos[token];
+            tokenInfo.executed++;
             bytes32 orderKey = tokenInfo.ordersIndex[orderIndexes[i]];
             Order storage order = tokenInfo.orders[orderKey];
             trade.orders.push(OrderInfo(token, uint64(orderIndexes[i])));
@@ -277,6 +285,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                 (nftFrom, nftTo) = (order.maker, msg.sender);
             }
             uint priceMultiple = (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) ? tokenIds.length : 1;
+            tokenInfo.volumeWeth += order.price * priceMultiple;
             addNetting(trade, nftTo, nftFrom, order.price * priceMultiple);
 
             if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) {
@@ -293,11 +302,13 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     }
                     require(found, "TokenId");
                     IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
+                    tokenInfo.volumeToken++;
                 }
             } else { // if (order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) {
                 for (uint j = 0; j < order.tokenIds.length; j++) {
                     require(tokenIds[j] == order.tokenIds[j], "TokenIds");
                     IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
+                    tokenInfo.volumeToken++;
                 }
             }
             order.tradeCount++;
@@ -362,6 +373,33 @@ contract NixHelper {
         nix = _nix;
         weth = _nix.weth();
     }
+
+    // struct TokenInfo {
+    //     address token;
+    //     bytes32[] ordersIndex;
+    //     mapping(bytes32 => Order) orders;
+    //     uint64 trades;
+    //     uint64 volumeTokens;
+    //     uint64 volumeWeth;
+    // }
+    function getTokenInfos(uint[] memory tokenInfosIndices) public view returns (address[] memory tokens, uint64[] memory executedList, uint64[] memory volumeTokenList, uint[] memory volumeWethList) {
+        uint length = tokenInfosIndices.length;
+        tokens = new address[](length);
+        executedList = new uint64[](length);
+        volumeTokenList = new uint64[](length);
+        volumeWethList = new uint[](length);
+        for (uint i = 0; i < length; i++) {
+            uint tokenInfoIndex = tokenInfosIndices[i];
+            if (tokenInfoIndex < nix.tokenInfosLength()) {
+                (address token, uint64 executed, uint64 volumeToken, uint volumeWeth) = nix.getTokenInfo(tokenInfoIndex);
+                tokens[i] = token;
+                executedList[i] = executed;
+                volumeTokenList[i] = volumeToken;
+                volumeWethList[i] = volumeWeth;
+            }
+        }
+    }
+
 
     enum OrderStatus { Executable, Expired, Maxxed, MakerNoWeth, MakerNoWethAllowance, MakerNoToken, MakerNotApprovedNix, UnknownError }
     function orderStatus(address token, Nix.Order memory order) public view returns (OrderStatus) {
@@ -434,8 +472,6 @@ contract NixHelper {
         bytes32[] memory orderKeys,
         address[] memory makers,
         address[] memory takers,
-        address[] memory tokens,
-        // address[3][] memory addresses,
         uint[][] memory tokenIds,
         uint[] memory prices,
         uint64[5][] memory data
@@ -444,8 +480,6 @@ contract NixHelper {
         orderKeys = new bytes32[](length);
         makers = new address[](length);
         takers = new address[](length);
-        tokens = new address[](length);
-        // addresses = new address[3][](length);
         tokenIds = new uint[][](length);
         prices = new uint[](length);
         data = new uint64[5][](length);
@@ -457,11 +491,6 @@ contract NixHelper {
                 orderKeys[i] = orderKey;
                 makers[i] = order.maker;
                 takers[i] = order.taker;
-                // TODO: Delete
-                tokens[i] = token;
-        //         // addresses[0][i] = order.maker;
-        //         // addresses[1][i] = order.taker;
-        //         // addresses[2][i] = order.token;
                 tokenIds[i] = order.tokenIds;
                 prices[i] = order.price;
                 data[i][0] = uint64(order.orderType);
@@ -482,7 +511,6 @@ contract NixHelper {
             uint tradeIndex = tradeIndexes[i];
             if (tradeIndex < nix.tradesLength()) {
                 (address taker, uint64 blockNumber, Nix.OrderInfo[] memory orders) = nix.getTrade(tradeIndex);
-                // Nix.Trade memory trade = nix.getTrade(tradeIndex);
                 takers[i] = taker;
                 blockNumbers[i] = blockNumber;
                 ordersList[i] = orders;
