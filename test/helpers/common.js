@@ -196,12 +196,17 @@ class Data {
     if (this.nix != null) {
 
       const tokenInfosLength = await this.nix.tokenInfosLength();
-      console.log("tokenInfosLength: " + tokenInfosLength);
       if (tokenInfosLength > 0) {
         var tokenInfosIndices = [...Array(parseInt(tokenInfosLength)).keys()];
-        console.log("tokenInfosIndices: " + JSON.stringify(tokenInfosIndices));
         const tokenInfos = await this.nixHelper.getTokenInfos(tokenInfosIndices);
-        console.log("tokenInfos: " + JSON.stringify(tokenInfos.map((x) => { return x.toString(); })));
+        for (let i = 0; i < tokenInfos[0].length; i++) {
+          const token = tokenInfos[0][i];
+          const ordersLength = tokenInfos[1][i];
+          const executed = tokenInfos[2][i];
+          const volumeToken = tokenInfos[3][i];
+          const volumeWeth = tokenInfos[4][i];
+          console.log("          Token " + this.getShortAccountName(token) + ", ordersLength: " + ordersLength + ", executed: " + executed + ", volumeToken: " + volumeToken + ", volumeWeth: " + ethers.utils.formatEther(volumeWeth));
+        }
       }
 
       const ordersLength = await this.nix.ordersLength(this.nftA.address);
