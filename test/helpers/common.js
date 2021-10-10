@@ -16,6 +16,7 @@ class Data {
 
     this.weth = null;
     this.nftA = null;
+    this.nftB = null;
     this.nix = null;
     this.nixHelper = null;
 
@@ -135,6 +136,10 @@ class Data {
     this.nftA = nftA;
     this.addContract(nftA, "NFTA");
   }
+  async setNFTB(nftB) {
+    this.nftB = nftB;
+    this.addContract(nftB, "NFTB");
+  }
   async setNix(nix) {
     this.nix = nix;
     this.addContract(nix, "Nix");
@@ -145,34 +150,48 @@ class Data {
   }
 
   async printState(prefix) {
+    console.log("        --- " + prefix + " ---");
+    let totalSupplyA = 0;
+    let totalSupplyB = 0;
+    const ownersA = {};
+    const ownersB = {};
     if (this.nftA != null) {
-      const totalSupply = await this.nftA.totalSupply();
-      console.log("        --- " + prefix + " ---");
-      const owners = {};
-      for (let i = 0; i < totalSupply; i++) {
+      totalSupplyA = await this.nftA.totalSupply();
+      for (let i = 0; i < totalSupplyA; i++) {
         const ownerOf = await this.nftA.ownerOf(i);
-        if (!owners[ownerOf]) {
-          owners[ownerOf] = [];
+        if (!ownersA[ownerOf]) {
+          ownersA[ownerOf] = [];
         }
-        owners[ownerOf].push(i);
+        ownersA[ownerOf].push(i);
       }
-      console.log("          Account                               ETH                 WETH " + await this.nftA.symbol() + " (totalSupply: " + totalSupply + ")");
-      console.log("          -------------------- -------------------- -------------------- -------------------------");
-      const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.integrator];
-      if (this.nix != null) {
-        checkAccounts.push(this.nix.address);
-      }
-      if (this.nixHelper != null) {
-        checkAccounts.push(this.nixHelper.address);
-      }
-      for (let i = 0; i < checkAccounts.length; i++) {
-        const ownerData = owners[checkAccounts[i]] || [];
-        const balance = await ethers.provider.getBalance(checkAccounts[i]);
-        const wethBalance = this.weth == null ? 0 : await this.weth.balanceOf(checkAccounts[i]);
-        console.log("          " + this.padRight(this.getShortAccountName(checkAccounts[i]), 20) + " " + this.padLeft(ethers.utils.formatEther(balance), 20) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + JSON.stringify(ownerData) + " ");
-      }
-      console.log();
     }
+    if (this.nftB != null) {
+      totalSupplyB = await this.nftB.totalSupply();
+      for (let i = 0; i < totalSupplyB; i++) {
+        const ownerOf = await this.nftB.ownerOf(i);
+        if (!ownersB[ownerOf]) {
+          ownersB[ownerOf] = [];
+        }
+        ownersB[ownerOf].push(i);
+      }
+    }
+    console.log("          Account                               ETH                 WETH " + this.padRight(await this.nftA.symbol() + " (" + totalSupplyA + ")", 26) + this.padRight(await this.nftB.symbol() + " (" + totalSupplyB + ")", 26) );
+    console.log("          -------------------- -------------------- -------------------- ------------------------- -------------------------");
+    const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.integrator];
+    if (this.nix != null) {
+      checkAccounts.push(this.nix.address);
+    }
+    if (this.nixHelper != null) {
+      checkAccounts.push(this.nixHelper.address);
+    }
+    for (let i = 0; i < checkAccounts.length; i++) {
+      const ownerDataA = ownersA[checkAccounts[i]] || [];
+      const ownerDataB = ownersB[checkAccounts[i]] || [];
+      const balance = await ethers.provider.getBalance(checkAccounts[i]);
+      const wethBalance = this.weth == null ? 0 : await this.weth.balanceOf(checkAccounts[i]);
+      console.log("          " + this.padRight(this.getShortAccountName(checkAccounts[i]), 20) + " " + this.padLeft(ethers.utils.formatEther(balance), 20) + " " + this.padLeft(ethers.utils.formatEther(wethBalance), 20) + " " + this.padRight(JSON.stringify(ownerDataA), 25) + " " + JSON.stringify(ownerDataB));
+    }
+    console.log();
 
     if (this.nix != null) {
 

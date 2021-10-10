@@ -32,6 +32,12 @@ describe("Nix", function () {
     if (DETAILS > 0) {
       await data.printEvents("Deployed NFTA", nftATransactionReceipt);
     }
+    const nftB = await ERC721PresetMinterPauserAutoId.deploy("NFTeeB", "NFTB", "uri");
+    await data.setNFTB(nftB);
+    const nftBTransactionReceipt = await data.nftB.deployTransaction.wait();
+    if (DETAILS > 0) {
+      await data.printEvents("Deployed NFTB", nftBTransactionReceipt);
+    }
     const nix = await Nix.deploy(weth.address);
     // console.log(nix);
     await nix.deployed();
@@ -69,32 +75,46 @@ describe("Nix", function () {
     setup2.push(data.nftA.mint(data.taker0));
     setup2.push(data.nftA.mint(data.taker0));
     setup2.push(data.nftA.mint(data.taker0));
-    const [mint0Tx, mint1Tx, mint2Tx, mint3Tx, mint4Tx, mint5Tx] = await Promise.all(setup2);
+    const mintATxs = await Promise.all(setup2);
     if (DETAILS > 0) {
-      [mint0Tx, mint1Tx, mint2Tx, mint3Tx, mint4Tx, mint5Tx].forEach( async function (a) {
+      mintATxs.forEach( async function (a) {
         await data.printEvents("Minted NFTA", await a.wait());
       });
     }
 
     const setup3 = [];
-    setup3.push(weth.connect(data.deployerSigner).approve(nix.address, ethers.utils.parseEther("100")));
-    setup3.push(weth.connect(data.maker0Signer).approve(nix.address, ethers.utils.parseEther("100")));
-    setup3.push(weth.connect(data.maker1Signer).approve(nix.address, ethers.utils.parseEther("100")));
-    setup3.push(weth.connect(data.taker0Signer).approve(nix.address, ethers.utils.parseEther("100")));
-    setup3.push(weth.connect(data.taker1Signer).approve(nix.address, ethers.utils.parseEther("100")));
-    const [wethApproveNix0Tx, wethApproveNix1Tx, wethApproveNix2Tx, wethApproveNix3Tx, wethApproveNix4Tx] = await Promise.all(setup3);
+    setup3.push(data.nftB.mint(data.maker0));
+    setup3.push(data.nftB.mint(data.maker0));
+    setup3.push(data.nftB.mint(data.maker0));
+    setup3.push(data.nftB.mint(data.taker0));
+    setup3.push(data.nftB.mint(data.taker0));
+    setup3.push(data.nftB.mint(data.taker0));
+    const mintBTxs = await Promise.all(setup3);
+    if (DETAILS > 0) {
+      mintBTxs.forEach( async function (a) {
+        await data.printEvents("Minted NFTB", await a.wait());
+      });
+    }
+
+    const setup4 = [];
+    setup4.push(weth.connect(data.deployerSigner).approve(nix.address, ethers.utils.parseEther("100")));
+    setup4.push(weth.connect(data.maker0Signer).approve(nix.address, ethers.utils.parseEther("100")));
+    setup4.push(weth.connect(data.maker1Signer).approve(nix.address, ethers.utils.parseEther("100")));
+    setup4.push(weth.connect(data.taker0Signer).approve(nix.address, ethers.utils.parseEther("100")));
+    setup4.push(weth.connect(data.taker1Signer).approve(nix.address, ethers.utils.parseEther("100")));
+    const [wethApproveNix0Tx, wethApproveNix1Tx, wethApproveNix2Tx, wethApproveNix3Tx, wethApproveNix4Tx] = await Promise.all(setup4);
     if (DETAILS > 0) {
       [wethApproveNix0Tx, wethApproveNix1Tx, wethApproveNix2Tx, wethApproveNix3Tx, wethApproveNix4Tx].forEach( async function (a) {
         await data.printEvents("WETH.approve(nix)", await a.wait());
       });
     }
 
-    const setup4 = [];
-    setup4.push(data.nftA.connect(data.maker0Signer).setApprovalForAll(nix.address, true));
-    setup4.push(data.nftA.connect(data.maker1Signer).setApprovalForAll(nix.address, true));
-    setup4.push(data.nftA.connect(data.taker0Signer).setApprovalForAll(nix.address, true));
-    setup4.push(data.nftA.connect(data.taker1Signer).setApprovalForAll(nix.address, true));
-    const [approve0Tx, approve1Tx, approve2Tx, approve3Tx] = await Promise.all(setup4);
+    const setup5 = [];
+    setup5.push(data.nftA.connect(data.maker0Signer).setApprovalForAll(nix.address, true));
+    setup5.push(data.nftA.connect(data.maker1Signer).setApprovalForAll(nix.address, true));
+    setup5.push(data.nftA.connect(data.taker0Signer).setApprovalForAll(nix.address, true));
+    setup5.push(data.nftA.connect(data.taker1Signer).setApprovalForAll(nix.address, true));
+    const [approve0Tx, approve1Tx, approve2Tx, approve3Tx] = await Promise.all(setup5);
     if (DETAILS > 0) {
       [approve0Tx, approve1Tx, approve2Tx, approve3Tx].forEach( async function (a) {
         await data.printEvents("NFTA.approved(nix)", await a.wait());
@@ -111,6 +131,8 @@ describe("Nix", function () {
     const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
     const makerAddOrder2Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(ZERO_ADDRESS, data.nftA.address, [ ], ethers.utils.parseEther("0.0011"), ORDERTYPE.BUYANY, expiry2, 5, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e", await makerAddOrder2Tx.wait());
+    const makerAddOrder3Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(ZERO_ADDRESS, data.nftB.address, [ 3, 4, 5 ], ethers.utils.parseEther("22"), ORDERTYPE.BUYANY, 0, 5, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTB:{3|4|5} for 22e", await makerAddOrder3Tx.wait());
     await data.printState("After Maker Added Orders");
 
     console.log("        --- Taker Execute Against Orders ---");
