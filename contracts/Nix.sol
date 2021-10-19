@@ -32,6 +32,10 @@ interface IERC721Partial is IERC165 {
     function safeTransferFrom(address _from, address _to, uint256 _tokenId) external payable;
 }
 
+interface IERC2981 is IERC165 {
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 royaltyAmount);
+}
+
 interface ERC721TokenReceiver {
     function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data) external returns(bytes4);
 }
@@ -42,6 +46,7 @@ contract Owned {
     address public newOwner;
 
     event OwnershipTransferred(address indexed _from, address indexed _to);
+    event Withdrawn(address indexed token, uint tokens, uint tokenId);
 
     modifier onlyOwner {
         require(msg.sender == owner, "Not owner");
@@ -61,7 +66,6 @@ contract Owned {
         newOwner = address(0);
     }
 
-    event Withdrawn(address indexed token, uint tokens, uint tokenId);
     function withdraw(address token, uint tokens, uint tokenId) public onlyOwner {
         if (tokenId == 0) {
             if (token == address(0)) {
