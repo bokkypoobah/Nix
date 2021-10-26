@@ -27,7 +27,7 @@ describe("Nix", function () {
     await weth.deployed();
     await data.setWeth(weth);
 
-    const royaltyEngine = await MockRoyaltyEngineV1.deploy();
+    const royaltyEngine = await MockRoyaltyEngineV1.deploy(data.royalty1, data.royalty2);
     await royaltyEngine.deployed();
     await data.setRoyaltyEngine(royaltyEngine);
 
@@ -141,7 +141,7 @@ describe("Nix", function () {
     await data.printState("After Maker Added Orders");
 
     console.log("        --- Taker Execute Against Orders ---");
-    const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address, data.nftA.address], [0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22.0011").mul(8).div(10), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address, data.nftA.address], [0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22.0011").mul(7).div(10), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     // const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address], [1], [[4]], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     // const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([0], [[ 3]], ethers.utils.parseEther("11.00"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e" , await takerExecuteOrder1Tx.wait());

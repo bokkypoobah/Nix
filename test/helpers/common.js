@@ -28,8 +28,8 @@ class Data {
   }
 
   async init() {
-    [this.deployerSigner, this.maker0Signer, this.maker1Signer, this.taker0Signer, this.taker1Signer, this.integratorSigner] = await ethers.getSigners();
-    [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.integrator] = await Promise.all([this.deployerSigner.getAddress(), this.maker0Signer.getAddress(), this.maker1Signer.getAddress(), this.taker0Signer.getAddress(), this.taker1Signer.getAddress(), this.integratorSigner.getAddress()]);
+    [this.deployerSigner, this.maker0Signer, this.maker1Signer, this.taker0Signer, this.taker1Signer, this.royalty1Signer, this.royalty2Signer, this.integratorSigner] = await ethers.getSigners();
+    [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.royalty1, this.royalty2, this.integrator] = await Promise.all([this.deployerSigner.getAddress(), this.maker0Signer.getAddress(), this.maker1Signer.getAddress(), this.taker0Signer.getAddress(), this.taker1Signer.getAddress(), this.royalty1Signer.getAddress(), this.royalty2Signer.getAddress(), this.integratorSigner.getAddress()]);
 
     this.addAccount("0x0000000000000000000000000000000000000000", "null");
     this.addAccount(this.deployer, "deployer");
@@ -37,6 +37,8 @@ class Data {
     this.addAccount(this.maker1, "maker1");
     this.addAccount(this.taker0, "taker0");
     this.addAccount(this.taker1, "taker1");
+    this.addAccount(this.royalty1, "royalty1");
+    this.addAccount(this.royalty2, "royalty2");
     this.addAccount(this.integrator, "integrator");
     this.baseBlock = await ethers.provider.getBlockNumber();
   }
@@ -182,7 +184,7 @@ class Data {
     }
     console.log("          Account                               ETH                 WETH " + this.padRight(await this.nftA.symbol() + " (" + totalSupplyA + ")", 26) + this.padRight(await this.nftB.symbol() + " (" + totalSupplyB + ")", 26) );
     console.log("          -------------------- -------------------- -------------------- ------------------------- -------------------------");
-    const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.integrator];
+    const checkAccounts = [this.deployer, this.maker0, this.maker1, this.taker0, this.taker1, this.royalty1, this.royalty2, this.integrator];
     if (this.nix != null) {
       checkAccounts.push(this.nix.address);
     }

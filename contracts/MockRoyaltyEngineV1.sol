@@ -21,17 +21,21 @@ interface IRoyaltyEngineV1Partial /* is IERC165 */ {
 
 contract MockRoyaltyEngineV1 is IRoyaltyEngineV1Partial {
 
-    address payable public royaltyRecipient;
+    address payable public royalty1;
+    address payable public royalty2;
 
-    constructor() {
-        royaltyRecipient = payable(msg.sender);
+    constructor(address _royalty1, address _royalty2) {
+        royalty1 = payable(_royalty1);
+        royalty2 = payable(_royalty2);
     }
 
 
     function getRoyaltyView(address /*tokenAddress*/, uint /*tokenId*/, uint value) external view override returns(address payable[] memory recipients, uint[] memory amounts) {
-        recipients = new address payable[](1);
-        amounts = new uint256[](1);
-        recipients[0] = royaltyRecipient;
-        amounts[0] = value/5;
+        recipients = new address payable[](2);
+        amounts = new uint256[](2);
+        recipients[0] = royalty1;
+        recipients[1] = royalty2;
+        amounts[0] = value/10;
+        amounts[1] = value/5;
     }
 }
