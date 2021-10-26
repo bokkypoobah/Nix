@@ -15,6 +15,7 @@ class Data {
     this.contracts = [];
 
     this.weth = null;
+    this.royaltyEngine = null;
     this.nftA = null;
     this.nftB = null;
     this.nix = null;
@@ -131,6 +132,10 @@ class Data {
   async setWeth(weth) {
     this.weth = weth;
     this.addContract(weth, "WETH");
+  }
+  async setRoyaltyEngine(royaltyEngine) {
+    this.royaltyEngine = royaltyEngine;
+    this.addContract(royaltyEngine, "RoyaltyEngine");
   }
   async setNFTA(nftA) {
     this.nftA = nftA;

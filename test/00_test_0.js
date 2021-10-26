@@ -11,6 +11,7 @@ describe("Nix", function () {
 
   beforeEach(async function () {
     const TestERC20 = await ethers.getContractFactory("TestERC20");
+    const MockRoyaltyEngineV1 = await ethers.getContractFactory("MockRoyaltyEngineV1");
     const ERC721PresetMinterPauserAutoId  = await ethers.getContractFactory("ERC721PresetMinterPauserAutoId");
     const Nix = await ethers.getContractFactory("Nix");
     const NixHelper = await ethers.getContractFactory("NixHelper");
@@ -26,6 +27,10 @@ describe("Nix", function () {
     await weth.deployed();
     await data.setWeth(weth);
 
+    const royaltyEngine = await MockRoyaltyEngineV1.deploy();
+    await royaltyEngine.deployed();
+    await data.setRoyaltyEngine(royaltyEngine);
+
     const nftA = await ERC721PresetMinterPauserAutoId.deploy("NFTeeA", "NFTA", "uri");
     await data.setNFTA(nftA);
     const nftATransactionReceipt = await data.nftA.deployTransaction.wait();
@@ -38,7 +43,7 @@ describe("Nix", function () {
     if (DETAILS > 0) {
       await data.printEvents("Deployed NFTB", nftBTransactionReceipt);
     }
-    const nix = await Nix.deploy(weth.address);
+    const nix = await Nix.deploy(weth.address, royaltyEngine.address);
     // console.log(nix);
     await nix.deployed();
     await data.setNix(nix);

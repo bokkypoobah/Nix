@@ -26,18 +26,18 @@ interface IERC165 {
 }
 
 interface IERC721Partial is IERC165 {
-    function ownerOf(uint256 tokenId) external view returns (address);
-    function balanceOf(address owner) external view returns (uint256 balance);
+    function ownerOf(uint tokenId) external view returns (address);
+    function balanceOf(address owner) external view returns (uint balance);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
-    function safeTransferFrom(address _from, address _to, uint256 _tokenId) external payable;
+    function safeTransferFrom(address _from, address _to, uint _tokenId) external payable;
 }
 
-interface IERC2981 is IERC165 {
-    function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view returns (address receiver, uint256 royaltyAmount);
+interface IRoyaltyEngineV1Partial is IERC165 {
+    function getRoyaltyView(address tokenAddress, uint tokenId, uint value) external view returns(address payable[] memory recipients, uint[] memory amounts);
 }
 
 interface ERC721TokenReceiver {
-    function onERC721Received(address _operator, address _from, uint256 _tokenId, bytes memory _data) external returns(bytes4);
+    function onERC721Received(address _operator, address _from, uint _tokenId, bytes memory _data) external returns(bytes4);
 }
 
 
@@ -82,7 +82,7 @@ contract Owned {
 
 
 contract ReentrancyGuard {
-    uint256 private _executing;
+    uint private _executing;
     modifier reentrancyGuard() {
         require(_executing != 1, "NO!");
         _executing = 1;
@@ -136,6 +136,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
 
     IERC20Partial public weth;
+    IRoyaltyEngineV1Partial public royaltyEngine;
 
     address[] private tokenInfosIndex;
     mapping(address => TokenInfo) public tokenInfos;
@@ -146,11 +147,12 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
     event ThankYou(uint tip);
 
-    constructor(IERC20Partial _weth) {
+    constructor(IERC20Partial _weth, IRoyaltyEngineV1Partial _royaltyEngine) {
         weth = _weth;
+        royaltyEngine = _royaltyEngine;
     }
 
-    function onERC721Received(address /*_operator*/, address /*_from*/, uint256 _tokenId, bytes memory /*_data*/) external override returns(bytes4) {
+    function onERC721Received(address /*_operator*/, address /*_from*/, uint _tokenId, bytes memory /*_data*/) external override returns(bytes4) {
         emit ThankYou(_tokenId);
         return this.onERC721Received.selector;
     }
