@@ -32,6 +32,6 @@ contract MockRoyaltyEngineV1 is IRoyaltyEngineV1Partial {
         recipients = new address payable[](1);
         amounts = new uint256[](1);
         recipients[0] = royaltyRecipient;
-        amounts[0] = value/10;
+        amounts[0] = value/5;
     }
 }

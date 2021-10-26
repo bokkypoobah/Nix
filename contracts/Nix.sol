@@ -308,7 +308,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
                     tokenInfo.volumeToken++;
                     tokenInfo.volumeWeth += order.price;
-                    addNetting(trade, nftTo, nftFrom, order.price);
+                    addNetting(token, tokenIds[j], trade, nftTo, nftFrom, order.price);
                 }
             } else { // if (order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) {
                 for (uint j = 0; j < order.tokenIds.length; j++) {
@@ -317,7 +317,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     tokenInfo.volumeToken++;
                 }
                 tokenInfo.volumeWeth += order.price;
-                addNetting(trade, nftTo, nftFrom, order.price);
+                // NOTE - Using first one
+                addNetting(token, order.tokenIds[0], trade, nftTo, nftFrom, order.price);
             }
             order.tradeCount++;
             emit TakerOrderExecuted(orderKey, i);
@@ -327,7 +328,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         handleTips(integrator);
     }
 
-    function addNetting(Trade storage trade, address wethFrom, address wethTo, uint amount) internal {
+    function addNetting(address token, uint tokenId, Trade storage trade, address wethFrom, address wethTo, uint amount) internal {
         if (!trade.seen[wethFrom]) {
             trade.uniqueAddresses.push(wethFrom);
             trade.seen[wethFrom] = true;
@@ -337,6 +338,17 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             trade.seen[wethTo] = true;
         }
         trade.netting[wethFrom] -= int(amount);
+
+        (address payable[] memory recipients, uint256[] memory amounts) = royaltyEngine.getRoyaltyView(token, tokenId, amount);
+        require(recipients.length == amounts.length);
+        for (uint i = 0; i < recipients.length; i++) {
+            if (!trade.seen[recipients[i]]) {
+                trade.uniqueAddresses.push(recipients[i]);
+                trade.seen[recipients[i]] = true;
+            }
+            trade.netting[recipients[i]] += int(amounts[i]);
+            trade.netting[wethTo] -= int(amounts[i]);
+        }
         trade.netting[wethTo] += int(amount);
     }
     function transferNetted(Trade storage trade) internal {
