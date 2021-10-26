@@ -291,9 +291,6 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             } else {
                 (nftFrom, nftTo) = (order.maker, msg.sender);
             }
-            uint priceMultiple = (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) ? tokenIds.length : 1;
-            tokenInfo.volumeWeth += order.price * priceMultiple;
-            addNetting(trade, nftTo, nftFrom, order.price * priceMultiple);
 
             if (order.orderType == OrderType.BuyAny || order.orderType == OrderType.SellAny) {
                 for (uint j = 0; j < tokenIds.length; j++) {
@@ -310,6 +307,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     require(found, "TokenId");
                     IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
                     tokenInfo.volumeToken++;
+                    tokenInfo.volumeWeth += order.price;
+                    addNetting(trade, nftTo, nftFrom, order.price);
                 }
             } else { // if (order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) {
                 for (uint j = 0; j < order.tokenIds.length; j++) {
@@ -317,6 +316,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
                     tokenInfo.volumeToken++;
                 }
+                tokenInfo.volumeWeth += order.price;
+                addNetting(trade, nftTo, nftFrom, order.price);
             }
             order.tradeCount++;
             emit TakerOrderExecuted(orderKey, i);
