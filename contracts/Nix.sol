@@ -362,7 +362,6 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         trade.blockNumber = uint64(block.number);
 
         for (uint i = 0; i < orderIndexes.length; i++) {
-            // address token = tokenList[i];
             Token storage tokenInfo = tokens[tokenList[i]];
             tokenInfo.executed++;
             bytes32 orderKey = tokenInfo.ordersIndex[orderIndexes[i]];
@@ -374,14 +373,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             require(order.expiry == 0 || order.expiry >= block.timestamp, "Expired");
             require(order.tradeCount < order.tradeMax, "Maxxed");
 
-            address nftFrom;
-            address nftTo;
-            if (order.buyOrSell == BuyOrSell.Buy) {
-                (nftFrom, nftTo) = (msg.sender, order.maker);
-            } else {
-                (nftFrom, nftTo) = (order.maker, msg.sender);
-            }
-
+            (address nftFrom, address nftTo) = (order.buyOrSell == BuyOrSell.Buy) ? (msg.sender, order.maker) : (order.maker, msg.sender);
             if (order.anyOrAll == AnyOrAll.Any) {
                 for (uint j = 0; j < tokenIds.length; j++) {
                     bool found = false;
@@ -398,7 +390,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     IERC721Partial(tokenInfo.token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
                     tokenInfo.volumeToken++;
                     tokenInfo.volumeWeth += order.price;
-                    addNetting(tokenInfo, tokenIds[j], trade, nftTo, nftFrom, order);
+                    addNetting(tokenInfo, tokenIds[j], trade, order);
                 }
             } else {
                 require(tokenIds.length == order.tokenIds.length, "TokenIds length");
@@ -409,7 +401,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                 }
                 tokenInfo.volumeWeth += order.price;
                 // NOTE - Royalty information for the FIRST tokenId for All
-                addNetting(tokenInfo, order.tokenIds[0], trade, nftTo, nftFrom, order);
+                addNetting(tokenInfo, order.tokenIds[0], trade, order);
             }
             order.tradeCount++;
             emit OrderExecuted(tokenInfo.token, orderIndexes[i]);
@@ -419,7 +411,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         handleTips(integrator);
     }
 
-    function addNetting(Token storage tokenInfo, uint tokenId, Trade storage trade, address wethFrom, address wethTo, Order memory order) private {
+    function addNetting(Token storage tokenInfo, uint tokenId, Trade storage trade, Order memory order) private {
+        (address wethTo, address wethFrom) = (order.buyOrSell == BuyOrSell.Buy) ? (msg.sender, order.maker) : (order.maker, msg.sender);
         if (!trade.seen[wethFrom]) {
             trade.uniqueAddresses.push(wethFrom);
             trade.seen[wethFrom] = true;
@@ -429,10 +422,9 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             trade.seen[wethTo] = true;
         }
         trade.netting[wethFrom] -= int(order.price);
-
         (address payable[] memory recipients, uint256[] memory amounts) = royaltyEngine.getRoyaltyView(tokenInfo.token, tokenId, order.price);
         require(recipients.length == amounts.length);
-        uint royaltyFactor = order.buyOrSell == BuyOrSell.Sell ? order.royaltyFactor : trade.royaltyFactor;
+        uint royaltyFactor = (order.buyOrSell == BuyOrSell.Buy) ? trade.royaltyFactor : order.royaltyFactor;
         for (uint i = 0; i < recipients.length; i++) {
             if (!trade.seen[recipients[i]]) {
                 trade.uniqueAddresses.push(recipients[i]);
