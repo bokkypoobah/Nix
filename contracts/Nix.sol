@@ -319,6 +319,13 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         handleTips(integrator);
     }
 
+    /// @dev Taker execute orders.
+    /// @param tokenList List of ERC-721 contract addresses - one address for each order
+    /// @param orderIndexes List of order indices - one orderIndex for each order
+    /// @param tokenIdsList List of list of tokenIds - one set of tokenIds for each order
+    /// @param netAmount Positive (taker receives WETH) or negative (taker pays WETH) for all orders
+    /// @param royaltyFactor 0 to 100, and will be applied as % when the taker sells the NFTs
+    /// @param integrator Address of integrator, that will receive a portion of ETH tips
     function takerExecuteOrders(
         address[] memory tokenList,
         uint[] memory orderIndexes,
@@ -377,7 +384,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     tokenInfo.volumeWeth += order.price;
                     addNetting(tokenInfo, tokenIds[j], trade, nftTo, nftFrom, order);
                 }
-            } else { // if (order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) {
+            } else {
                 require(tokenIds.length == order.tokenIds.length, "TokenIds length");
                 for (uint j = 0; j < order.tokenIds.length; j++) {
                     require(tokenIds[j] == order.tokenIds[j], "TokenIds");
@@ -385,7 +392,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     tokenInfo.volumeToken++;
                 }
                 tokenInfo.volumeWeth += order.price;
-                // NOTE - Using first one
+                // NOTE - Royalty information for the FIRST tokenId for BuyAll and SellAll
                 addNetting(tokenInfo, order.tokenIds[0], trade, nftTo, nftFrom, order);
             }
             order.tradeCount++;
@@ -451,10 +458,13 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         }
     }
     receive() external payable {
+        handleTips(owner);
     }
 }
 
 
+/// @author BokkyPooBah
+/// @title Decentralised ERC-721 exchange bulk data retrieval helper
 contract NixHelper {
 
     enum OrderStatus {
