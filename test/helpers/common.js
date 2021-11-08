@@ -1,6 +1,8 @@
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const ORDERTYPE = { BUYANY: 0, SELLANY: 1, BUYALL: 2, SELLALL: 3 };
-const ORDERTYPESTRING = [ "BuyAny", "SellAny", "BuyAll", "SellAll" ];
+const BUYORSELL = { BUY: 0, SELL: 1 };
+const ANYORALL = { ANY: 0, ALL: 1 };
+const BUYORSELLSTRING = [ "Buy", "Sell" ];
+const ANYORALLSTRING = [ "Any", "All" ];
 const ORDERSTATUSSTRING = [ "Executable", "Expired", "Maxxed", "MakerNoWeth", "MakerNoWethAllowance", "MakerNoToken", "MakerNotApprovedNix", "UnknownError" ];
 
 const { BigNumber } = require("ethers");
@@ -212,8 +214,8 @@ class Data {
           const volumeToken = tokenInfos[3][i];
           const volumeWeth = tokenInfos[4][i];
           console.log("          Orders for " + this.getShortAccountName(token) + ", ordersLength: " + ordersLength + ", executed: " + executed + ", volumeToken: " + volumeToken + ", volumeWeth: " + ethers.utils.formatEther(volumeWeth));
-          console.log("              # Maker          Taker                         Price Type     Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds");
-          console.log("            --- -------------- -------------- -------------------- -------- ------------------------ -------- -------- -------- -------------------- -----------------------");
+          console.log("              # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds");
+          console.log("            --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------");
           var orderIndices = [...Array(parseInt(ordersLength)).keys()];
           const orders = await this.nixHelper.getOrders(token, orderIndices);
           for (let i = 0; i < ordersLength; i++) {
@@ -222,18 +224,21 @@ class Data {
             const tokenIds = orders[2][i];
             const price = orders[3][i];
             const data = orders[4][i];
-            const orderType = data[0];
-            const expiry = data[1];
+            const buyOrSell = data[0];
+            const anyOrAll = data[1];
+            const expiry = data[2];
             const expiryString = expiry == 0 ? "(none)" : new Date(expiry * 1000).toISOString();
-            const tradeCount = data[2];
-            const tradeMax = data[3];
-            const royaltyFactor = data[4];
-            const orderStatus = data[5];
+            const tradeCount = data[3];
+            const tradeMax = data[4];
+            const royaltyFactor = data[5];
+            const orderStatus = data[6];
             const orderStatusString = ORDERSTATUSSTRING[orderStatus];
             console.log("            " + this.padLeft(i, 3) + " " +
               this.padRight(this.getShortAccountName(maker), 14) + " " +
               this.padRight(this.getShortAccountName(taker), 14) + " " +
-              this.padLeft(ethers.utils.formatEther(price), 20) + " " + this.padRight(ORDERTYPESTRING[orderType], 8) + " " +
+              this.padLeft(ethers.utils.formatEther(price), 20) + " " +
+              this.padRight(BUYORSELLSTRING[buyOrSell], 4) + " " +
+              this.padRight(ANYORALLSTRING[anyOrAll], 7) + " " +
               this.padRight(expiryString, 24) + " " +
               this.padLeft(tradeCount.toString(), 8) + " " +
               this.padLeft(tradeMax.toString(), 8) + " " +
@@ -269,7 +274,9 @@ class Data {
 /* Exporting the module */
 module.exports = {
     ZERO_ADDRESS,
-    ORDERTYPE,
-    ORDERTYPESTRING,
+    BUYORSELL,
+    ANYORALL,
+    BUYORSELLSTRING,
+    ANYORALLSTRING,
     Data
 }
