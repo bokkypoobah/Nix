@@ -195,10 +195,21 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         return (trade.taker, trade.royaltyFactor, trade.blockNumber, trade.orders);
     }
 
+    /// @dev Maker add order
+    /// @param token ERC-721 contract address
+    /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. BuyAll and SellAll must have specified tokenIds.
+    /// @param taker Specific address, or null for any taker
+    /// @param price Price per NFT for BuyAny or SellAny. Price for all specified NFTs for BuyAll or SellAll
+    /// @param orderType (0) BuyAny, (1) SellAny, (2) BuyAll, (3) SellAll
+    /// @param expiry Expiry date. 0 = no expiry.
+    /// @param tradeMax Must be 1 for BuyAll or SellAll. Maximum number of NFTs for BuyAny or SellAny
+    /// @param royaltyFactor 0 to 100, and will be applied as % when the maker sells the NFTs
+    /// @param integrator Address of integrator, that will receive a portion of ETH tips
+    /// @return orderIndex The new order index
     function makerAddOrder(
-        address taker,
         address token,
         uint[] memory tokenIds,
+        address taker,
         uint price,
         OrderType orderType,
         uint64 expiry,
@@ -208,9 +219,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     ) external payable reentrancyGuard returns (
         uint64 orderIndex
     ) {
-        // require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
         if (orderType == OrderType.BuyAll || orderType == OrderType.SellAll) {
-            require(tokenIds.length > 0, "No tokenIds specified");
+            require(tokenIds.length > 0, "TokenIds");
             require(tradeMax == 1, "Only single trade");
         } else {
             require(tradeMax > 0, "Must have at least one trade");
@@ -247,6 +257,11 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         return uint64(tokenInfo.ordersIndex.length - 1);
     }
 
+    /// @dev Maker update order tokenIds
+    /// @param token ERC-721 contract address
+    /// @param orderIndex Order index
+    /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. BuyAll and SellAll must have specified tokenIds.
+    /// @param integrator Address of integrator, that will receive a portion of ETH tips
     function makerUpdateTokenIds(
         address token,
         uint orderIndex,
@@ -261,9 +276,19 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         handleTips(integrator);
     }
 
+    /// @dev Maker update order
+    /// @param token ERC-721 contract address
+    /// @param orderIndex Order index
+    /// @param taker Specific address, or null for any taker
+    /// @param price Price per NFT for BuyAny or SellAny. Price for all specified NFTs for BuyAll or SellAll
+    /// @param expiry Expiry date. 0 = no expiry.
+    /// @param tradeMaxAdjustment Positive or negative number to adjust tradeMax. tradeMax must result in 0 or 1 for BuyAll or SellAll; or the maximum number of NFTs for BuyAny or SellAny
+    /// @param royaltyFactor 0 to 100, and will be applied as % when the maker sells the NFTs
+    /// @param integrator Address of integrator, that will receive a portion of ETH tips
     function makerUpdateOrder(
         address token,
         uint orderIndex,
+        address taker,
         uint price,
         uint64 expiry,
         int64 tradeMaxAdjustment,
@@ -273,9 +298,9 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
         Order storage order = tokenInfos[token].orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
+        order.taker = taker;
         order.price = price;
         order.expiry = expiry;
-        // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
         if (tradeMaxAdjustment < 0) {
             uint64 subtract = uint64(-tradeMaxAdjustment);
             if (subtract > (order.tradeMax - order.tradeCount)) {
