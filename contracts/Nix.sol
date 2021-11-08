@@ -332,7 +332,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                 }
                 tokenInfo.volumeWeth += order.price;
                 // NOTE - Using first one
-                // addNetting(tokenInfo.token, order.tokenIds[0], trade, nftTo, nftFrom, order);
+                addNetting(tokenInfo, order.tokenIds[0], trade, nftTo, nftFrom, order);
             }
             order.tradeCount++;
             emit TakerOrderExecuted(orderKey, i);
