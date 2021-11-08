@@ -154,7 +154,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
     event TokenInfoAdded(address token, uint tokenInfoIndex);
     event MakerOrderAdded(address token, uint orderIndex);
-    event MakerTokenIdsUpdated(address token, uint orderIndex);
+    event MakerOrderDisabled(address token, uint orderIndex);
+    event MakerOrderTokenIdsUpdated(address token, uint orderIndex);
     event MakerOrderUpdated(address token, uint orderIndex);
     event TakerOrderExecuted(address token, uint orderIndex);
     event ThankYou(uint tip);
@@ -257,12 +258,26 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         return uint64(tokenInfo.ordersIndex.length - 1);
     }
 
+    // Code too large
+    // /// @dev Maker disable order
+    // /// @param token ERC-721 contract address
+    // /// @param orderIndex Order index
+    // /// @param integrator Address of integrator, that will receive a portion of ETH tips
+    // function makerDisableOrder(address token, uint orderIndex, address integrator) external payable reentrancyGuard {
+    //     bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
+    //     Order storage order = tokenInfos[token].orders[orderKey];
+    //     require(msg.sender == order.maker, "Not maker");
+    //     order.expiry = uint64(block.timestamp - 1);
+    //     emit MakerOrderDisabled(token, orderIndex);
+    //     handleTips(integrator);
+    // }
+
     /// @dev Maker update order tokenIds
     /// @param token ERC-721 contract address
     /// @param orderIndex Order index
     /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. BuyAll and SellAll must have specified tokenIds.
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
-    function makerUpdateTokenIds(
+    function makerUpdateOrderTokenIds(
         address token,
         uint orderIndex,
         uint[] memory tokenIds,
@@ -272,7 +287,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         Order storage order = tokenInfos[token].orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
         order.tokenIds = tokenIds;
-        emit MakerTokenIdsUpdated(token, orderIndex);
+        emit MakerOrderTokenIdsUpdated(token, orderIndex);
         handleTips(integrator);
     }
 
@@ -449,7 +464,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         if (msg.value > 0) {
             uint integratorTip;
             if (integrator != address(0) && integrator != owner) {
-                integratorTip = msg.value / 2;
+                integratorTip = msg.value * 3 / 4;
                 if (integratorTip > 0) {
                     payable(integrator).transfer(integratorTip);
                 }
