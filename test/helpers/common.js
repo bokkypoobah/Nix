@@ -203,16 +203,16 @@ class Data {
     console.log();
 
     if (this.nix != null) {
-      const tokenInfosLength = await this.nix.tokenInfosLength();
-      if (tokenInfosLength > 0) {
-        var tokenInfosIndices = [...Array(parseInt(tokenInfosLength)).keys()];
-        const tokenInfos = await this.nixHelper.getTokenInfos(tokenInfosIndices);
-        for (let i = 0; i < tokenInfos[0].length; i++) {
-          const token = tokenInfos[0][i];
-          const ordersLength = tokenInfos[1][i];
-          const executed = tokenInfos[2][i];
-          const volumeToken = tokenInfos[3][i];
-          const volumeWeth = tokenInfos[4][i];
+      const tokensLength = await this.nix.tokensLength();
+      if (tokensLength > 0) {
+        var tokensIndices = [...Array(parseInt(tokensLength)).keys()];
+        const tokens = await this.nixHelper.getTokens(tokensIndices);
+        for (let i = 0; i < tokens[0].length; i++) {
+          const token = tokens[0][i];
+          const ordersLength = tokens[1][i];
+          const executed = tokens[2][i];
+          const volumeToken = tokens[3][i];
+          const volumeWeth = tokens[4][i];
           console.log("          Orders for " + this.getShortAccountName(token) + ", ordersLength: " + ordersLength + ", executed: " + executed + ", volumeToken: " + volumeToken + ", volumeWeth: " + ethers.utils.formatEther(volumeWeth));
           console.log("              # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds");
           console.log("            --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------");

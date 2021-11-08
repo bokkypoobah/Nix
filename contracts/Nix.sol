@@ -99,7 +99,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     enum BuyOrSell { Buy, Sell }
     enum AnyOrAll { Any, All }
 
-    struct TokenInfo {
+    struct Token {
         address token;
         bytes32[] ordersIndex;
         mapping(bytes32 => Order) orders;
@@ -110,10 +110,10 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     struct Order {
         address maker;
         address taker;
-        uint[] tokenIds;
-        uint price;
         BuyOrSell buyOrSell;
         AnyOrAll anyOrAll;
+        uint[] tokenIds;
+        uint price;
         uint64 expiry;
         uint64 tradeCount;
         uint64 tradeMax;
@@ -123,7 +123,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         address accounts;
         int amount;
     }
-    struct OrderInfo {
+    struct ExecutedOrder {
         address token;
         uint64 orderIndex;
     }
@@ -134,26 +134,27 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         address[] uniqueAddresses;
         mapping(address => bool) seen;
         mapping(address => int) netting;
-        OrderInfo[] orders;
+        ExecutedOrder[] executedOrders;
     }
 
-    bytes4 private constant ERC721_INTERFACE = 0x80ac58cd; // https://eips.ethereum.org/EIPS/eip-721
+    // https://eips.ethereum.org/EIPS/eip-721
+    bytes4 private constant ERC721_INTERFACE = 0x80ac58cd;
     bytes4 private constant ERC721METADATA_INTERFACE = 0x5b5e139f;
     bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
 
     IERC20Partial public weth;
     IRoyaltyEngineV1Partial public royaltyEngine;
 
-    address[] private tokenInfosIndex;
-    mapping(address => TokenInfo) public tokenInfos;
+    address[] private tokensIndex;
+    mapping(address => Token) public tokens;
     Trade[] private trades;
 
-    event TokenInfoAdded(address token, uint tokenInfoIndex);
-    event MakerOrderAdded(address token, uint orderIndex);
-    event MakerOrderDisabled(address token, uint orderIndex);
-    event MakerOrderTokenIdsUpdated(address token, uint orderIndex);
-    event MakerOrderUpdated(address token, uint orderIndex);
-    event TakerOrderExecuted(address token, uint orderIndex);
+    event TokenAdded(address token, uint tokenIndex);
+    event OrderAdded(address token, uint orderIndex);
+    event OrderDisabled(address token, uint orderIndex);
+    // event OrderTokenIdsUpdated(address token, uint orderIndex);
+    event OrderUpdated(address token, uint orderIndex);
+    event OrderExecuted(address token, uint orderIndex);
     event ThankYou(uint tip);
 
     constructor(IERC20Partial _weth, IRoyaltyEngineV1Partial _royaltyEngine) {
@@ -166,33 +167,33 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         return this.onERC721Received.selector;
     }
 
-    function tokenInfosLength() public view returns (uint) {
-        return tokenInfosIndex.length;
+    function tokensLength() public view returns (uint) {
+        return tokensIndex.length;
     }
     function ordersLength(address token) public view returns (uint) {
-        return tokenInfos[token].ordersIndex.length;
+        return tokens[token].ordersIndex.length;
     }
     function tradesLength() public view returns (uint) {
         return trades.length;
     }
-    function getTokenInfo(uint tokenInfoIndex) external view returns (address token, uint64 _ordersLength, uint64 executed, uint64 volumeToken, uint volumeWeth) {
-        token = tokenInfosIndex[tokenInfoIndex];
-        TokenInfo storage tokenInfo = tokenInfos[token];
+    function getToken(uint tokenIndex) external view returns (address token, uint64 _ordersLength, uint64 executed, uint64 volumeToken, uint volumeWeth) {
+        token = tokensIndex[tokenIndex];
+        Token storage tokenInfo = tokens[token];
         _ordersLength = uint64(tokenInfo.ordersIndex.length);
         executed = tokenInfo.executed;
         volumeToken = tokenInfo.volumeToken;
         volumeWeth = tokenInfo.volumeWeth;
     }
     function getOrder(address token, uint orderIndex) external view returns (Order memory order) {
-        bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
-        order = tokenInfos[token].orders[orderKey];
+        bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
+        order = tokens[token].orders[orderKey];
     }
-    function getTrade(uint tradeIndex) external view returns (address taker, uint64 royaltyFactor, uint64 blockNumber, OrderInfo[] memory orders) {
+    function getTrade(uint tradeIndex) external view returns (address taker, uint64 royaltyFactor, uint64 blockNumber, ExecutedOrder[] memory executedOrders) {
         Trade storage trade = trades[tradeIndex];
-        return (trade.taker, trade.royaltyFactor, trade.blockNumber, trade.orders);
+        return (trade.taker, trade.royaltyFactor, trade.blockNumber, trade.executedOrders);
     }
 
-    /// @dev Maker add order
+    /// @dev Add order
     /// @param token ERC-721 contract address
     /// @param taker Specific address, or null for any taker
     /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All
@@ -204,16 +205,16 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param royaltyFactor 0 to 100, and will be applied as % when the maker sells the NFTs
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
     /// @return orderIndex The new order index
-    function makerAddOrder(
+    function addOrder(
         address token,
         address taker,
-        uint[] memory tokenIds,
-        uint price,
         BuyOrSell buyOrSell,
         AnyOrAll anyOrAll,
-        uint64 expiry,
-        uint64 tradeMax,
-        uint64 royaltyFactor,
+        uint[] memory tokenIds,
+        uint price,
+        uint expiry,
+        uint tradeMax,
+        uint royaltyFactor,
         address integrator
     ) external payable reentrancyGuard returns (
         uint64 orderIndex
@@ -221,54 +222,52 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         if (anyOrAll == AnyOrAll.All) {
             require(tokenIds.length > 0, "TokenIds");
             require(tradeMax <= 1, "Parcel");
-        } else {
-            require(tradeMax > 0, "Must have at least one trade");
         }
         require(royaltyFactor <= 100, "Royalty");
 
-        TokenInfo storage tokenInfo = tokenInfos[token];
+        Token storage tokenInfo = tokens[token];
         if (tokenInfo.token != token) {
             try IERC721Partial(token).supportsInterface(ERC721_INTERFACE) returns (bool b) {
                 require(b, "ERC721");
-                tokenInfosIndex.push(token);
+                tokensIndex.push(token);
                 tokenInfo.token = token;
-                emit TokenInfoAdded(token, tokenInfosIndex.length - 1);
+                emit TokenAdded(token, tokensIndex.length - 1);
             } catch {
-                revert("Not ERC721");
+                revert("ERC165");
             }
         }
 
-        bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, buyOrSell, anyOrAll, expiry));
+        bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, price, buyOrSell, anyOrAll, expiry));
         require(tokenInfo.orders[_orderKey].maker == address(0), "Duplicate");
 
         tokenInfo.ordersIndex.push(_orderKey);
         Order storage order = tokenInfo.orders[_orderKey];
         order.maker = msg.sender;
         order.taker = taker;
-        order.tokenIds = tokenIds;
         order.buyOrSell = buyOrSell;
         order.anyOrAll = anyOrAll;
+        order.tokenIds = tokenIds;
         order.price = price;
-        order.expiry = expiry;
-        order.tradeMax = tradeMax;
-        order.royaltyFactor = royaltyFactor;
-        emit MakerOrderAdded(token, tokenInfo.ordersIndex.length - 1);
+        order.expiry = uint64(expiry);
+        order.tradeMax = uint64(tradeMax);
+        order.royaltyFactor = uint64(royaltyFactor);
+        emit OrderAdded(token, tokenInfo.ordersIndex.length - 1);
         handleTips(integrator);
         return uint64(tokenInfo.ordersIndex.length - 1);
     }
 
     // Code too large
-    /// @dev Maker disable order
+    /// @dev Disable order
     /// @param token ERC-721 contract address
     /// @param orderIndex Order index
-    // / @param integrator Address of integrator, that will receive a portion of ETH tips
-    function makerDisableOrder(address token, uint orderIndex /*, address integrator*/) external /*payable reentrancyGuard*/ {
-        bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
-        Order storage order = tokenInfos[token].orders[orderKey];
-        require(msg.sender == order.maker, "Not maker");
+    /// @param integrator Address of integrator, that will receive a portion of ETH tips
+    function disableOrder(address token, uint orderIndex, address integrator) external payable reentrancyGuard {
+        bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
+        Order storage order = tokens[token].orders[orderKey];
+        require(msg.sender == order.maker, "NotMaker");
         order.expiry = uint64(block.timestamp - 1);
-        emit MakerOrderDisabled(token, orderIndex);
-        // handleTips(integrator);
+        emit OrderDisabled(token, orderIndex);
+        handleTips(integrator);
     }
 
     // /// @dev Maker update order tokenIds
@@ -276,21 +275,21 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     // /// @param orderIndex Order index
     // /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All
     // /// @param integrator Address of integrator, that will receive a portion of ETH tips
-    // function makerUpdateOrderTokenIds(
+    // function updateOrderTokenIds(
     //     address token,
     //     uint orderIndex,
     //     uint[] memory tokenIds,
     //     address integrator
     // ) external payable reentrancyGuard {
-    //     bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
-    //     Order storage order = tokenInfos[token].orders[orderKey];
-    //     require(msg.sender == order.maker, "Not maker");
+    //     bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
+    //     Order storage order = tokens[token].orders[orderKey];
+    //     require(msg.sender == order.maker, "NotMaker");
     //     order.tokenIds = tokenIds;
-    //     emit MakerOrderTokenIdsUpdated(token, orderIndex);
+    //     emit OrderTokenIdsUpdated(token, orderIndex);
     //     handleTips(integrator);
     // }
 
-    /// @dev Maker update order
+    /// @dev Update order
     /// @param token ERC-721 contract address
     /// @param orderIndex Order index
     /// @param taker Specific address, or null for any taker
@@ -300,39 +299,39 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param tradeMaxAdjustment Positive or negative number to adjust tradeMax. tradeMax must result in 0 or 1 for All, or the maximum number of NFTs for Any
     /// @param royaltyFactor 0 to 100, and will be applied as % when the maker sells the NFTs
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
-    function makerUpdateOrder(
+    function updateOrder(
         address token,
         uint orderIndex,
         address taker,
         uint[] memory tokenIds,
         uint price,
-        uint64 expiry,
-        int64 tradeMaxAdjustment,
-        uint64 royaltyFactor,
+        uint expiry,
+        int tradeMaxAdjustment,
+        uint royaltyFactor,
         address integrator
     ) external payable reentrancyGuard {
-        bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
-        Order storage order = tokenInfos[token].orders[orderKey];
-        require(msg.sender == order.maker, "Not maker");
+        bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
+        Order storage order = tokens[token].orders[orderKey];
+        require(msg.sender == order.maker, "NotMaker");
         order.taker = taker;
         order.tokenIds = tokenIds;
         order.price = price;
-        order.expiry = expiry;
+        order.expiry = uint64(expiry);
         if (tradeMaxAdjustment < 0) {
-            uint64 subtract = uint64(-tradeMaxAdjustment);
+            uint64 subtract = uint64(-int64(tradeMaxAdjustment));
             if (subtract > (order.tradeMax - order.tradeCount)) {
                 order.tradeMax -= subtract;
             } else {
                 order.tradeMax = order.tradeCount;
             }
         } else {
-            order.tradeMax += uint64(tradeMaxAdjustment);
+            order.tradeMax += uint64(int64(tradeMaxAdjustment));
         }
         if (order.anyOrAll == AnyOrAll.All) {
             require(order.tradeMax <= 1, "Parcel");
         }
-        order.royaltyFactor = royaltyFactor;
-        emit MakerOrderUpdated(token, orderIndex);
+        order.royaltyFactor = uint64(royaltyFactor);
+        emit OrderUpdated(token, orderIndex);
         handleTips(integrator);
     }
 
@@ -343,12 +342,12 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param netAmount Positive (taker receives WETH) or negative (taker pays WETH) for all orders
     /// @param royaltyFactor 0 to 100, and will be applied as % when the taker sells the NFTs
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
-    function takerExecuteOrders(
+    function executeOrders(
         address[] memory tokenList,
         uint[] memory orderIndexes,
         uint[][] memory tokenIdsList,
         int netAmount,
-        uint64 royaltyFactor,
+        uint royaltyFactor,
         address integrator
     ) external payable reentrancyGuard {
         require(tokenList.length > 0);
@@ -359,19 +358,19 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         trades.push();
         Trade storage trade = trades[trades.length - 1];
         trade.taker = msg.sender;
-        trade.royaltyFactor = royaltyFactor;
+        trade.royaltyFactor = uint64(royaltyFactor);
         trade.blockNumber = uint64(block.number);
 
         for (uint i = 0; i < orderIndexes.length; i++) {
             // address token = tokenList[i];
-            TokenInfo storage tokenInfo = tokenInfos[tokenList[i]];
+            Token storage tokenInfo = tokens[tokenList[i]];
             tokenInfo.executed++;
             bytes32 orderKey = tokenInfo.ordersIndex[orderIndexes[i]];
             Order storage order = tokenInfo.orders[orderKey];
-            trade.orders.push(OrderInfo(tokenList[i], uint64(orderIndexes[i])));
+            trade.executedOrders.push(ExecutedOrder(tokenList[i], uint64(orderIndexes[i])));
             uint[] memory tokenIds = tokenIdsList[i];
             require(tokenIds.length > 0, "TokenIds");
-            require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
+            require(order.taker == address(0) || order.taker == msg.sender, "NotTaker");
             require(order.expiry == 0 || order.expiry >= block.timestamp, "Expired");
             require(order.tradeCount < order.tradeMax, "Maxxed");
 
@@ -413,14 +412,14 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                 addNetting(tokenInfo, order.tokenIds[0], trade, nftTo, nftFrom, order);
             }
             order.tradeCount++;
-            emit TakerOrderExecuted(tokenInfo.token, orderIndexes[i]);
+            emit OrderExecuted(tokenInfo.token, orderIndexes[i]);
         }
         require(trade.netting[msg.sender] == netAmount, "NetAmount");
         transferNetted(trade);
         handleTips(integrator);
     }
 
-    function addNetting(TokenInfo storage tokenInfo, uint tokenId, Trade storage trade, address wethFrom, address wethTo, Order memory order) private {
+    function addNetting(Token storage tokenInfo, uint tokenId, Trade storage trade, address wethFrom, address wethTo, Order memory order) private {
         if (!trade.seen[wethFrom]) {
             trade.uniqueAddresses.push(wethFrom);
             trade.seen[wethFrom] = true;
@@ -503,25 +502,25 @@ contract NixHelper {
         weth = _nix.weth();
     }
 
-    function getTokenInfos(
-        uint[] memory tokenInfosIndices
+    function getTokens(
+        uint[] memory tokensIndices
     ) public view returns (
         address[] memory tokens,
-        uint64[] memory ordersLengthList,
-        uint64[] memory executedList,
-        uint64[] memory volumeTokenList,
+        uint[] memory ordersLengthList,
+        uint[] memory executedList,
+        uint[] memory volumeTokenList,
         uint[] memory volumeWethList
     ) {
-        uint length = tokenInfosIndices.length;
+        uint length = tokensIndices.length;
         tokens = new address[](length);
-        ordersLengthList = new uint64[](length);
-        executedList = new uint64[](length);
-        volumeTokenList = new uint64[](length);
+        ordersLengthList = new uint[](length);
+        executedList = new uint[](length);
+        volumeTokenList = new uint[](length);
         volumeWethList = new uint[](length);
         for (uint i = 0; i < length; i++) {
-            uint tokenInfoIndex = tokenInfosIndices[i];
-            if (tokenInfoIndex < nix.tokenInfosLength()) {
-                (address token, uint64 ordersLength, uint64 executed, uint64 volumeToken, uint volumeWeth) = nix.getTokenInfo(tokenInfoIndex);
+            uint tokenIndex = tokensIndices[i];
+            if (tokenIndex < nix.tokensLength()) {
+                (address token, uint64 ordersLength, uint64 executed, uint64 volumeToken, uint volumeWeth) = nix.getToken(tokenIndex);
                 tokens[i] = token;
                 ordersLengthList[i] = ordersLength;
                 executedList[i] = executed;
@@ -603,14 +602,14 @@ contract NixHelper {
         address[] memory takers,
         uint[][] memory tokenIds,
         uint[] memory prices,
-        uint64[7][] memory data
+        uint[7][] memory data
     ) {
         uint length = orderIndices.length;
         makers = new address[](length);
         takers = new address[](length);
         tokenIds = new uint[][](length);
         prices = new uint[](length);
-        data = new uint64[7][](length);
+        data = new uint[7][](length);
         uint ordersLength = nix.ordersLength(token);
         for (uint i = 0; i < length; i++) {
             uint orderIndex = orderIndices[i];
@@ -620,13 +619,13 @@ contract NixHelper {
                 takers[i] = order.taker;
                 tokenIds[i] = order.tokenIds;
                 prices[i] = order.price;
-                data[i][0] = uint64(order.buyOrSell);
-                data[i][1] = uint64(order.anyOrAll);
-                data[i][2] = uint64(order.expiry);
-                data[i][3] = uint64(order.tradeCount);
-                data[i][4] = uint64(order.tradeMax);
-                data[i][5] = uint64(order.royaltyFactor);
-                data[i][6] = uint64(orderStatus(token, order));
+                data[i][0] = uint(order.buyOrSell);
+                data[i][1] = uint(order.anyOrAll);
+                data[i][2] = uint(order.expiry);
+                data[i][3] = uint(order.tradeCount);
+                data[i][4] = uint(order.tradeMax);
+                data[i][5] = uint(order.royaltyFactor);
+                data[i][6] = uint(orderStatus(token, order));
             }
         }
     }
@@ -635,20 +634,20 @@ contract NixHelper {
         uint[] memory tradeIndexes
     ) public view returns (
         address[] memory takers,
-        uint64[] memory royaltyFactors,
-        uint64[] memory blockNumbers,
-        Nix.OrderInfo[][] memory ordersList
+        uint[] memory royaltyFactors,
+        uint[] memory blockNumbers,
+        Nix.ExecutedOrder[][] memory ordersList
     ) {
         uint length = tradeIndexes.length;
         takers = new address[](length);
-        royaltyFactors = new uint64[](length);
-        blockNumbers = new uint64[](length);
-        ordersList = new Nix.OrderInfo[][](length);
+        royaltyFactors = new uint[](length);
+        blockNumbers = new uint[](length);
+        ordersList = new Nix.ExecutedOrder[][](length);
         uint tradesLength = nix.tradesLength();
         for (uint i = 0; i < length; i++) {
             uint tradeIndex = tradeIndexes[i];
             if (tradeIndex < tradesLength) {
-                (address taker, uint64 royaltyFactor, uint64 blockNumber, Nix.OrderInfo[] memory orders) = nix.getTrade(tradeIndex);
+                (address taker, uint64 royaltyFactor, uint64 blockNumber, Nix.ExecutedOrder[] memory orders) = nix.getTrade(tradeIndex);
                 takers[i] = taker;
                 royaltyFactors[i] = royaltyFactor;
                 blockNumbers[i] = blockNumber;
