@@ -212,23 +212,23 @@ class Data {
           const volumeToken = tokenInfos[3][i];
           const volumeWeth = tokenInfos[4][i];
           console.log("          Orders for " + this.getShortAccountName(token) + ", ordersLength: " + ordersLength + ", executed: " + executed + ", volumeToken: " + volumeToken + ", volumeWeth: " + ethers.utils.formatEther(volumeWeth));
-          console.log("              # Maker          Taker                         Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds");
-          console.log("            --- -------------- -------------- -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------");
+          console.log("              # Maker          Taker                         Price Type     Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds");
+          console.log("            --- -------------- -------------- -------------------- -------- ------------------------ -------- -------- -------- -------------------- -----------------------");
           var orderIndices = [...Array(parseInt(ordersLength)).keys()];
-          const orders = await this.nixHelper.getOrders(this.nftA.address, orderIndices);
+          const orders = await this.nixHelper.getOrders(token, orderIndices);
           for (let i = 0; i < ordersLength; i++) {
-            const orderKey = orders[0][i];
-            const maker = orders[1][i];
-            const taker = orders[2][i];
-            const tokenIds = orders[3][i];
-            const price = orders[4][i];
-            const data = orders[5][i];
+            const maker = orders[0][i];
+            const taker = orders[1][i];
+            const tokenIds = orders[2][i];
+            const price = orders[3][i];
+            const data = orders[4][i];
             const orderType = data[0];
             const expiry = data[1];
             const expiryString = expiry == 0 ? "(none)" : new Date(expiry * 1000).toISOString();
             const tradeCount = data[2];
             const tradeMax = data[3];
-            const orderStatus = data[4];
+            const royaltyFactor = data[4];
+            const orderStatus = data[5];
             const orderStatusString = ORDERSTATUSSTRING[orderStatus];
             console.log("            " + this.padLeft(i, 3) + " " +
               this.padRight(this.getShortAccountName(maker), 14) + " " +
@@ -237,8 +237,8 @@ class Data {
               this.padRight(expiryString, 24) + " " +
               this.padLeft(tradeCount.toString(), 8) + " " +
               this.padLeft(tradeMax.toString(), 8) + " " +
+              this.padLeft(royaltyFactor.toString(), 8) + " " +
               this.padRight(orderStatusString.toString(), 20) + " " +
-              orderKey.substring(0, 10) + " " +
               JSON.stringify(tokenIds.map((x) => { return parseInt(x.toString()); })));
           }
           console.log();

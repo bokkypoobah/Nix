@@ -152,7 +152,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
     event TokenInfoAdded(address token, uint tokenInfoIndex);
     event MakerOrderAdded(address token, uint orderIndex);
-    event MakerTokenIdsUpdated(uint orderIndex);
+    event MakerTokenIdsUpdated(address token, uint orderIndex);
+    event MakerOrderUpdated(address token, uint orderIndex);
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
     event ThankYou(uint tip);
 
@@ -183,13 +184,13 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         volumeToken = tokenInfo.volumeToken;
         volumeWeth = tokenInfo.volumeWeth;
     }
-    function getOrder(address token, uint orderIndex) external view returns (bytes32 orderKey, Order memory order) {
-        orderKey = tokenInfos[token].ordersIndex[orderIndex];
+    function getOrder(address token, uint orderIndex) external view returns (Order memory order) {
+        bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
         order = tokenInfos[token].orders[orderKey];
     }
-    function getTrade(uint tradeIndex) external view returns (address taker, uint64 blockNumber, OrderInfo[] memory orders) {
+    function getTrade(uint tradeIndex) external view returns (address taker, uint64 royaltyFactor, uint64 blockNumber, OrderInfo[] memory orders) {
         Trade storage trade = trades[tradeIndex];
-        return (trade.taker, trade.blockNumber, trade.orders);
+        return (trade.taker, trade.royaltyFactor, trade.blockNumber, trade.orders);
     }
 
     function makerAddOrder(
@@ -246,31 +247,31 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         Order storage order = tokenInfos[token].orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
         order.tokenIds = tokenIds;
-        emit MakerTokenIdsUpdated(orderIndex);
+        emit MakerTokenIdsUpdated(token, orderIndex);
         handleTips(integrator);
     }
 
-    // event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
-    // function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, address integrator) external payable reentrancyGuard {
-    //     bytes32 orderKey = ordersIndex[orderIndex];
-    //     Order storage order = orders[orderKey];
-    //     require(msg.sender == order.maker, "Not maker");
-    //     order.price = price;
-    //     order.expiry = expiry;
-    //     // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
-    //     if (tradeMaxAdjustment < 0) {
-    //         uint64 subtract = uint64(-tradeMaxAdjustment);
-    //         if (subtract > (order.tradeMax - order.tradeCount)) {
-    //             order.tradeMax -= subtract;
-    //         } else {
-    //             order.tradeMax = order.tradeCount;
-    //         }
-    //     } else {
-    //         order.tradeMax += uint64(tradeMaxAdjustment);
-    //     }
-    //     emit MakerOrderUpdated(orderKey, orderIndex);
-    //     handleTips(integrator);
-    // }
+    function makerUpdateOrder(address token, uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, uint64 royaltyFactor, address integrator) external payable reentrancyGuard {
+        bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
+        Order storage order = tokenInfos[token].orders[orderKey];
+        require(msg.sender == order.maker, "Not maker");
+        order.price = price;
+        order.expiry = expiry;
+        // TODO: tradeMax must be 1 for BuyAll and SellAll - cannot change this
+        if (tradeMaxAdjustment < 0) {
+            uint64 subtract = uint64(-tradeMaxAdjustment);
+            if (subtract > (order.tradeMax - order.tradeCount)) {
+                order.tradeMax -= subtract;
+            } else {
+                order.tradeMax = order.tradeCount;
+            }
+        } else {
+            order.tradeMax += uint64(tradeMaxAdjustment);
+        }
+        order.royaltyFactor = royaltyFactor;
+        emit MakerOrderUpdated(token, orderIndex);
+        handleTips(integrator);
+    }
 
     function takerExecuteOrders(address[] memory tokenList, uint[] memory orderIndexes, uint[][] memory tokenIdsList, int netAmount, uint64 royaltyFactor, address integrator) external payable reentrancyGuard {
         require(tokenList.length > 0);
@@ -500,26 +501,23 @@ contract NixHelper {
         address token,
         uint[] memory orderIndices
     ) public view returns (
-        bytes32[] memory orderKeys,
         address[] memory makers,
         address[] memory takers,
         uint[][] memory tokenIds,
         uint[] memory prices,
-        uint64[5][] memory data
+        uint64[6][] memory data
     ) {
         uint length = orderIndices.length;
-        orderKeys = new bytes32[](length);
         makers = new address[](length);
         takers = new address[](length);
         tokenIds = new uint[][](length);
         prices = new uint[](length);
-        data = new uint64[5][](length);
+        data = new uint64[6][](length);
         uint ordersLength = nix.ordersLength(token);
         for (uint i = 0; i < length; i++) {
             uint orderIndex = orderIndices[i];
             if (orderIndex < ordersLength) {
-                (bytes32 orderKey, Nix.Order memory order) = nix.getOrder(token, orderIndex);
-                orderKeys[i] = orderKey;
+                Nix.Order memory order = nix.getOrder(token, orderIndex);
                 makers[i] = order.maker;
                 takers[i] = order.taker;
                 tokenIds[i] = order.tokenIds;
@@ -528,22 +526,25 @@ contract NixHelper {
                 data[i][1] = uint64(order.expiry);
                 data[i][2] = uint64(order.tradeCount);
                 data[i][3] = uint64(order.tradeMax);
-                data[i][4] = uint64(orderStatus(token, order));
+                data[i][4] = uint64(order.royaltyFactor);
+                data[i][5] = uint64(orderStatus(token, order));
             }
         }
     }
 
-    function getTrades(uint[] memory tradeIndexes) public view returns (address[] memory takers, uint64[] memory blockNumbers, Nix.OrderInfo[][] memory ordersList) {
+    function getTrades(uint[] memory tradeIndexes) public view returns (address[] memory takers, uint64[] memory royaltyFactors, uint64[] memory blockNumbers, Nix.OrderInfo[][] memory ordersList) {
         uint length = tradeIndexes.length;
         takers = new address[](length);
+        royaltyFactors = new uint64[](length);
         blockNumbers = new uint64[](length);
         ordersList = new Nix.OrderInfo[][](length);
         uint tradesLength = nix.tradesLength();
         for (uint i = 0; i < length; i++) {
             uint tradeIndex = tradeIndexes[i];
             if (tradeIndex < tradesLength) {
-                (address taker, uint64 blockNumber, Nix.OrderInfo[] memory orders) = nix.getTrade(tradeIndex);
+                (address taker, uint64 royaltyFactor, uint64 blockNumber, Nix.OrderInfo[] memory orders) = nix.getTrade(tradeIndex);
                 takers[i] = taker;
+                royaltyFactors[i] = royaltyFactor;
                 blockNumbers[i] = blockNumber;
                 ordersList[i] = orders;
             }
