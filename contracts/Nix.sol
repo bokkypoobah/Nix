@@ -100,7 +100,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     // enum OrderType { BuyAny, SellAny, BuyAll, SellAll } =>
     //   enum BuySellFlag { Buy = 0; Sell = 1 }
     //   enum AllOrAnyTokens { All = 0x; Any = 0x }
-    // sellerRoyalty%
+    // royaltyFactor%
 
     struct TokenInfo {
         address token;
@@ -119,7 +119,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         uint64 expiry;
         uint64 tradeCount;
         uint64 tradeMax;
-        uint64 sellerRoyalty;
+        uint64 royaltyFactor;
     }
     struct Netting {
         address accounts;
@@ -131,7 +131,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     }
     struct Trade {
         address taker;
-        uint64 takerSellerRoyalty;
+        uint64 royaltyFactor;
         uint64 blockNumber;
         address[] uniqueAddresses;
         mapping(address => bool) seen;
@@ -150,8 +150,9 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     mapping(address => TokenInfo) public tokenInfos;
     Trade[] private trades;
 
-    event MakerOrderAdded(address token, bytes32 orderKey, uint orderIndex);
     event TokenInfoAdded(address token, uint tokenInfoIndex);
+    event MakerOrderAdded(address token, uint orderIndex);
+    event MakerTokenIdsUpdated(uint orderIndex);
     event TakerOrderExecuted(bytes32 orderKey, uint orderIndex);
     event ThankYou(uint tip);
 
@@ -199,7 +200,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         OrderType orderType,
         uint64 expiry,
         uint64 tradeMax,
-        uint64 sellerRoyalty,
+        uint64 royaltyFactor,
         address integrator
     ) external payable reentrancyGuard {
         // require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
@@ -209,7 +210,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         } else {
             require(tradeMax > 0, "Must have at least one trade");
         }
-        require(sellerRoyalty <= 100, "Royalty");
+        require(royaltyFactor <= 100, "Royalty");
 
         TokenInfo storage tokenInfo = tokenInfos[token];
         if (tokenInfo.token != token) {
@@ -235,20 +236,19 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         order.orderType = orderType;
         order.expiry = expiry;
         order.tradeMax = tradeMax;
-        order.sellerRoyalty = sellerRoyalty;
-        emit MakerOrderAdded(token, _orderKey, tokenInfo.ordersIndex.length - 1);
+        order.royaltyFactor = royaltyFactor;
+        emit MakerOrderAdded(token, tokenInfo.ordersIndex.length - 1);
         handleTips(integrator);
     }
 
-    // event MakerTokenIdsUpdated(bytes32 orderKey, uint orderIndex);
-    // function makerUpdateTokenIds(uint orderIndex, uint[] memory tokenIds, address integrator) external payable reentrancyGuard {
-    //     bytes32 orderKey = ordersIndex[orderIndex];
-    //     Order storage order = orders[orderKey];
-    //     require(msg.sender == order.maker, "Not maker");
-    //     order.tokenIds = tokenIds;
-    //     emit MakerTokenIdsUpdated(orderKey, orderIndex);
-    //     handleTips(integrator);
-    // }
+    function makerUpdateTokenIds(address token, uint orderIndex, uint[] memory tokenIds, address integrator) external payable reentrancyGuard {
+        bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
+        Order storage order = tokenInfos[token].orders[orderKey];
+        require(msg.sender == order.maker, "Not maker");
+        order.tokenIds = tokenIds;
+        emit MakerTokenIdsUpdated(orderIndex);
+        handleTips(integrator);
+    }
 
     // event MakerOrderUpdated(bytes32 orderKey, uint orderIndex);
     // function makerUpdateOrder(uint orderIndex, uint price, uint64 expiry, int64 tradeMaxAdjustment, address integrator) external payable reentrancyGuard {
@@ -272,16 +272,16 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     //     handleTips(integrator);
     // }
 
-    function takerExecuteOrders(address[] memory tokenList, uint[] memory orderIndexes, uint[][] memory tokenIdsList, int netAmount, uint64 takerSellerRoyalty, address integrator) external payable reentrancyGuard {
+    function takerExecuteOrders(address[] memory tokenList, uint[] memory orderIndexes, uint[][] memory tokenIdsList, int netAmount, uint64 royaltyFactor, address integrator) external payable reentrancyGuard {
         require(tokenList.length > 0);
         require(tokenList.length == orderIndexes.length);
         require(tokenList.length == tokenIdsList.length);
-        require(takerSellerRoyalty <= 100, "Royalty");
+        require(royaltyFactor <= 100, "Royalty");
 
         trades.push();
         Trade storage trade = trades[trades.length - 1];
         trade.taker = msg.sender;
-        trade.takerSellerRoyalty = takerSellerRoyalty;
+        trade.royaltyFactor = royaltyFactor;
         trade.blockNumber = uint64(block.number);
 
         for (uint i = 0; i < orderIndexes.length; i++) {
@@ -355,7 +355,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
         (address payable[] memory recipients, uint256[] memory amounts) = royaltyEngine.getRoyaltyView(tokenInfo.token, tokenId, order.price);
         require(recipients.length == amounts.length);
-        uint royaltyFactor = (order.orderType == OrderType.SellAny || order.orderType == OrderType.SellAll) ? order.sellerRoyalty : trade.takerSellerRoyalty;
+        uint royaltyFactor = (order.orderType == OrderType.SellAny || order.orderType == OrderType.SellAll) ? order.royaltyFactor : trade.royaltyFactor;
         for (uint i = 0; i < recipients.length; i++) {
             if (!trade.seen[recipients[i]]) {
                 trade.uniqueAddresses.push(recipients[i]);
