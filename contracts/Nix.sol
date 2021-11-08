@@ -96,6 +96,20 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
     enum OrderType { BuyAny, SellAny, BuyAll, SellAll }
 
+    // TODO
+    // enum OrderType { BuyAny, SellAny, BuyAll, SellAll } =>
+    //   enum BuySellFlag { Buy = 0; Sell = 1 }
+    //   enum AllOrAnyTokens { All = 0x; Any = 0x }
+    // sellerRoyalty%
+
+    struct TokenInfo {
+        address token;
+        bytes32[] ordersIndex;
+        mapping(bytes32 => Order) orders;
+        uint64 executed;
+        uint64 volumeToken;
+        uint volumeWeth;
+    }
     struct Order {
         address maker;
         address taker;
@@ -105,14 +119,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         uint64 expiry;
         uint64 tradeCount;
         uint64 tradeMax;
-    }
-    struct TokenInfo {
-        address token;
-        bytes32[] ordersIndex;
-        mapping(bytes32 => Order) orders;
-        uint64 executed;
-        uint64 volumeToken;
-        uint volumeWeth;
+        uint64 sellerRoyalty;
     }
     struct Netting {
         address accounts;
@@ -124,6 +131,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     }
     struct Trade {
         address taker;
+        uint64 takerSellerRoyalty;
         uint64 blockNumber;
         address[] uniqueAddresses;
         mapping(address => bool) seen;
@@ -191,6 +199,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         OrderType orderType,
         uint64 expiry,
         uint64 tradeMax,
+        uint64 sellerRoyalty,
         address integrator
     ) external payable reentrancyGuard {
         // require(expiry == 0 || expiry > block.timestamp, "Invalid expiry");
@@ -200,6 +209,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         } else {
             require(tradeMax > 0, "Must have at least one trade");
         }
+        require(sellerRoyalty <= 100, "Royalty");
 
         TokenInfo storage tokenInfo = tokenInfos[token];
         if (tokenInfo.token != token) {
@@ -225,6 +235,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         order.orderType = orderType;
         order.expiry = expiry;
         order.tradeMax = tradeMax;
+        order.sellerRoyalty = sellerRoyalty;
         emit MakerOrderAdded(token, _orderKey, tokenInfo.ordersIndex.length - 1);
         handleTips(integrator);
     }
@@ -261,23 +272,25 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     //     handleTips(integrator);
     // }
 
-    function takerExecuteOrders(address[] memory tokenList, uint[] memory orderIndexes, uint[][] memory tokenIdsList, int totalPrice, address integrator) external payable reentrancyGuard {
+    function takerExecuteOrders(address[] memory tokenList, uint[] memory orderIndexes, uint[][] memory tokenIdsList, int netAmount, uint64 takerSellerRoyalty, address integrator) external payable reentrancyGuard {
         require(tokenList.length > 0);
         require(tokenList.length == orderIndexes.length);
         require(tokenList.length == tokenIdsList.length);
+        require(takerSellerRoyalty <= 100, "Royalty");
 
         trades.push();
         Trade storage trade = trades[trades.length - 1];
         trade.taker = msg.sender;
+        trade.takerSellerRoyalty = takerSellerRoyalty;
         trade.blockNumber = uint64(block.number);
 
         for (uint i = 0; i < orderIndexes.length; i++) {
-            address token = tokenList[i];
-            TokenInfo storage tokenInfo = tokenInfos[token];
+            // address token = tokenList[i];
+            TokenInfo storage tokenInfo = tokenInfos[tokenList[i]];
             tokenInfo.executed++;
             bytes32 orderKey = tokenInfo.ordersIndex[orderIndexes[i]];
             Order storage order = tokenInfo.orders[orderKey];
-            trade.orders.push(OrderInfo(token, uint64(orderIndexes[i])));
+            trade.orders.push(OrderInfo(tokenList[i], uint64(orderIndexes[i])));
             uint[] memory tokenIds = tokenIdsList[i];
             require(tokenIds.length > 0, "TokenIds");
             require(order.taker == address(0) || order.taker == msg.sender, "Not taker");
@@ -305,30 +318,31 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                         }
                     }
                     require(found, "TokenId");
-                    IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
+                    IERC721Partial(tokenInfo.token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
                     tokenInfo.volumeToken++;
                     tokenInfo.volumeWeth += order.price;
-                    addNetting(token, tokenIds[j], trade, nftTo, nftFrom, order.price);
+                    addNetting(tokenInfo, tokenIds[j], trade, nftTo, nftFrom, order);
                 }
             } else { // if (order.orderType == OrderType.BuyAll || order.orderType == OrderType.SellAll) {
+                require(tokenIds.length == order.tokenIds.length, "TokenIds length");
                 for (uint j = 0; j < order.tokenIds.length; j++) {
                     require(tokenIds[j] == order.tokenIds[j], "TokenIds");
-                    IERC721Partial(token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
+                    IERC721Partial(tokenInfo.token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
                     tokenInfo.volumeToken++;
                 }
                 tokenInfo.volumeWeth += order.price;
                 // NOTE - Using first one
-                addNetting(token, order.tokenIds[0], trade, nftTo, nftFrom, order.price);
+                // addNetting(tokenInfo.token, order.tokenIds[0], trade, nftTo, nftFrom, order);
             }
             order.tradeCount++;
             emit TakerOrderExecuted(orderKey, i);
         }
-        require(trade.netting[msg.sender] == totalPrice, "TotalPrice");
+        require(trade.netting[msg.sender] == netAmount, "NetAmount");
         transferNetted(trade);
         handleTips(integrator);
     }
 
-    function addNetting(address token, uint tokenId, Trade storage trade, address wethFrom, address wethTo, uint amount) internal {
+    function addNetting(TokenInfo storage tokenInfo, uint tokenId, Trade storage trade, address wethFrom, address wethTo, Order memory order) internal {
         if (!trade.seen[wethFrom]) {
             trade.uniqueAddresses.push(wethFrom);
             trade.seen[wethFrom] = true;
@@ -337,19 +351,21 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             trade.uniqueAddresses.push(wethTo);
             trade.seen[wethTo] = true;
         }
-        trade.netting[wethFrom] -= int(amount);
+        trade.netting[wethFrom] -= int(order.price);
 
-        (address payable[] memory recipients, uint256[] memory amounts) = royaltyEngine.getRoyaltyView(token, tokenId, amount);
+        (address payable[] memory recipients, uint256[] memory amounts) = royaltyEngine.getRoyaltyView(tokenInfo.token, tokenId, order.price);
         require(recipients.length == amounts.length);
+        uint royaltyFactor = (order.orderType == OrderType.SellAny || order.orderType == OrderType.SellAll) ? order.sellerRoyalty : trade.takerSellerRoyalty;
         for (uint i = 0; i < recipients.length; i++) {
             if (!trade.seen[recipients[i]]) {
                 trade.uniqueAddresses.push(recipients[i]);
                 trade.seen[recipients[i]] = true;
             }
-            trade.netting[recipients[i]] += int(amounts[i]);
-            trade.netting[wethTo] -= int(amounts[i]);
+            uint royalty = amounts[i] * royaltyFactor / 100;
+            trade.netting[recipients[i]] += int(royalty);
+            trade.netting[wethTo] -= int(royalty);
         }
-        trade.netting[wethTo] += int(amount);
+        trade.netting[wethTo] += int(order.price);
     }
     function transferNetted(Trade storage trade) internal {
         for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
