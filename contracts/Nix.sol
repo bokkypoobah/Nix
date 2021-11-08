@@ -402,7 +402,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                 // NOTE - Royalty information for the FIRST tokenId for All
                 addNetting(tokenInfo, order.tokenIds[0], trade, order);
             }
-            require(order.tradeCount < order.tradeMax, "Maxxed");
+            require(order.tradeCount <= order.tradeMax, "Maxxed");
             emit OrderExecuted(tokenInfo.token, orderIndexes[i]);
         }
         require(trade.netting[msg.sender] == netAmount, "NetAmount");
@@ -421,17 +421,19 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             trade.seen[wethTo] = true;
         }
         trade.netting[wethFrom] -= int(order.price);
-        (address payable[] memory recipients, uint256[] memory amounts) = royaltyEngine.getRoyaltyView(tokenInfo.token, tokenId, order.price);
-        require(recipients.length == amounts.length);
-        uint royaltyFactor = (order.buyOrSell == BuyOrSell.Buy) ? trade.royaltyFactor : order.royaltyFactor;
-        for (uint i = 0; i < recipients.length; i++) {
-            if (!trade.seen[recipients[i]]) {
-                trade.uniqueAddresses.push(recipients[i]);
-                trade.seen[recipients[i]] = true;
+        try royaltyEngine.getRoyaltyView(tokenInfo.token, tokenId, order.price) returns (address payable[] memory recipients, uint256[] memory amounts) {
+            require(recipients.length == amounts.length);
+            uint royaltyFactor = (order.buyOrSell == BuyOrSell.Buy) ? trade.royaltyFactor : order.royaltyFactor;
+            for (uint i = 0; i < recipients.length; i++) {
+                if (!trade.seen[recipients[i]]) {
+                    trade.uniqueAddresses.push(recipients[i]);
+                    trade.seen[recipients[i]] = true;
+                }
+                uint royalty = amounts[i] * royaltyFactor / 100;
+                trade.netting[recipients[i]] += int(royalty);
+                trade.netting[wethTo] -= int(royalty);
             }
-            uint royalty = amounts[i] * royaltyFactor / 100;
-            trade.netting[recipients[i]] += int(royalty);
-            trade.netting[wethTo] -= int(royalty);
+        } catch {
         }
         trade.netting[wethTo] += int(order.price);
     }
