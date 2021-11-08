@@ -84,7 +84,7 @@ contract Owned {
 contract ReentrancyGuard {
     uint private _executing;
     modifier reentrancyGuard() {
-        require(_executing != 1, "NO!");
+        require(_executing != 1, "NO");
         _executing = 1;
         _;
         _executing = 2;
@@ -194,8 +194,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
     /// @dev Maker add order
     /// @param token ERC-721 contract address
-    /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All
     /// @param taker Specific address, or null for any taker
+    /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All
     /// @param price Price per NFT for Any. Price for all specified NFTs for All
     /// @param buyOrSell (0) Buy, (1) Sell
     /// @param anyOrAll (0) Any, (1) All
@@ -206,8 +206,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @return orderIndex The new order index
     function makerAddOrder(
         address token,
-        uint[] memory tokenIds,
         address taker,
+        uint[] memory tokenIds,
         uint price,
         BuyOrSell buyOrSell,
         AnyOrAll anyOrAll,
@@ -246,9 +246,9 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         order.maker = msg.sender;
         order.taker = taker;
         order.tokenIds = tokenIds;
-        order.price = price;
         order.buyOrSell = buyOrSell;
         order.anyOrAll = anyOrAll;
+        order.price = price;
         order.expiry = expiry;
         order.tradeMax = tradeMax;
         order.royaltyFactor = royaltyFactor;
@@ -258,18 +258,18 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     }
 
     // Code too large
-    // /// @dev Maker disable order
-    // /// @param token ERC-721 contract address
-    // /// @param orderIndex Order index
-    // /// @param integrator Address of integrator, that will receive a portion of ETH tips
-    // function makerDisableOrder(address token, uint orderIndex, address integrator) external payable reentrancyGuard {
-    //     bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
-    //     Order storage order = tokenInfos[token].orders[orderKey];
-    //     require(msg.sender == order.maker, "Not maker");
-    //     order.expiry = uint64(block.timestamp - 1);
-    //     emit MakerOrderDisabled(token, orderIndex);
-    //     handleTips(integrator);
-    // }
+    /// @dev Maker disable order
+    /// @param token ERC-721 contract address
+    /// @param orderIndex Order index
+    // / @param integrator Address of integrator, that will receive a portion of ETH tips
+    function makerDisableOrder(address token, uint orderIndex /*, address integrator*/) external /*payable reentrancyGuard*/ {
+        bytes32 orderKey = tokenInfos[token].ordersIndex[orderIndex];
+        Order storage order = tokenInfos[token].orders[orderKey];
+        require(msg.sender == order.maker, "Not maker");
+        order.expiry = uint64(block.timestamp - 1);
+        emit MakerOrderDisabled(token, orderIndex);
+        // handleTips(integrator);
+    }
 
     // /// @dev Maker update order tokenIds
     // /// @param token ERC-721 contract address
@@ -294,6 +294,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param token ERC-721 contract address
     /// @param orderIndex Order index
     /// @param taker Specific address, or null for any taker
+    /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All
     /// @param price Price per NFT for Any. Price for all specified NFTs for All
     /// @param expiry Expiry date. 0 = no expiry.
     /// @param tradeMaxAdjustment Positive or negative number to adjust tradeMax. tradeMax must result in 0 or 1 for All, or the maximum number of NFTs for Any
@@ -303,6 +304,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         address token,
         uint orderIndex,
         address taker,
+        uint[] memory tokenIds,
         uint price,
         uint64 expiry,
         int64 tradeMaxAdjustment,
@@ -313,6 +315,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         Order storage order = tokenInfos[token].orders[orderKey];
         require(msg.sender == order.maker, "Not maker");
         order.taker = taker;
+        order.tokenIds = tokenIds;
         order.price = price;
         order.expiry = expiry;
         if (tradeMaxAdjustment < 0) {

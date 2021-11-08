@@ -131,17 +131,17 @@ describe("Nix", function () {
 
   it.only("00. Maker BuyAny Test", async function () {
     console.log("        --- Maker Add Orders ---");
-    const makerAddOrder1Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(data.nftA.address, [ 3, 4, 5 ], ZERO_ADDRESS, ethers.utils.parseEther("11"), BUYORSELL.BUY, ANYORALL.ANY, 0, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder1Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(data.nftA.address, ZERO_ADDRESS, [ 3, 4, 5 ], ethers.utils.parseEther("11"), BUYORSELL.BUY, ANYORALL.ANY, 0, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
     await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e", await makerAddOrder1Tx.wait());
     const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
-    const makerAddOrder2Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(data.nftA.address, [ ], ZERO_ADDRESS, ethers.utils.parseEther("0.0011"), BUYORSELL.BUY, ANYORALL.ANY, expiry2, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder2Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(data.nftA.address, ZERO_ADDRESS, [ ], ethers.utils.parseEther("0.0011"), BUYORSELL.BUY, ANYORALL.ANY, expiry2, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
     await data.printEvents("Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e", await makerAddOrder2Tx.wait());
-    const makerAddOrder3Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(data.nftB.address, [ 3, 4, 5 ], ZERO_ADDRESS, ethers.utils.parseEther("22"), BUYORSELL.BUY, ANYORALL.ANY, 0, 50, 75, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    const makerAddOrder3Tx = await data.nix.connect(data.maker0Signer).makerAddOrder(data.nftB.address, ZERO_ADDRESS, [ 3, 4, 5 ], ethers.utils.parseEther("22"), BUYORSELL.BUY, ANYORALL.ANY, 0, 50, 75, data.integrator, { value: ethers.utils.parseEther("0.000001") });
     await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTB:{3|4|5} for 22e", await makerAddOrder3Tx.wait());
     await data.printState("After Maker Added Orders");
 
     console.log("        --- Taker Execute Against Orders ---");
-    const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address, data.nftA.address], [0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22.0011").mul(7).div(10), 100, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address, data.nftA.address], [0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22.0011").mul(7).div(10), 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
     // const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([data.nftA.address], [1], [[4]], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     // const takerExecuteOrder1Tx = await data.nix.connect(data.taker0Signer).takerExecuteOrders([0], [[ 3]], ethers.utils.parseEther("11.00"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e" , await takerExecuteOrder1Tx.wait());
