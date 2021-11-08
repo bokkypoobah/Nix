@@ -238,7 +238,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         }
 
         bytes32 _orderKey = keccak256(abi.encodePacked(msg.sender, taker, token, tokenIds, price, buyOrSell, anyOrAll, expiry));
-        require(tokenInfo.orders[_orderKey].maker == address(0), "Duplicate");
+        require(tokenInfo.orders[_orderKey].maker == address(0), "Dup");
 
         tokenInfo.ordersIndex.push(_orderKey);
         Order storage order = tokenInfo.orders[_orderKey];
@@ -264,7 +264,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     function disableOrder(address token, uint orderIndex, address integrator) external payable reentrancyGuard {
         bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
         Order storage order = tokens[token].orders[orderKey];
-        require(msg.sender == order.maker, "NotMaker");
+        require(msg.sender == order.maker, "Maker");
         order.expiry = uint64(block.timestamp - 1);
         emit OrderDisabled(token, orderIndex);
         handleTips(integrator);
@@ -283,7 +283,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     // ) external payable reentrancyGuard {
     //     bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
     //     Order storage order = tokens[token].orders[orderKey];
-    //     require(msg.sender == order.maker, "NotMaker");
+    //     require(msg.sender == order.maker, "Maker");
     //     order.tokenIds = tokenIds;
     //     emit OrderTokenIdsUpdated(token, orderIndex);
     //     handleTips(integrator);
@@ -312,7 +312,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     ) external payable reentrancyGuard {
         bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
         Order storage order = tokens[token].orders[orderKey];
-        require(msg.sender == order.maker, "NotMaker");
+        require(msg.sender == order.maker, "Maker");
         order.taker = taker;
         order.tokenIds = tokenIds;
         order.price = price;
@@ -350,9 +350,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         uint royaltyFactor,
         address integrator
     ) external payable reentrancyGuard {
-        require(tokenList.length > 0);
-        require(tokenList.length == orderIndexes.length);
-        require(tokenList.length == tokenIdsList.length);
+        require(tokenList.length > 0 && tokenList.length == orderIndexes.length && tokenList.length == tokenIdsList.length);
         require(royaltyFactor <= 100, "Royalty");
 
         trades.push();
@@ -391,19 +389,20 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                     tokenInfo.volumeToken++;
                     tokenInfo.volumeWeth += order.price;
                     addNetting(tokenInfo, tokenIds[j], trade, order);
+                    order.tradeCount++;
                 }
             } else {
-                require(tokenIds.length == order.tokenIds.length, "TokenIds length");
+                require(tokenIds.length == order.tokenIds.length, "TokenIds");
                 for (uint j = 0; j < order.tokenIds.length; j++) {
-                    require(tokenIds[j] == order.tokenIds[j], "TokenIds");
+                    require(tokenIds[j] == order.tokenIds[j], "TokenId");
                     IERC721Partial(tokenInfo.token).safeTransferFrom(nftFrom, nftTo, order.tokenIds[j]);
                     tokenInfo.volumeToken++;
                 }
+                order.tradeCount++;
                 tokenInfo.volumeWeth += order.price;
                 // NOTE - Royalty information for the FIRST tokenId for All
                 addNetting(tokenInfo, order.tokenIds[0], trade, order);
             }
-            order.tradeCount++;
             emit OrderExecuted(tokenInfo.token, orderIndexes[i]);
         }
         require(trade.netting[msg.sender] == netAmount, "NetAmount");
@@ -441,13 +440,13 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             address account = trade.uniqueAddresses[i];
             delete trade.seen[account];
             if (trade.netting[account] < 0) {
-                require(weth.transferFrom(account, address(this), uint(-trade.netting[account])), "-Weth tx");
+                require(weth.transferFrom(account, address(this), uint(-trade.netting[account])), "-Weth");
             }
         }
         for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
             address account = trade.uniqueAddresses[i];
             if (trade.netting[account] > 0) {
-                require(weth.transfer(account, uint(trade.netting[account])), "+Weth tx");
+                require(weth.transfer(account, uint(trade.netting[account])), "+Weth");
             }
             delete trade.netting[account];
         }
@@ -457,7 +456,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         if (msg.value > 0) {
             uint integratorTip;
             if (integrator != address(0) && integrator != owner) {
-                integratorTip = msg.value * 3 / 4;
+                integratorTip = msg.value / 5;
                 if (integratorTip > 0) {
                     payable(integrator).transfer(integratorTip);
                 }
