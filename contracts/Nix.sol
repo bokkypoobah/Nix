@@ -369,7 +369,6 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             require(tokenIds.length > 0, "TokenIds");
             require(order.taker == address(0) || order.taker == msg.sender, "NotTaker");
             require(order.expiry == 0 || order.expiry >= block.timestamp, "Expired");
-            require(order.tradeCount < order.tradeMax, "Maxxed");
 
             (address nftFrom, address nftTo) = (order.buyOrSell == BuyOrSell.Buy) ? (msg.sender, order.maker) : (order.maker, msg.sender);
             if (order.anyOrAll == AnyOrAll.Any) {
@@ -403,6 +402,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                 // NOTE - Royalty information for the FIRST tokenId for All
                 addNetting(tokenInfo, order.tokenIds[0], trade, order);
             }
+            require(order.tradeCount < order.tradeMax, "Maxxed");
             emit OrderExecuted(tokenInfo.token, orderIndexes[i]);
         }
         require(trade.netting[msg.sender] == netAmount, "NetAmount");
