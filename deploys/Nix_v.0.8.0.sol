@@ -5,7 +5,9 @@ pragma solidity ^0.8.0;
 //
 // https://github.com/bokkypoobah/Nix
 //
-// Deployed to
+// Deployments:
+// Nix https://rinkeby.etherscan.io/address/0x9c4b276d8c6cda3c2e2e6401f4a502c1e15847e9
+// NixHelper https://rinkeby.etherscan.io/address/0x429106bab5981abb59094b9780cb731cf1dc16ad 
 //
 // SPDX-License-Identifier: MIT
 //

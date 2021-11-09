@@ -21,3 +21,54 @@ https://github.com/manifoldxyz/royalty-registry-solidity
 https://royaltyregistry.xyz/lookup
 
 Engine@Mainnet [0x0385603ab55642cb4Dd5De3aE9e306809991804f](https://etherscan.io/address/0x0385603ab55642cb4dd5de3ae9e306809991804f#code)
+
+<br />
+
+<hr />
+
+## WETH9 On Testnets
+
+WETH9 https://ropsten.etherscan.io/address/0xd0000de5a8a759ead912f89d2e6f1ae59063a61a#code
+
+
+Deployed [WETH9](https://etherscan.io/address/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2#code)  v0.4.19+commit.c4cbbb05 no optimisation to 0xD0000DE5A8A759EAD912F89d2E6f1ae59063a61A on the following Ethereum testnets:
+
+* [Ropsten](https://ropsten.etherscan.io/address/0xD0000DE5A8A759EAD912F89d2E6f1ae59063a61A#code)
+* [Kovan](https://kovan.etherscan.io/address/0xD0000DE5A8A759EAD912F89d2E6f1ae59063a61A#code)
+* [Rinkeby](https://rinkeby.etherscan.io/address/0xD0000DE5A8A759EAD912F89d2E6f1ae59063a61A#code)
+* [Goerli](https://goerli.etherscan.io/address/0xD0000DE5A8A759EAD912F89d2E6f1ae59063a61A#code)
+* [xDai](https://blockscout.com/xdai/mainnet/address/0xD0000DE5A8A759EAD912F89d2E6f1ae59063a61A/contracts)
+
+<br />
+
+<hr />
+
+## Rinkeby Testnet
+
+### Royalty Registry
+
+Royalty Registry https://rinkeby.etherscan.io/address/0xc9198CbbB57708CF31e0caBCe963c98e60d333c3
+
+Royalty Engine https://rinkeby.etherscan.io/address/0x8d17687ea9a6bb6efA24ec11DcFab01661b2ddcd
+
+<br />
+
+### TestToadz
+
+* [Rinkeby](https://rinkeby.etherscan.io/address/0xd000f000aa1f8accbd5815056ea32a54777b2fc4#writeContract)
+
+You can view your Rinkeby "TestToadz" and Goerli "TestToads V2" in [https://testnets.opensea.io/account](https://testnets.opensea.io/account).
+
+<br />
+
+### WETH9
+
+* [Rinkeby](https://rinkeby.etherscan.io/address/0xD0000DE5A8A759EAD912F89d2E6f1ae59063a61A#code)
+
+<br />
+
+### Nix Deployment
+
+Nix https://rinkeby.etherscan.io/address/0x9c4b276d8c6cda3c2e2e6401f4a502c1e15847e9#code
+
+NixHelper https://rinkeby.etherscan.io/address/0x429106bab5981abb59094b9780cb731cf1dc16ad#code
