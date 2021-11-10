@@ -51,6 +51,8 @@ Royalty Registry https://rinkeby.etherscan.io/address/0xc9198CbbB57708CF31e0caBC
 
 Royalty Engine https://rinkeby.etherscan.io/address/0x8d17687ea9a6bb6efA24ec11DcFab01661b2ddcd
 
+https://royaltyregistry.xyz/lookup
+
 <br />
 
 ### TestToadz

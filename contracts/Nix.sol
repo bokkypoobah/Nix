@@ -43,7 +43,6 @@ interface ERC721TokenReceiver {
 
 contract Owned {
     address public owner;
-    address public newOwner;
 
     event OwnershipTransferred(address indexed _from, address indexed _to);
     event Withdrawn(address indexed token, uint tokens, uint tokenId);
@@ -58,12 +57,8 @@ contract Owned {
     }
 
     function transferOwnership(address _newOwner) public onlyOwner {
-        newOwner = _newOwner;
-    }
-    function acceptOwnership() public {
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-        newOwner = address(0);
+        emit OwnershipTransferred(owner, _newOwner);
+        owner = _newOwner;
     }
 
     function withdraw(address token, uint tokens, uint tokenId) public onlyOwner {
