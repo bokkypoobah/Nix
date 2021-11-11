@@ -71,6 +71,16 @@ You can view your Rinkeby "TestToadz" and Goerli "TestToads V2" in [https://test
 
 ### Nix Deployment
 
+#### Nix v0.8.0
+
 Nix https://rinkeby.etherscan.io/address/0x9c4b276d8c6cda3c2e2e6401f4a502c1e15847e9#code
 
 NixHelper https://rinkeby.etherscan.io/address/0x429106bab5981abb59094b9780cb731cf1dc16ad#code
+
+<br />
+
+#### Nix v0.8.1
+
+Nix https://rinkeby.etherscan.io/address/0x66fa96804A82034Dd7C44aF5376eEd7207861efd#code
+
+NixHelper https://rinkeby.etherscan.io/address/0x83377ea907a08baC9320cE6330993EcabBB48578#code

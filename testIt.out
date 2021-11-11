@@ -50,7 +50,7 @@ Compilation finished successfully
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          0        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-12T21:46:02.000Z        0        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-12T21:59:05.000Z        0        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -90,7 +90,7 @@ Compilation finished successfully
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          2        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-12T21:46:02.000Z        1        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-12T21:59:05.000Z        1        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -99,8 +99,8 @@ Compilation finished successfully
 
 tradesLength: 1
 trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,0,0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,1"]
-    ✓ 00. Maker BuyAny Test (850ms)
+    ✓ 00. Maker BuyAny Test (725ms)
 
 
-  1 passing (4s)
+  1 passing (3s)
 
