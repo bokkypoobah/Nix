@@ -1,13 +1,15 @@
+Compiling 1 file with 0.8.9
+Compilation finished successfully
 
 
   Nix
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
-        > txFee Deployed Nix - gasUsed: 5307047 ~ ETH 0.445791948 ~ USD 1441
+        > txFee Deployed Nix - gasUsed: 5311175 ~ ETH 0.4461387 ~ USD 1442
         > txFee Deployed NixHelper - gasUsed: 2399558 ~ ETH 0.201562872 ~ USD 651
-        --- Setup Completed. Nix bytecode ~24670, NixHelper bytecode ~11397 ---
+        --- Setup Completed. Nix bytecode ~24689, NixHelper bytecode ~11397 ---
           Account                               ETH                 WETH NFTA (6)                  NFTB (6)                  
           -------------------- -------------------- -------------------- ------------------------- -------------------------
-          deployer:0xf39F            9999.760620216                100.0 []                        []
+          deployer:0xf39F            9999.760587192                100.0 []                        []
           maker0:0x7099               9999.99925244                100.0 [0,1,2]                   [0,1,2]
           maker1:0x3C44               9999.99925244                100.0 []                        []
           taker0:0x90F7               9999.99925244                100.0 [3,4,5]                   [3,4,5]
@@ -33,7 +35,7 @@
         --- After Maker Added Orders ---
           Account                               ETH                 WETH NFTA (6)                  NFTB (6)                  
           -------------------- -------------------- -------------------- ------------------------- -------------------------
-          deployer:0xf39F            9999.760620216                100.0 []                        []
+          deployer:0xf39F            9999.760587192                100.0 []                        []
           maker0:0x7099              9999.992848536                100.0 [0,1,2]                   [0,1,2]
           maker1:0x3C44               9999.99925244                100.0 []                        []
           taker0:0x90F7               9999.99925244                100.0 [3,4,5]                   [3,4,5]
@@ -48,7 +50,7 @@
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          0        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-11T20:03:32.000Z        0        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-12T21:46:02.000Z        0        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -56,15 +58,15 @@
               0 maker0:0x7099  null:0x0000                    22.0 Buy  Any     (none)                          0       50       75 Executable           [3,4,5]
 
         --- Taker Execute Against Orders ---
-        > txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e - gasUsed: 600231 ~ ETH 0.050419404 ~ USD 163
+        > txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e - gasUsed: 601535 ~ ETH 0.05052894 ~ USD 163
           + NFTA:0xCf7E 37.0 Approval(owner: taker0:0x90F7, approved: null:0x0000, tokenId: 3)
           + NFTA:0xCf7E 37.1 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokenId: 3)
           + NFTA:0xCf7E 37.2 Approval(owner: taker0:0x90F7, approved: null:0x0000, tokenId: 5)
           + NFTA:0xCf7E 37.3 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokenId: 5)
-          + Nix:0x5FC8 37.4 OrderExecuted(token: NFTA:0xCf7E, orderIndex: 0)
+          + Nix:0x5FC8 37.4 OrderExecuted(token: NFTA:0xCf7E, orderIndex: 0, tradeIndex: 0)
           + NFTA:0xCf7E 37.5 Approval(owner: taker0:0x90F7, approved: null:0x0000, tokenId: 4)
           + NFTA:0xCf7E 37.6 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokenId: 4)
-          + Nix:0x5FC8 37.7 OrderExecuted(token: NFTA:0xCf7E, orderIndex: 1)
+          + Nix:0x5FC8 37.7 OrderExecuted(token: NFTA:0xCf7E, orderIndex: 1, tradeIndex: 0)
           + WETH:0xe7f1 37.8 Transfer(from: maker0:0x7099, to: Nix:0x5FC8, tokens: 22.0011)
           + WETH:0xe7f1 37.9 Transfer(from: Nix:0x5FC8, to: taker0:0x90F7, tokens: 15.40077)
           + WETH:0xe7f1 37.10 Transfer(from: Nix:0x5FC8, to: royalty1:0x9965, tokens: 2.20011)
@@ -73,10 +75,10 @@
         --- After Taker Executed Orders ---
           Account                               ETH                 WETH NFTA (6)                  NFTB (6)                  
           -------------------- -------------------- -------------------- ------------------------- -------------------------
-          deployer:0xf39F            9999.760620216                100.0 []                        []
+          deployer:0xf39F            9999.760587192                100.0 []                        []
           maker0:0x7099              9999.992848536              77.9989 [0,1,2,3,4,5]             [0,1,2]
           maker1:0x3C44               9999.99925244                100.0 []                        []
-          taker0:0x90F7              9999.994449592            115.40077 []                        [3,4,5]
+          taker0:0x90F7               9999.99443916            115.40077 []                        [3,4,5]
           taker1:0x15d3               9999.99925244                100.0 []                        []
           royalty1:0x9965                   10000.0              2.20011 []                        []
           royalty2:0x976E                   10000.0              4.40022 []                        []
@@ -88,7 +90,7 @@
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          2        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-11T20:03:32.000Z        1        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2021-11-12T21:46:02.000Z        1        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -97,8 +99,8 @@
 
 tradesLength: 1
 trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,0,0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,1"]
-    ✓ 00. Maker BuyAny Test (645ms)
+    ✓ 00. Maker BuyAny Test (850ms)
 
 
-  1 passing (3s)
+  1 passing (4s)
 
