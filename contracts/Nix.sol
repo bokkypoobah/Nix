@@ -151,7 +151,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     event OrderDisabled(address token, uint orderIndex);
     // event OrderTokenIdsUpdated(address token, uint orderIndex);
     event OrderUpdated(address token, uint orderIndex);
-    event OrderExecuted(address token, uint orderIndex, uint tradeIndex);
+    event OrderExecuted(address token, uint orderIndex, uint tradeIndex, uint[] tokenIds);
     event ThankYou(uint tip);
 
     constructor(IERC20Partial _weth, IRoyaltyEngineV1Partial _royaltyEngine) {
@@ -399,7 +399,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
                 addNetting(tokenInfo, order.tokenIds[0], trade, order);
             }
             require(order.tradeCount <= order.tradeMax, "Maxxed");
-            emit OrderExecuted(tokenInfo.token, orderIndexes[i], trades.length - 1);
+            emit OrderExecuted(tokenInfo.token, orderIndexes[i], trades.length - 1, tokenIds);
         }
         require(trade.netting[msg.sender] == netAmount, "NetAmount");
         transferNetted(trade);
