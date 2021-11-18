@@ -1,13 +1,13 @@
 pragma solidity ^0.8.0;
 
 // ----------------------------------------------------------------------------
-// Nix v0.8.1 testing
+// Nix v0.8.2 testing
 //
 // https://github.com/bokkypoobah/Nix
 //
 // Deployed to Rinkeby
-// - Nix 0x66fa96804A82034Dd7C44aF5376eEd7207861efd
-// - NixHelper 0x83377ea907a08baC9320cE6330993EcabBB48578
+// - Nix 0xDd26fD59b687269A5672217614BA72dd0ffC6b9f
+// - NixHelper 0x2ce1eeF166373607aa7415D183007fA56E1eB5E2
 //
 // SPDX-License-Identifier: MIT
 //
@@ -138,6 +138,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     bytes4 private constant ERC721_INTERFACE = 0x80ac58cd;
     bytes4 private constant ERC721METADATA_INTERFACE = 0x5b5e139f;
     bytes4 private constant ERC721ENUMERABLE_INTERFACE = 0x780e9d63;
+    uint private constant ROYALTYFACTOR_MAX = 1000;
 
     IERC20Partial public weth;
     IRoyaltyEngineV1Partial public royaltyEngine;
@@ -199,7 +200,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param anyOrAll (0) Any, (1) All
     /// @param expiry Expiry date. 0 = no expiry.
     /// @param tradeMax Must be 0 or 1 for All. Maximum number of NFTs for Any
-    /// @param royaltyFactor 0 to 100, and will be applied as % when the maker sells the NFTs
+    /// @param royaltyFactor 0 to ROYALTYFACTOR_MAX, and will be applied as % when the maker sells the NFTs
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
     /// @return orderIndex The new order index
     function addOrder(
@@ -220,7 +221,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             require(tokenIds.length > 0, "TokenIds");
             require(tradeMax <= 1, "Parcel");
         }
-        require(royaltyFactor <= 100, "Royalty");
+        require(royaltyFactor <= ROYALTYFACTOR_MAX, "Royalty");
 
         Token storage tokenInfo = tokens[token];
         if (tokenInfo.token != token) {
@@ -293,7 +294,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param price Price per NFT for Any. Price for all specified NFTs for All
     /// @param expiry Expiry date. 0 = no expiry.
     /// @param tradeMaxAdjustment Positive or negative number to adjust tradeMax. tradeMax must result in 0 or 1 for All, or the maximum number of NFTs for Any
-    /// @param royaltyFactor 0 to 100, and will be applied as % when the maker sells the NFTs
+    /// @param royaltyFactor 0 to ROYALTYFACTOR_MAX, and will be applied as % when the maker sells the NFTs
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
     function updateOrder(
         address token,
@@ -309,6 +310,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
         Order storage order = tokens[token].orders[orderKey];
         require(msg.sender == order.maker, "NotMaker");
+        require(royaltyFactor <= ROYALTYFACTOR_MAX, "Royalty");
         order.taker = taker;
         order.tokenIds = tokenIds;
         order.price = price;
@@ -336,7 +338,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param orderIndexes List of order indices - one orderIndex for each order
     /// @param tokenIdsList List of list of tokenIds - one set of tokenIds for each order
     /// @param netAmount Positive (taker receives WETH) or negative (taker pays WETH) for all orders
-    /// @param royaltyFactor 0 to 100, and will be applied as % when the taker sells the NFTs
+    /// @param royaltyFactor 0 to ROYALTYFACTOR_MAX, and will be applied as % when the taker sells the NFTs
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
     function executeOrders(
         address[] memory tokenList,
@@ -347,7 +349,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         address integrator
     ) external payable reentrancyGuard {
         require(tokenList.length > 0 && tokenList.length == orderIndexes.length && tokenList.length == tokenIdsList.length);
-        require(royaltyFactor <= 100, "Royalty");
+        require(royaltyFactor <= ROYALTYFACTOR_MAX, "Royalty");
 
         trades.push();
         Trade storage trade = trades[trades.length - 1];
