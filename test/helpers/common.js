@@ -3,7 +3,7 @@ const BUYORSELL = { BUY: 0, SELL: 1 };
 const ANYORALL = { ANY: 0, ALL: 1 };
 const BUYORSELLSTRING = [ "Buy", "Sell" ];
 const ANYORALLSTRING = [ "Any", "All" ];
-const ORDERSTATUSSTRING = [ "Executable", "Expired", "Maxxed", "MakerNoWeth", "MakerNoWethAllowance", "MakerNoToken", "MakerNotApprovedNix", "UnknownError" ];
+const ORDERSTATUSSTRING = [ "Executable", "Disabled", "Expired", "Maxxed", "MakerNoWeth", "MakerNoWethAllowance", "MakerNoToken", "MakerNotApprovedNix", "UnknownError" ];
 
 const { BigNumber } = require("ethers");
 const util = require('util');

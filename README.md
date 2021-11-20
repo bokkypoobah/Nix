@@ -92,3 +92,11 @@ NixHelper https://rinkeby.etherscan.io/address/0x83377ea907a08baC9320cE6330993Ec
 Nix https://rinkeby.etherscan.io/address/0xDd26fD59b687269A5672217614BA72dd0ffC6b9f#code
 
 NixHelper https://rinkeby.etherscan.io/address/0x2ce1eeF166373607aa7415D183007fA56E1eB5E2#code
+
+<br />
+
+#### Nix v0.8.3 testing
+
+Nix https://rinkeby.etherscan.io/address/0x682b156Cbb16e7F38874B3138F559976593B8629#code
+
+NixHelper https://rinkeby.etherscan.io/address/0x088973C56EB9B5E616A5184b015642e574582c31#code
