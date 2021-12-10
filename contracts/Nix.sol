@@ -95,6 +95,7 @@ contract ReentrancyGuard {
     }
 }
 
+
 /// @author Alex W.(github.com/nonstopcoderaxw)
 /// @title array utility functions optimized for Nix
 library ArrayUtils {
@@ -106,19 +107,16 @@ library ArrayUtils {
     /// @return 0 - unsorted in ascending order
     ///         1 - sorted in ascending order and no duplicated item
     ///         2 - include duplicated item
-    function isAscSortedAndNoDup(uint256[] memory self,
-                                 uint256 index)
-                                 internal
-                                 pure
-                                 returns (uint256)
-    {
+    function isAscSortedAndNoDup(
+        uint256[] memory self,
+        uint256 index
+    ) internal pure returns (uint256) {
         // base case
-        if(index == 1) return 1;
+        if (index == 1) return 1;
         //check sorting
-        if(self[index - 1] < self[index - 2]) return 0;
+        if (self[index - 1] < self[index - 2]) return 0;
         //check dup
-        if(self[index - 1] == self[index - 2]) return 2;
-
+        if (self[index - 1] == self[index - 2]) return 2;
         return isAscSortedAndNoDup(self, index - 1);
     }
 
@@ -126,16 +124,13 @@ library ArrayUtils {
     /// @param self the given sorted array
     /// @param target the targeted item to the array
     /// @return true - if exists, false - not found
-    function includes(uint256[] memory self,
-                      uint256 target)
-                      internal
-                      pure
-                      returns (bool)
-    {
+    function includes(
+        uint256[] memory self,
+        uint256 target
+    ) internal pure returns (bool) {
         uint256 left;
         uint256 right = self.length - 1;
         uint256 mid;
-
         while (left <= right) {
             mid = (left + right) / 2; //overflow can happen
             if (target == self[mid]) return true;
@@ -143,13 +138,12 @@ library ArrayUtils {
                 right = mid - 1;
                 continue;
             }
-
             left = mid + 1;
         }
-
         return false;
     }
 }
+
 
 /// @author BokkyPooBah, Bok Consulting Pty Ltd
 /// @title Decentralised ERC-721 exchange
