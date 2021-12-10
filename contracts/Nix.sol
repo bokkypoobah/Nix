@@ -95,6 +95,61 @@ contract ReentrancyGuard {
     }
 }
 
+/// @author Alex W.(github.com/nonstopcoderaxw)
+/// @title array utility functions optimized for Nix
+library ArrayUtils {
+
+    /// @notice check if an array is sorted in ascending order
+    /// @param self the array to check
+    /// @param index the "to index" of the sub array to run recursion,
+    ///        the initial value should the length of the array
+    /// @return 0 - unsorted in ascending order
+    ///         1 - sorted in ascending order and no duplicated item
+    ///         2 - include duplicated item
+    function isAscSortedAndNoDup(uint256[] memory self,
+                                 uint256 index)
+                                 internal
+                                 pure
+                                 returns (uint256)
+    {
+        // base case
+        if(index == 1) return 1;
+        //check sorting
+        if(self[index - 1] < self[index - 2]) return 0;
+        //check dup
+        if(self[index - 1] == self[index - 2]) return 2;
+
+        return isAscSortedAndNoDup(self, index - 1);
+    }
+
+    /// @notice divide-and-conquer check if an targeted item exists in a sorted array
+    /// @param self the given sorted array
+    /// @param target the targeted item to the array
+    /// @return true - if exists, false - not found
+    function includes(uint256[] memory self,
+                      uint256 target)
+                      internal
+                      pure
+                      returns (bool)
+    {
+        uint256 left;
+        uint256 right = self.length - 1;
+        uint256 mid;
+
+        while (left <= right) {
+            mid = (left + right) / 2; //overflow can happen
+            if (target == self[mid]) return true;
+            if (target < self[mid]) {
+                right = mid - 1;
+                continue;
+            }
+
+            left = mid + 1;
+        }
+
+        return false;
+    }
+}
 
 /// @author BokkyPooBah, Bok Consulting Pty Ltd
 /// @title Decentralised ERC-721 exchange
@@ -141,6 +196,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         ExecutedOrder[] executedOrders;
     }
 
+    using ArrayUtils for uint[];
     // https://eips.ethereum.org/EIPS/eip-721
     bytes4 private constant ERC721_INTERFACE = 0x80ac58cd;
     bytes4 private constant ERC721METADATA_INTERFACE = 0x5b5e139f;
@@ -200,7 +256,8 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @dev Add order
     /// @param token ERC-721 contract address
     /// @param taker Specific address, or null for any taker
-    /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All
+    /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All.
+    ///                    Must be sorted in ascending order and have no duplicates(error will be thrown).
     /// @param price Price per NFT for Any. Price for all specified NFTs for All
     /// @param buyOrSell (0) Buy, (1) Sell
     /// @param anyOrAll (0) Any, (1) All
@@ -227,6 +284,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             require(tokenIds.length > 0, "TokenIds");
             require(tradeMax <= 1, "Parcel");
         }
+        require(tokenIds.isAscSortedAndNoDup(tokenIds.length) == 1, "BadTokenIdList");
         require(royaltyFactor <= ROYALTYFACTOR_MAX, "Royalty");
 
         Token storage tokenInfo = tokens[token];
@@ -357,16 +415,21 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
 
             (address nftFrom, address nftTo) = (order.buyOrSell == BuyOrSell.Buy) ? (msg.sender, order.maker) : (order.maker, msg.sender);
             if (order.anyOrAll == AnyOrAll.Any) {
+                //cahced order.tokenIds
+                uint256[] memory _orderTokenIds;
                 for (uint j = 0; j < tokenIds.length; j++) {
                     bool found = false;
                     if (order.tokenIds.length == 0) {
                         found = true;
                     } else {
-                        for (uint k = 0; k < order.tokenIds.length && !found; k++) {
-                            if (tokenIds[j] == order.tokenIds[k]) {
-                                found = true;
-                            }
-                        }
+                          //cache storage into memory to avoid multiple sload on a same item
+                          if(_orderTokenIds.length == 0){
+                              _orderTokenIds = new uint256[](order.tokenIds.length);
+                              for(uint256 k = 0; k < _orderTokenIds.length; k++) {
+                                  _orderTokenIds[k] = order.tokenIds[k];
+                              }
+                          }
+                          found = _orderTokenIds.includes(tokenIds[j]);
                     }
                     require(found, "TokenId");
                     IERC721Partial(tokenInfo.token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
@@ -390,10 +453,12 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             require(order.tradeCount <= order.tradeMax, "Maxxed");
             emit OrderExecuted(tokenInfo.token, orderIndexes[i], trades.length - 1, tokenIds);
         }
+
         require(trade.netting[msg.sender] == netAmount, "NetAmount");
         transferNetted(trade);
         handleTips(integrator);
     }
+
 
     function addNetting(Token storage tokenInfo, uint tokenId, Trade storage trade, Order memory order) private {
         (address wethTo, address wethFrom) = (order.buyOrSell == BuyOrSell.Buy) ? (msg.sender, order.maker) : (order.maker, msg.sender);
@@ -422,6 +487,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         }
         trade.netting[wethTo] += int(order.price);
     }
+
     function transferNetted(Trade storage trade) private {
         for (uint i = 0; i < trade.uniqueAddresses.length; i++) {
             address account = trade.uniqueAddresses[i];
