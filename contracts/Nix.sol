@@ -257,7 +257,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param token ERC-721 contract address
     /// @param taker Specific address, or null for any taker
     /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All.
-    ///                    Must be sorted in ascending order and have no duplicates(error will be thrown)
+    ///                    Must be sorted in ascending order and have no duplicates(error will be thrown).
     /// @param price Price per NFT for Any. Price for all specified NFTs for All
     /// @param buyOrSell (0) Buy, (1) Sell
     /// @param anyOrAll (0) Any, (1) All
