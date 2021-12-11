@@ -1,13 +1,13 @@
 pragma solidity ^0.8.0;
 
 // ----------------------------------------------------------------------------
-// Nix v0.8.4 testing
+// Nix v0.8.5 testing to be deployed
 //
 // https://github.com/bokkypoobah/Nix
 //
 // Deployed to Rinkeby
-// - Nix 0xB1eb96f752C624DC784D80961A1aCcfAf348C923
-// - NixHelper 0x8aa752009F38F0b1C9306c7da2f9A146E2bAF56b
+// - Nix
+// - NixHelper
 //
 // SPDX-License-Identifier: MIT
 //
@@ -151,12 +151,12 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     IRoyaltyEngineV1Partial public royaltyEngine;
 
     address[] private tokensIndex;
-    mapping(address => Token) public tokens;
+    mapping(address => Token) private tokens;
     Trade[] private trades;
 
     event TokenAdded(address indexed token, uint indexed tokenIndex);
     event OrderAdded(address indexed token, uint indexed orderIndex);
-    event OrderDisabled(address indexed token, uint indexed orderIndex);
+    event OrderPriceAndExpiryUpdated(address indexed token, uint indexed orderIndex);
     event OrderUpdated(address indexed token, uint indexed orderIndex);
     event OrderExecuted(address indexed token, uint indexed orderIndex, uint indexed tradeIndex, uint[] tokenIds);
     event ThankYou(uint tip);
@@ -263,13 +263,22 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @dev Disable order
     /// @param token ERC-721 contract address
     /// @param orderIndex Order index
+    /// @param price Price per NFT for Any. Price for all specified NFTs for All
+    /// @param expiry Expiry date. 0 = no expiry. 1 = disabled.
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
-    function disableOrder(address token, uint orderIndex, address integrator) external payable reentrancyGuard {
+    function updateOrderPriceAndExpiry(
+        address token,
+        uint orderIndex,
+        uint price,
+        uint expiry,
+        address integrator
+    ) external payable reentrancyGuard {
         bytes32 orderKey = tokens[token].ordersIndex[orderIndex];
         Order storage order = tokens[token].orders[orderKey];
         require(msg.sender == order.maker, "NotMaker");
-        order.expiry = uint64(1);
-        emit OrderDisabled(token, orderIndex);
+        order.price = price;
+        order.expiry = uint64(expiry);
+        emit OrderPriceAndExpiryUpdated(token, orderIndex);
         handleTips(integrator);
     }
 
@@ -279,7 +288,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
     /// @param taker Specific address, or null for any taker
     /// @param tokenIds [] (empty) for any, [tokenId1, tokenId2, ...] for specific tokenIds. Must not be empty for All
     /// @param price Price per NFT for Any. Price for all specified NFTs for All
-    /// @param expiry Expiry date. 0 = no expiry.
+    /// @param expiry Expiry date. 0 = no expiry. 1 = disabled.
     /// @param tradeMaxAdjustment Positive or negative number to adjust tradeMax. tradeMax must result in 0 or 1 for All, or the maximum number of NFTs for Any
     /// @param royaltyFactor 0 to ROYALTYFACTOR_MAX, and will be applied as % when the maker sells the NFTs
     /// @param integrator Address of integrator, that will receive a portion of ETH tips
