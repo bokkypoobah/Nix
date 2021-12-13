@@ -7,7 +7,7 @@ const util = require('util');
 let data;
 
 describe("Nix", function () {
-  const DETAILS = 0;
+  const DETAILS = 1;
 
   beforeEach(async function () {
     const TestERC20 = await ethers.getContractFactory("TestERC20");
@@ -80,6 +80,7 @@ describe("Nix", function () {
     setup2.push(data.nftA.mint(data.taker0));
     setup2.push(data.nftA.mint(data.taker0));
     setup2.push(data.nftA.mint(data.taker0));
+    setup2.push(data.nftA.mint(data.maker1)); //6
     const mintATxs = await Promise.all(setup2);
     if (DETAILS > 0) {
       mintATxs.forEach( async function (a) {
@@ -113,144 +114,38 @@ describe("Nix", function () {
         await data.printEvents("WETH.approve(nix)", await a.wait());
       });
     }
-
-    const setup5 = [];
-    setup5.push(data.nftA.connect(data.maker0Signer).setApprovalForAll(nix.address, true));
-    setup5.push(data.nftA.connect(data.maker1Signer).setApprovalForAll(nix.address, true));
-    setup5.push(data.nftA.connect(data.taker0Signer).setApprovalForAll(nix.address, true));
-    setup5.push(data.nftA.connect(data.taker1Signer).setApprovalForAll(nix.address, true));
-    const [approve0Tx, approve1Tx, approve2Tx, approve3Tx] = await Promise.all(setup5);
-    if (DETAILS > 0) {
-      [approve0Tx, approve1Tx, approve2Tx, approve3Tx].forEach( async function (a) {
-        await data.printEvents("NFTA.approved(nix)", await a.wait());
-      });
-    }
-    // console.log("bytecode ~" + JSON.stringify(nix.deployTransaction.data.length/2, null, 2));
+    
     await data.printState("Setup Completed. Nix bytecode ~" + nix.deployTransaction.data.length/2 + ", NixHelper bytecode ~" + nixHelper.deployTransaction.data.length/2);
   })
 
-  it.only("00. Maker BuyAny Test", async function () {
-    console.log("        --- Maker Add Orders ---");
-    const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, [ 3, 4, 5 ], ethers.utils.parseEther("11"), 0, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
-    await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e", await addOrder1Tx.wait());
-    const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
-    const addOrder2Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, [ ], ethers.utils.parseEther("0.0011"), expiry2, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
-    await data.printEvents("Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e", await addOrder2Tx.wait());
-    const addOrder3Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftB.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, [ 3, 4, 5 ], ethers.utils.parseEther("22"), 0, 50, 75, data.integrator, { value: ethers.utils.parseEther("0.000001") });
-    await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTB:{3|4|5} for 22e", await addOrder3Tx.wait());
-    await data.printState("After Maker Added Orders");
-
-    console.log("        --- Taker Execute Against Orders ---");
-    const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address, data.nftA.address], [0, 1], [[ 3, 5 ], [4]], ethers.utils.parseEther("22.0011").mul(7).div(10), 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
-    // const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [1], [[4]], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    // const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrders([0], [[ 3]], ethers.utils.parseEther("11.00"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e" , await executeOrder1Tx.wait());
-    // const executeOrder2Tx = await data.nix.connect(data.taker0Signer).executeOrder(1, [ 4 ], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    // await data.printEvents("Taker Sold #4 against BuyAny Max 2 NFTA:* for 0.0011e", await executeOrder2Tx.wait());
-    await data.printState("After Taker Executed Orders");
-  });
-
-  it("0Old. Maker BuyAny Test", async function () {
-    console.log("        --- Maker Add Orders ---");
-    const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 3, 4, 5 ], ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, ethers.utils.parseEther("11"), 0, 5, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e", await addOrder1Tx.wait());
-    const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
-    const addOrder2Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ ], ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, ethers.utils.parseEther("0.0011"), expiry2, 5, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e", await addOrder2Tx.wait());
-    await data.printState("After Maker Added Orders");
-
-    console.log("        --- Taker Execute Against Orders ---");
-    const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrder(0, [ 3, 5 ], ethers.utils.parseEther("22"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e" , await executeOrder1Tx.wait());
-    const executeOrder2Tx = await data.nix.connect(data.taker0Signer).executeOrder(1, [ 4 ], ethers.utils.parseEther("0.0011"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Taker Sold #4 against BuyAny Max 2 NFTA:* for 0.0011e", await executeOrder2Tx.wait());
-    await data.printState("After Taker Executed Orders");
-  });
-
-  it("1. Maker SellAny Test", async function () {
-    console.log("        --- Maker Add Orders ---");
-    const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 0, 1, 2 ], ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ANY, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Maker Added Order #0 - SellAny NFTA:{0|1|2} for 12.3456e", await addOrder1Tx.wait());
-    const expiry2 = parseInt(new Date() / 1000) + (60 * 60 * 24);
-    const addOrder2Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ ], ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ANY, ethers.utils.parseEther("1.23456"), expiry2, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Maker Added Order #1 - SellAny NFTA:* for 1.23456e", await addOrder2Tx.wait());
-    await data.printState("After Maker Added Orders");
-
-    console.log("        --- Taker Execute Against Orders ---");
-    const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrder(0, [ 1 ], ethers.utils.parseEther("12.3456"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Taker Bought #1 against SellAny NFTA:{0|1|2} for 12.3456e" , await executeOrder1Tx.wait());
-    const executeOrder2Tx = await data.nix.connect(data.taker0Signer).executeOrder(1, [ 2 ], ethers.utils.parseEther("1.23456"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Taker Bought #2 against SellAny NFTA:* for 1.23456e", await executeOrder2Tx.wait());
-    await data.printState("After Taker Executed Orders");
-  });
-
-  it("2. Maker BuyAll Test", async function () {
-    console.log("        --- Maker Add Orders ---");
-    const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 3, 4, 5 ], ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ALL, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Maker Added Order #0 - BuyAll NFTA:{3&4&5} for 12.3456e", await addOrder1Tx.wait());
-    await data.printState("After Maker Added Orders");
-
-    console.log("        --- Taker Execute Against Orders ---");
-    const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrder(0, [ 3, 4, 5 ], ethers.utils.parseEther("12.3456"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Taker Sold #3,#4&#5 against BuyAll NFTA:{3&4&5} for 12.3456e" , await executeOrder1Tx.wait());
-    await data.printState("After Taker Executed Orders");
-  });
-
-  it("3. Maker SellAll Test & Owner Withdraw Tips", async function () {
-    console.log("        --- Maker Add Orders ---");
-    const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 0, 1, 2 ], ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ALL, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Maker Added Order #0 - SellAll NFTA:{0&1&2} for 12.3456e", await addOrder1Tx.wait());
-    await data.printState("After Maker Added Orders");
-
-    console.log("        --- Taker Execute Against Orders ---");
-    const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrder(0, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Taker Bought #0,#1&#2 against SellAll NFTA:{0&1&2} for 12.3456e" , await executeOrder1Tx.wait());
-    await data.printState("After Taker Executed Orders");
-
-    console.log("        --- Send Nix ETH Tip ---");
-    const sendNixTip0Tx = await data.deployerSigner.sendTransaction({ to: data.nix.address, value: ethers.utils.parseEther("8.888") });
-    await data.printEvents("txFee Send Nix ETH Tip" , await sendNixTip0Tx.wait());
-    await data.printState("After Send Nix ETH Tip");
-
-    console.log("        --- Owner Withdraw Tips ---");
-    const ownerWithdrawTips0Tx = await data.nix.connect(data.deployerSigner).withdrawTips(ZERO_ADDRESS, 0, 0);
-    await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawTips0Tx.wait());
-    await data.printState("After Owner Withdrawn Tips");
-
-    console.log("        --- Send Nix WETH Tip ---");
-    const sendNixWETHTip0Tx = await data.weth.connect(data.taker0Signer).transfer(data.nix.address, ethers.utils.parseEther("3.33"));
-    await data.printEvents("txFee Send Nix WETH Tip" , await sendNixWETHTip0Tx.wait());
-    await data.printState("After Send Nix WETH Tip");
-
-    console.log("        --- Owner Withdraw WETH Tips ---");
-    const ownerWithdrawWETHTips0Tx = await data.nix.connect(data.deployerSigner).withdrawTips(data.weth.address, 0, 0);
-    await data.printEvents("txFee Owner Withdrawn WETH Tips" , await ownerWithdrawWETHTips0Tx.wait());
-    await data.printState("After Owner Withdrawn WETH Tips");
-
-    console.log("        --- Taker0 Transfer NFTA To Nix For Donation ---");
-    const takerTransferNFTToNixTx = await data.nftA.connect(data.taker0Signer)["safeTransferFrom(address,address,uint256)"](data.taker0, data.nix.address, 3);
-    await data.printEvents("Taker0 Transfer NFTA To Nix For Donation" , await takerTransferNFTToNixTx.wait());
-    await data.printState("After Taker0 Transfer NFTA To Nix For Donation");
-
-    console.log("        --- Owner Withdraw NFT Tips ---");
-    const ownerWithdrawNFTTips1Tx = await data.nix.connect(data.deployerSigner).withdrawTips(data.nftA.address, 0, 3);
-    await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawNFTTips1Tx.wait());
-    await data.printState("After Owner Withdrawn Tips");
+  it.only(`security.00 Maker adds an sell order of an unowned NFT,
+                       Taker executes,
+                       Maker receives funds,
+                       Takers receives no NFT.
+                       Tx is successful`, async function () {
+     const unowned_tokenId = "6";
+     const balanceOfBefore_maker0 = (await data.weth.balanceOf(data.maker0Signer.address)).toString();
+     const balanceOfBefore_taker0 = (await data.weth.balanceOf(data.taker0Signer.address)).toString();
+     console.log("        > Check if the NFT is owned by Maker0, expect false ---");
+     assert.notEqual(await data.nftA.connect(data.maker0Signer).ownerOf(unowned_tokenId),
+                     data.maker0Signer.address);
+     console.log(`        >> success assert: NFT is not owned by maker0`);
+     console.log(`        > maker0 to add an sell order of NFT(unowned)`);
+     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ANY, [ unowned_tokenId ], ethers.utils.parseEther("11"), 0, 1, 0, data.integrator, { value: ethers.utils.parseEther("0.000001") });
+     console.log(`        > taker0 to execute the sell order for NFT(unowned by maker0)`);
+     const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [0], [ [unowned_tokenId] ], ethers.utils.parseEther("-11"), 0, data.integrator, { value: ethers.utils.parseEther("0.000001") });
+     console.log("        > Check if the NFT is received by Taker0, expect false ---");
+     assert.notEqual(await data.nftA.connect(data.taker0Signer).ownerOf(unowned_tokenId),
+                     data.taker0Signer.address);
+     console.log(`        >> success assert: NFT is not received by taker0`);
+     const balanceOfAfter_maker0 = (await data.weth.balanceOf(data.maker0Signer.address)).toString();
+     const balanceOfAfter_taker0 = (await data.weth.balanceOf(data.taker0Signer.address)).toString();
+     console.log(`        >> weth balance before and after executeOrders`);
+     console.log(`        Before executeOrders: Maker0 Balance: ${balanceOfBefore_maker0}`);
+     console.log(`        After executeOrders: Maker0 Balance:  ${balanceOfAfter_maker0}`);
+     console.log(`        Before executeOrders: Take0 Balance:  ${balanceOfBefore_taker0}`);
+     console.log(`        After executeOrders: Take0 Balance:   ${balanceOfAfter_taker0}`);
 
   });
+
 });
-
-
-// if (false) {
-//   const exchangeTx = await data.nix.connect(data.maker0Signer).exchange(nftA.address, 1, maker1);
-//   printEvents("Exchanged", await exchangeTx.wait());
-//   await data.printState("After Approve And Exchange =");
-// }
-// expect(await data.nix.greet()).to.equal("Hello, world!");
-//
-// const setGreetingTx = await data.nix.setGreeting("Hola, mundo!");
-//
-// // wait until the transaction is mined
-// await setGreetingTx.wait();
-//
-// expect(await data.nix.greet()).to.equal("Hola, mundo!");

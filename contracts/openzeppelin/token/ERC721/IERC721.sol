@@ -55,7 +55,7 @@ interface IERC721 is IERC165 {
         address from,
         address to,
         uint256 tokenId
-    ) external;
+    ) external returns (bool);
 
     /**
      * @dev Transfers `tokenId` token from `from` to `to`.

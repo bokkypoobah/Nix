@@ -163,13 +163,19 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     /**
      * @dev See {IERC721-safeTransferFrom}.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override {
-        safeTransferFrom(from, to, tokenId, "");
-    }
+     function safeTransferFrom(
+         address from,
+         address to,
+         uint256 tokenId
+     ) public virtual override returns (bool){
+         // safeTransferFrom(from, to, tokenId, "");
+         if(_isApprovedOrOwner(_msgSender(), tokenId)){
+             safeTransferFrom(from, to, tokenId, "");
+             return true;
+         }
+
+         return false;
+     }
 
     /**
      * @dev See {IERC721-safeTransferFrom}.
