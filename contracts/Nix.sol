@@ -234,11 +234,9 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         if (tokenIds.length > 0) {
             tokenIdsKey = keccak256(abi.encodePacked(tokenIds));
             if (tokenIdsData[tokenIdsKey].length == 0) {
-                if (tokenIds.length > 1) {
-                    for (uint i = 1; i < tokenIds.length; i++) {
-                        if (tokenIds[i - 1] >= tokenIds[i]) {
-                            revert TokenIdsMustBeSortedWithNoDuplicates();
-                        }
+                for (uint i = 1; i < tokenIds.length; i++) {
+                    if (tokenIds[i - 1] >= tokenIds[i]) {
+                        revert TokenIdsMustBeSortedWithNoDuplicates();
                     }
                 }
                 tokenIdsData[tokenIdsKey] = tokenIds;
