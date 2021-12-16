@@ -42,6 +42,32 @@ interface ERC721TokenReceiver {
     function onERC721Received(address _operator, address _from, uint _tokenId, bytes memory _data) external returns(bytes4);
 }
 
+/// @author Alex W.(github.com/nonstopcoderaxw)
+/// @title Array utility functions optimized for Nix
+library ArrayUtils {
+    /// @notice divide-and-conquer check if an targeted item exists in a sorted array
+    /// @param self the given sorted array
+    /// @param target the targeted item to the array
+    /// @return true - if exists, false - not found
+    function includes(uint256[] memory self, uint256 target) internal pure returns (bool) {
+        uint256 left;
+        uint256 right = self.length - 1;
+        uint256 mid;
+        while (left <= right) {
+            mid = (left + right) / 2; //overflow can happen
+            if (target == self[mid]) {
+                return true;
+            }
+            if (target < self[mid]) {
+                right = mid - 1;
+                continue;
+            }
+            left = mid + 1;
+        }
+        return false;
+    }
+}
+
 
 contract Owned {
     bytes4 private constant ERC721_INTERFACE = 0x80ac58cd;
@@ -106,6 +132,7 @@ contract ReentrancyGuard {
 /// @author BokkyPooBah, Bok Consulting Pty Ltd
 /// @title Decentralised ERC-721 exchange
 contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
+    using ArrayUtils for uint[];
 
     enum BuyOrSell { Buy, Sell }
     enum AnyOrAll { Any, All }
@@ -450,17 +477,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
             uint[] memory orderTokenIds = _getTokenIds(order.tokenIdsKey);
             if (order.anyOrAll == AnyOrAll.Any) {
                 for (uint j = 0; j < tokenIds.length; j++) {
-                    bool found = false;
-                    if (order.tokenIdsKey == bytes32(0)) {
-                        found = true;
-                    } else {
-                        for (uint k = 0; k < orderTokenIds.length && !found; k++) {
-                            if (tokenIds[j] == orderTokenIds[k]) {
-                                found = true;
-                            }
-                        }
-                    }
-                    if (!found) {
+                    if (order.tokenIdsKey != bytes32(0) && !orderTokenIds.includes(tokenIds[j])) {
                         revert TokenIdNotFound(orderIndexes[i], tokenIds[j]);
                     }
                     IERC721Partial(tokenInfo.token).safeTransferFrom(nftFrom, nftTo, tokenIds[j]);
