@@ -50,22 +50,20 @@ library ArrayUtils {
     /// @param target the targeted item to the array
     /// @return true - if exists, false - not found
     function includes(uint256[] memory self, uint256 target) internal pure returns (bool) {
-        if (self.length == 0) {
-            return false;
-        }
-        uint256 left;
-        uint256 right = self.length - 1;
-        uint256 mid;
-        while (left <= right) {
-            mid = (left + right) / 2; //overflow can happen
-            if (target == self[mid]) {
-                return true;
+        if (self.length > 0) {
+            uint256 left;
+            uint256 right = self.length - 1;
+            uint256 mid;
+            while (left <= right) {
+                mid = (left + right) / 2;
+                if (self[mid] < target) {
+                    left = mid + 1;
+                } else if (self[mid] > target) {
+                    right = mid - 1;
+                } else {
+                    return true;
+                }
             }
-            if (target < self[mid]) {
-                right = mid - 1;
-                continue;
-            }
-            left = mid + 1;
         }
         return false;
     }
