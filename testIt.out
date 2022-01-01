@@ -49,7 +49,7 @@
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          0        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:48:23.000Z        0        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:49:27.000Z        0        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -89,7 +89,7 @@
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          2        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:48:23.000Z        1        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:49:27.000Z        1        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -119,7 +119,7 @@
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          2        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:48:23.000Z        1        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:49:27.000Z        1        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -128,7 +128,7 @@
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,0,0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,1"]
-    ✓ 00. Maker BuyAny Test (802ms)
+    ✓ 00. Maker BuyAny Test (838ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > txFee Deployed Nix - gasUsed: 5262032 ~ ETH 0.442010688 ~ USD 1649
         > txFee Deployed NixHelper - gasUsed: 2466135 ~ ETH 0.20715534 ~ USD 772
@@ -206,7 +206,7 @@
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","71","0x09635F643e140090A9A8Dcd712eD6285858ceBef,0"]
-    ✓ 01. Maker BuyAll Test (277ms)
+    ✓ 01. Maker BuyAll Test (307ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > txFee Deployed Nix - gasUsed: 5262032 ~ ETH 0.442010688 ~ USD 1649
         > txFee Deployed NixHelper - gasUsed: 2466135 ~ ETH 0.20715534 ~ USD 772
@@ -282,7 +282,7 @@
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","104","0x1291Be112d480055DaFd8a610b7d1e203891C274,0"]
-    ✓ 02. Maker SellAny Test (324ms)
+    ✓ 02. Maker SellAny Test (305ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > txFee Deployed Nix - gasUsed: 5262032 ~ ETH 0.442010688 ~ USD 1649
         > txFee Deployed NixHelper - gasUsed: 2466135 ~ ETH 0.20715534 ~ USD 772
@@ -360,8 +360,7 @@
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","137","0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD,0"]
-    ✓ 03. Maker SellAll Test (273ms)
-    - 04. Maker SellAll Test & Owner Withdraw Tips
+    ✓ 03. Maker SellAll Test (272ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > txFee Deployed Nix - gasUsed: 5262032 ~ ETH 0.442010688 ~ USD 1649
         > txFee Deployed NixHelper - gasUsed: 2466135 ~ ETH 0.20715534 ~ USD 772
@@ -431,9 +430,8 @@
         --- Non-Owner Transfer Ownership ---
         > Transfer Ownership - gasUsed: 28865 ~ ETH 0.00242466 ~ USD 9
           + Nix:0x5c74 179.0 OwnershipTransferred(from: deployer:0xf39F, to: taker0:0x90F7)
-    ✓ 99. Admin Test (355ms)
+    ✓ 99. Admin Test (358ms)
 
 
   5 passing (7s)
-  1 pending
 
