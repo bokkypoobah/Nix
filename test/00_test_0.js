@@ -155,11 +155,11 @@ describe("Nix", function () {
     console.log("      01. Maker BuyAll Test");
     console.log("        --- Maker Add Orders ---");
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ALL, [ 3, 4, 5 ], ethers.utils.parseEther("11"), 0, 1, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
-    await data.printEvents("Maker Added Order #0 - BuyAll Max 1 NFTA:{3|4|5} for 11e", await addOrder1Tx.wait());
+    await data.printEvents("Maker Added Order #0 - BuyAll Max 1 NFTA:{3,4,5} for 11e", await addOrder1Tx.wait());
     await data.printState("After Maker Added Orders");
     console.log("        --- Taker Execute Orders ---");
     const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [0], [[ 3, 4, 5 ]], ethers.utils.parseEther("11").mul(7).div(10), 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
-    await data.printEvents("Taker Execute Orders" , await executeOrder1Tx.wait());
+    await data.printEvents("Taker Execute Orders", await executeOrder1Tx.wait());
     await data.printState("After Taker Executed Orders");
   });
 
@@ -171,25 +171,24 @@ describe("Nix", function () {
     await data.printState("After Maker Added Orders");
     console.log("        --- Taker Execute Against Orders ---");
     const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [0], [[ 1, 2 ]], ethers.utils.parseEther("-24.6912"), 100, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-    await data.printEvents("Taker Bought #1 against SellAny NFTA:{0|1|2} for 12.3456e" , await executeOrder1Tx.wait());
+    await data.printEvents("Taker Execute Orders", await executeOrder1Tx.wait());
     await data.printState("After Taker Executed Orders");
   });
 
-  // it.skip("02. Maker BuyAll Test", async function () {
-  //   console.log("      02. Maker BuyAll Test");
-  //   console.log("        --- Maker Add Orders ---");
-  //   const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 3, 4, 5 ], ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ALL, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-  //   await data.printEvents("Maker Added Order #0 - BuyAll NFTA:{3&4&5} for 12.3456e", await addOrder1Tx.wait());
-  //   await data.printState("After Maker Added Orders");
-  //
-  //   console.log("        --- Taker Execute Against Orders ---");
-  //   const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrder(0, [ 3, 4, 5 ], ethers.utils.parseEther("12.3456"), data.integrator, { value: ethers.utils.parseEther("0.000000001") });
-  //   await data.printEvents("Taker Sold #3,#4&#5 against BuyAll NFTA:{3&4&5} for 12.3456e" , await executeOrder1Tx.wait());
-  //   await data.printState("After Taker Executed Orders");
-  // });
+  it("03. Maker SellAll Test", async function () {
+    console.log("      03. Maker SellAll Test");
+    console.log("        --- Maker Add Orders ---");
+    const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ALL, [ 0, 1, 2 ], ethers.utils.parseEther("12.3456"), 0, 1, 100, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    await data.printEvents("Maker Added Order #0 - SellAll Max 1 NFTA:{0,1,2} for 12.3456e", await addOrder1Tx.wait());
+    await data.printState("After Maker Added Orders");
+    console.log("        --- Taker Execute Against Orders ---");
+    const executeOrder1Tx = await data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [0], [[ 0, 1, 2 ]], ethers.utils.parseEther("-12.3456"), 100, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
+    await data.printEvents("Taker Execute Orders", await executeOrder1Tx.wait());
+    await data.printState("After Taker Executed Orders");
+  });
 
-  it.skip("03. Maker SellAll Test & Owner Withdraw Tips", async function () {
-    console.log("      03. Maker SellAll Test & Owner Withdraw Tips");
+  it.skip("04. Maker SellAll Test & Owner Withdraw Tips", async function () {
+    console.log("      04. Maker SellAll Test & Owner Withdraw Tips");
     console.log("        --- Maker Add Orders ---");
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 0, 1, 2 ], ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ALL, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Maker Added Order #0 - SellAll NFTA:{0&1&2} for 12.3456e", await addOrder1Tx.wait());
