@@ -75,7 +75,7 @@ contract Owned {
 
     address public owner;
 
-    event OwnershipTransferred(address indexed _from, address indexed _to);
+    event OwnershipTransferred(address indexed from, address indexed to);
     event Withdrawn(address indexed token, uint tokens, uint tokenId);
 
     error NotOwner();
@@ -98,7 +98,10 @@ contract Owned {
 
     function withdraw(address token, uint tokens, uint tokenId) public onlyOwner {
         if (token == address(0)) {
-            payable(owner).transfer((tokens == 0 ? address(this).balance : tokens));
+            if (tokens == 0) {
+                tokens = address(this).balance;
+            }
+            payable(owner).transfer(tokens);
         } else {
             bool isERC721 = false;
             try IERC721Partial(token).supportsInterface(ERC721_INTERFACE) returns (bool b) {
@@ -108,7 +111,10 @@ contract Owned {
             if (isERC721) {
                 IERC721Partial(token).safeTransferFrom(address(this), owner, tokenId);
             } else {
-                IERC20Partial(token).transfer(owner, tokens == 0 ? IERC20Partial(token).balanceOf(address(this)) : tokens);
+                if (tokens == 0) {
+                    tokens = IERC20Partial(token).balanceOf(address(this));
+                }
+                IERC20Partial(token).transfer(owner, tokens);
             }
         }
         emit Withdrawn(address(token), tokens, tokenId);

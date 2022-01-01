@@ -129,7 +129,7 @@ describe("Nix", function () {
     await data.printState("Setup Completed. Nix bytecode ~" + nix.deployTransaction.data.length/2 + ", NixHelper bytecode ~" + nixHelper.deployTransaction.data.length/2);
   })
 
-  it.only("00. Maker BuyAny Test", async function () {
+  it("00. Maker BuyAny Test", async function () {
     console.log("        --- Maker Add Orders ---");
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, [ 3, 4, 5 ], ethers.utils.parseEther("11"), 0, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
     await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e", await addOrder1Tx.wait());
@@ -150,7 +150,7 @@ describe("Nix", function () {
     await data.printState("After Taker Executed Orders");
   });
 
-  it("0Old. Maker BuyAny Test", async function () {
+  it.skip("0Old. Maker BuyAny Test", async function () {
     console.log("        --- Maker Add Orders ---");
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 3, 4, 5 ], ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, ethers.utils.parseEther("11"), 0, 5, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("txFee Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e", await addOrder1Tx.wait());
@@ -167,7 +167,7 @@ describe("Nix", function () {
     await data.printState("After Taker Executed Orders");
   });
 
-  it("1. Maker SellAny Test", async function () {
+  it.skip("1. Maker SellAny Test", async function () {
     console.log("        --- Maker Add Orders ---");
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 0, 1, 2 ], ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ANY, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Maker Added Order #0 - SellAny NFTA:{0|1|2} for 12.3456e", await addOrder1Tx.wait());
@@ -184,7 +184,7 @@ describe("Nix", function () {
     await data.printState("After Taker Executed Orders");
   });
 
-  it("2. Maker BuyAll Test", async function () {
+  it.skip("2. Maker BuyAll Test", async function () {
     console.log("        --- Maker Add Orders ---");
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 3, 4, 5 ], ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ALL, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Maker Added Order #0 - BuyAll NFTA:{3&4&5} for 12.3456e", await addOrder1Tx.wait());
@@ -196,7 +196,7 @@ describe("Nix", function () {
     await data.printState("After Taker Executed Orders");
   });
 
-  it("3. Maker SellAll Test & Owner Withdraw Tips", async function () {
+  it.skip("3. Maker SellAll Test & Owner Withdraw Tips", async function () {
     console.log("        --- Maker Add Orders ---");
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, [ 0, 1, 2 ], ZERO_ADDRESS, BUYORSELL.SELL, ANYORALL.ALL, ethers.utils.parseEther("12.3456"), 0, 1, data.integrator, { value: ethers.utils.parseEther("0.000000001") });
     await data.printEvents("Maker Added Order #0 - SellAll NFTA:{0&1&2} for 12.3456e", await addOrder1Tx.wait());
@@ -238,6 +238,38 @@ describe("Nix", function () {
     await data.printState("After Owner Withdrawn Tips");
 
   });
+
+  it("99. Admin Test", async function () {
+    console.log("        --- Send Nix ETH, WETH & NFT Tips ---");
+    const sendNixTip0Tx = await data.deployerSigner.sendTransaction({ to: data.nix.address, value: ethers.utils.parseEther("0.888") });
+    await data.printEvents("Send Nix ETH Tip" , await sendNixTip0Tx.wait());
+    const sendNixWETHTip0Tx = await data.weth.connect(data.taker0Signer).transfer(data.nix.address, ethers.utils.parseEther("3.33"));
+    await data.printEvents("Send Nix WETH Tip" , await sendNixWETHTip0Tx.wait());
+    const takerTransferNFTToNixTx = await data.nftA.connect(data.taker0Signer)["safeTransferFrom(address,address,uint256)"](data.taker0, data.nix.address, 3);
+    await data.printEvents("Taker0 Transfer NFTA To Nix For Donation" , await takerTransferNFTToNixTx.wait());
+    await data.printState("After Send Nix ETH, WETH & NFT Tips");
+
+    console.log("        --- Non-Owner Withdraw ETH, WETH & NFT Tips ---");
+    await expect(data.nix.connect(data.taker0Signer).withdraw(ZERO_ADDRESS, 0, 0)).to.be.revertedWith("NotOwner()");
+    await expect(data.nix.connect(data.taker0Signer).withdraw(data.weth.address, 0, 0)).to.be.revertedWith("NotOwner()");
+    await expect(data.nix.connect(data.taker0Signer).withdraw(data.nftA.address, 0, 0)).to.be.revertedWith("NotOwner()");
+
+    console.log("        --- Owner Withdraw ETH, WETH & NFT Tips ---");
+    const ownerWithdrawETHTips0Tx = await data.nix.connect(data.deployerSigner).withdraw(ZERO_ADDRESS, 0, 0);
+    await data.printEvents("Owner Withdrawn ETH Tips" , await ownerWithdrawETHTips0Tx.wait());
+    const ownerWithdrawWETHTips0Tx = await data.nix.connect(data.deployerSigner).withdraw(data.weth.address, 0, 0);
+    await data.printEvents("Owner Withdrawn WETH Tips" , await ownerWithdrawWETHTips0Tx.wait());
+    const ownerWithdrawNFTTips0Tx = await data.nix.connect(data.deployerSigner).withdraw(data.nftA.address, 0, 3);
+    await data.printEvents("Owner Withdrawn Tips" , await ownerWithdrawNFTTips0Tx.wait());
+    await data.printState("After Owner Withdrawn ETH, WETH & NFT Tips");
+
+    console.log("        --- Non-Owner Transfer Ownership ---");
+    await expect(data.nix.connect(data.taker0Signer).transferOwnership(ZERO_ADDRESS)).to.be.revertedWith("NotOwner()");
+    const ownerTransferOwnershipTx = await data.nix.connect(data.deployerSigner).transferOwnership(data.taker0Signer.address);
+    await data.printEvents("Transfer Ownership" , await ownerTransferOwnershipTx.wait());
+    expect(await data.nix.owner()).to.equal(data.taker0Signer.address);
+  });
+
 });
 
 

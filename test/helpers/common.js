@@ -24,7 +24,7 @@ class Data {
     this.nixHelper = null;
 
     this.gasPrice = ethers.utils.parseUnits("84", "gwei");
-    this.ethUsd = ethers.utils.parseUnits("4360.35", 18);
+    this.ethUsd = ethers.utils.parseUnits("3730.93", 18);
 
     this.verbose = false;
   }
