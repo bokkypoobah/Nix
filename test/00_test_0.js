@@ -147,7 +147,7 @@ describe("Nix", function () {
 
     console.log("        --- Owner Withdraw Tips ---");
     const ownerWithdrawTips0Tx = await data.nix.connect(data.deployerSigner).withdraw(ZERO_ADDRESS, 0, 0);
-    await data.printEvents("txFee Owner Withdrawn Tips" , await ownerWithdrawTips0Tx.wait());
+    await data.printEvents("Owner Withdrawn Tips" , await ownerWithdrawTips0Tx.wait());
     await data.printState("After Owner Withdrawn Tips");
   });
 
