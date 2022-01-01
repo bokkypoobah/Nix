@@ -253,13 +253,13 @@ class Data {
 
     const tradesLength = (await this.nix.getLengths())[1];
     if (tradesLength > 0) {
-      console.log("tradesLength: " + tradesLength);
+      console.log("          tradesLength: " + tradesLength);
       // if (ordersLength > 0) {
       //   console.log("            # Maker         Taker        Token                       Price Type     Expiry                   Tx Count   Tx Max Status               Key        TokenIds");
       //   console.log("          --- ------------- ------------ ------------ -------------------- -------- ------------------------ -------- -------- -------------------- ---------- -----------------------");
       const tradeIndices = [...Array(parseInt(tradesLength)).keys()];
       const trades = await this.nixHelper.getTrades(tradeIndices);
-      console.log("trades: " + JSON.stringify(trades.map((x) => { return x.toString(); })));
+      console.log("          trades: " + JSON.stringify(trades.map((x) => { return x.toString(); })));
       // //   const orders = await this.nix.getOrders(tradeIndices);
       //
       //

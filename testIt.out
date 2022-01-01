@@ -18,15 +18,16 @@
           Nix:0x5FC8                            0.0                  0.0 []                        []
           NixHelper:0x0165                      0.0                  0.0 []                        []
 
+      00. Maker BuyAny Test
         --- Maker Add Orders ---
-        > txFee Maker Added Order #0 - BuyAny Max 2 NFTA:{3|4|5} for 11e - gasUsed: 368316 ~ ETH 0.030938544 ~ USD 115
+        > Maker Added Order #0 - BuyAny Max 5 NFTA:{3|4|5} for 11e - gasUsed: 368316 ~ ETH 0.030938544 ~ USD 115
           + Nix:0x5FC8 34.0 TokenAdded(token: NFTA:0xCf7E, tokenIndex: 0)
           + Nix:0x5FC8 34.1 OrderAdded(token: NFTA:0xCf7E, orderIndex: 0)
           + Nix:0x5FC8 34.2 ThankYou(tip: 0.000001)
-        > Maker Added Order #1 - BuyAny Max 2 NFTA:* for 0.0011e - gasUsed: 148471 ~ ETH 0.012471564 ~ USD 46
+        > Maker Added Order #1 - BuyAny Max 5 NFTA:* for 0.0011e - gasUsed: 148471 ~ ETH 0.012471564 ~ USD 46
           + Nix:0x5FC8 35.0 OrderAdded(token: NFTA:0xCf7E, orderIndex: 1)
           + Nix:0x5FC8 35.1 ThankYou(tip: 0.000001)
-        > txFee Maker Added Order #0 - BuyAny Max 2 NFTB:{3|4|5} for 22e - gasUsed: 243328 ~ ETH 0.020439552 ~ USD 76
+        > Maker Added Order #0 - BuyAny Max 50 NFTB:{3|4|5} for 22e - gasUsed: 243328 ~ ETH 0.020439552 ~ USD 76
           + Nix:0x5FC8 36.0 TokenAdded(token: NFTB:0xDc64, tokenIndex: 1)
           + Nix:0x5FC8 36.1 OrderAdded(token: NFTB:0xDc64, orderIndex: 0)
           + Nix:0x5FC8 36.2 ThankYou(tip: 0.000001)
@@ -48,15 +49,15 @@
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          0        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T03:58:59.000Z        0        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:11:10.000Z        0        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    22.0 Buy  Any     (none)                          0       50       75 Executable           [3,4,5]
 
-        --- Taker Execute Against Orders ---
-        > txFee Taker Sold #3 against BuyAny Max 2 NFTA:{3|4|5} for 11e - gasUsed: 606237 ~ ETH 0.050923908 ~ USD 189
+        --- Taker Execute Orders ---
+        > Taker Execute Orders - gasUsed: 606237 ~ ETH 0.050923908 ~ USD 189
           + Nix:0x5FC8 37.0 OrderExecuted(token: NFTA:0xCf7E, orderIndex: 0, tradeIndex: 0, tokenIds: 3,5)
           + NFTA:0xCf7E 37.1 Approval(owner: taker0:0x90F7, approved: null:0x0000, tokenId: 3)
           + NFTA:0xCf7E 37.2 Transfer(from: taker0:0x90F7, to: maker0:0x7099, tokenId: 3)
@@ -88,16 +89,16 @@
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          2        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T03:58:59.000Z        1        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T04:11:10.000Z        1        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    22.0 Buy  Any     (none)                          0       50       75 Executable           [3,4,5]
 
-tradesLength: 1
-trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,0,0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,1"]
-    ✓ 00. Maker BuyAny Test (643ms)
+          tradesLength: 1
+          trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,0,0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,1"]
+    ✓ 00. Maker BuyAny Test (678ms)
     - 0Old. Maker BuyAny Test
     - 1. Maker SellAny Test
     - 2. Maker BuyAll Test
@@ -119,6 +120,7 @@ trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a
           Nix:0xc5a5                            0.0                  0.0 []                        []
           NixHelper:0x67d2                      0.0                  0.0 []                        []
 
+      99. Admin Test
         --- Send Nix ETH, WETH & NFT Tips ---
         > Send Nix ETH Tip - gasUsed: 24657 ~ ETH 0.002071188 ~ USD 7
           + Nix:0xc5a5 69.0 ThankYou(tip: 0.888)
@@ -170,7 +172,7 @@ trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a
         --- Non-Owner Transfer Ownership ---
         > Transfer Ownership - gasUsed: 28865 ~ ETH 0.00242466 ~ USD 9
           + Nix:0xc5a5 79.0 OwnershipTransferred(from: deployer:0xf39F, to: taker0:0x90F7)
-    ✓ 99. Admin Test (353ms)
+    ✓ 99. Admin Test (364ms)
 
 
   2 passing (4s)
