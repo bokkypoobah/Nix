@@ -13,7 +13,7 @@ pragma solidity ^0.8.0;
 //
 // Enjoy. And hello, from the past.
 //
-// (c) BokkyPooBah / Bok Consulting Pty Ltd 2021
+// (c) BokkyPooBah / Bok Consulting Pty Ltd 2022
 // ----------------------------------------------------------------------------
 
 interface IERC20Partial {
@@ -31,7 +31,7 @@ interface IERC721Partial is IERC165 {
     function ownerOf(uint tokenId) external view returns (address);
     function balanceOf(address owner) external view returns (uint balance);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
-    function safeTransferFrom(address _from, address _to, uint _tokenId) external payable;
+    function safeTransferFrom(address from, address to, uint tokenId) external payable;
 }
 
 interface IRoyaltyEngineV1Partial is IERC165 {
@@ -39,7 +39,7 @@ interface IRoyaltyEngineV1Partial is IERC165 {
 }
 
 interface ERC721TokenReceiver {
-    function onERC721Received(address _operator, address _from, uint _tokenId, bytes memory _data) external returns(bytes4);
+    function onERC721Received(address operator, address from, uint tokenId, bytes memory data) external returns(bytes4);
 }
 
 /// @author Alex W.(github.com/nonstopcoderaxw)
