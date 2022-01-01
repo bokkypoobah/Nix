@@ -35,7 +35,8 @@ Instrumenting for coverage...
 Compilation:
 ============
 
-Nothing to compile
+Compiling 25 files with 0.8.11
+Compilation finished successfully
 
 Network Info
 ============
@@ -93,7 +94,7 @@ Network Info
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          0        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T09:44:52.000Z        0        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T10:10:28.000Z        0        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -133,7 +134,7 @@ Network Info
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          2        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T09:44:52.000Z        1        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T10:10:28.000Z        1        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -163,7 +164,7 @@ Network Info
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          2        5      100 Executable           [3,4,5]
-              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T09:44:52.000Z        1        5      100 Executable           []
+              1 maker0:0x7099  null:0x0000                  0.0011 Buy  Any     2022-01-02T10:10:28.000Z        1        5      100 Executable           []
 
           Orders for NFTB:0xDc64, ordersLength: 1, executed: 0, volumeToken: 0, volumeWeth: 0.0
               # Maker          Taker                         Price B/S  Any/All Expiry                   Tx Count   Tx Max  RoyFac% Status               TokenIds
@@ -172,7 +173,7 @@ Network Info
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","37","0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,0,0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9,1"]
-    ✓ 00. Maker BuyAny Test (1661ms)
+    ✓ 00. Maker BuyAny Test (1714ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > Deployed Nix - gasUsed: 10721666 ~ ETH 0.900619944 ~ USD 3360
         > Deployed NixHelper - gasUsed: 4492370 ~ ETH 0.37735908 ~ USD 1407
@@ -250,7 +251,7 @@ Network Info
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","71","0x09635F643e140090A9A8Dcd712eD6285858ceBef,0"]
-    ✓ 01. Maker BuyAll Test (699ms)
+    ✓ 01. Maker BuyAll Test (752ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > Deployed Nix - gasUsed: 10721666 ~ ETH 0.900619944 ~ USD 3360
         > Deployed NixHelper - gasUsed: 4492370 ~ ETH 0.37735908 ~ USD 1407
@@ -326,7 +327,7 @@ Network Info
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","104","0x1291Be112d480055DaFd8a610b7d1e203891C274,0"]
-    ✓ 02. Maker SellAny Test (667ms)
+    ✓ 02. Maker SellAny Test (702ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > Deployed Nix - gasUsed: 10721666 ~ ETH 0.900619944 ~ USD 3360
         > Deployed NixHelper - gasUsed: 4492370 ~ ETH 0.37735908 ~ USD 1407
@@ -404,7 +405,7 @@ Network Info
 
           tradesLength: 1
           trades: ["0x90F79bf6EB2c4f870365E785982E1f101E93b906","100","137","0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD,0"]
-    ✓ 03. Maker SellAll Test (680ms)
+    ✓ 03. Maker SellAll Test (686ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > Deployed Nix - gasUsed: 10721666 ~ ETH 0.900619944 ~ USD 3360
         > Deployed NixHelper - gasUsed: 4492370 ~ ETH 0.37735908 ~ USD 1407
@@ -465,14 +466,14 @@ Network Info
             --- -------------- -------------- -------------------- ---- ------- ------------------------ -------- -------- -------- -------------------- -----------------------
               0 maker0:0x7099  null:0x0000                    11.0 Buy  Any     (none)                          0        5      100 Executable           [3,4,5,6]
               1 maker0:0x7099  null:0x0000                    11.0 Buy  Any     1970-01-01T00:00:01.000Z        0        5      100 Disabled             [3,4,5]
-              2 maker0:0x7099  null:0x0000                    11.0 Buy  Any     2021-12-31T09:45:00.000Z        0        5      100 Expired              [3,4,5]
-              3 maker0:0x7099  null:0x0000                    11.0 Buy  Any     2022-01-02T09:45:00.000Z        0        5      100 Executable           [3,4,5]
-              4 maker0:0x7099  taker1:0x15d3                  11.0 Buy  Any     2022-01-02T09:45:00.000Z        0        5      100 Executable           [3,4,5]
+              2 maker0:0x7099  null:0x0000                    11.0 Buy  Any     2021-12-31T10:10:36.000Z        0        5      100 Expired              [3,4,5]
+              3 maker0:0x7099  null:0x0000                    11.0 Buy  Any     2022-01-02T10:10:36.000Z        0        5      100 Executable           [3,4,5]
+              4 maker0:0x7099  taker1:0x15d3                  11.0 Buy  Any     2022-01-02T10:10:36.000Z        0        5      100 Executable           [3,4,5]
               5 maker0:0x7099  null:0x0000                    11.0 Buy  All     (none)                          0        1      100 Executable           [3,4,5]
-              6 maker0:0x7099  null:0x0000                    11.0 Buy  All     2022-01-02T09:45:00.000Z        0        0      100 Maxxed               [3,4,5]
+              6 maker0:0x7099  null:0x0000                    11.0 Buy  All     2022-01-02T10:10:36.000Z        0        0      100 Maxxed               [3,4,5]
 
         --- Taker Execute Orders ---
-    ✓ 10. Test Add And Execute Order Exceptions (1697ms)
+    ✓ 10. Test Add And Execute Order Exceptions (1664ms)
         --- Setup Accounts, WETH, NFT and Nix Contracts ---
         > Deployed Nix - gasUsed: 10721666 ~ ETH 0.900619944 ~ USD 3360
         > Deployed NixHelper - gasUsed: 4492370 ~ ETH 0.37735908 ~ USD 1407
@@ -542,7 +543,7 @@ Network Info
         --- Non-Owner Transfer Ownership ---
         > Transfer Ownership - gasUsed: 29237 ~ ETH 0.002455908 ~ USD 9
           + Nix:0xab16 239.0 OwnershipTransferred(from: deployer:0xf39F, to: taker0:0x90F7)
-    ✓ 99. Admin Test (452ms)
+    ✓ 99. Admin Test (484ms)
 
 
   6 passing (13s)

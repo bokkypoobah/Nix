@@ -117,7 +117,7 @@ contract Owned {
                 IERC20Partial(token).transfer(owner, tokens);
             }
         }
-        emit Withdrawn(address(token), tokens, tokenId);
+        emit Withdrawn(token, tokens, tokenId);
     }
 }
 
