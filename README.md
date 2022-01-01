@@ -9,6 +9,19 @@ https://docs.openzeppelin.com/test-helpers/0.5/
 
 npm install --save-dev @openzeppelin/test-helpers
 
+**Coverage**
+
+Run coverage reports using the command
+
+`npx hardhat coverage`
+
+Output will be in the generated coverage directory
+
+If you are using yarn, you can run 
+
+`yarn hardhat coverage`
+
+
 
 <br />
 

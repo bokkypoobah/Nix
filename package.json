@@ -10,6 +10,7 @@
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.1",
     "hardhat": "^2.4.3",
-    "web3": "^1.5.2"
+    "web3": "^1.6.0",
+    "solidity-coverage": "^0.7.16"
   }
 }
