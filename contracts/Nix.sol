@@ -413,7 +413,7 @@ contract Nix is Owned, ReentrancyGuard, ERC721TokenReceiver {
         order.expiry = uint64(expiry);
         if (tradeMaxAdjustment < 0) {
             uint64 subtract = uint64(-int64(tradeMaxAdjustment));
-            if (subtract > (order.tradeMax - order.tradeCount)) {
+            if (subtract < (order.tradeMax - order.tradeCount)) {
                 order.tradeMax -= subtract;
             } else {
                 order.tradeMax = order.tradeCount;

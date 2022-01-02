@@ -202,7 +202,7 @@ describe("Nix", function () {
     console.log("        --- Maker Add Orders ---");
     // No Expiry
     const addOrder0Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, [ 3, 4, 5, 6 ], ethers.utils.parseEther("11"), 0, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
-    await data.printEvents("Maker Added Order #0 - No Expiry - BuyAny Max 5 NFTA:{3|4|5} for 11e", await addOrder0Tx.wait());
+    await data.printEvents("Maker Added Order #0 - No Expiry - BuyAny Max 5 NFTA:{3|4|5|6} for 11e", await addOrder0Tx.wait());
     // Disabled
     const addOrder1Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, [ 3, 4, 5 ], ethers.utils.parseEther("11"), 1, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
     await data.printEvents("Maker Added Order #1 - Disabled - BuyAny Max 5 NFTA:{3|4|5} for 11e", await addOrder1Tx.wait());
@@ -242,6 +242,44 @@ describe("Nix", function () {
     await expect(data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [5], [[3, 4]], ethers.utils.parseEther("11").mul(7).div(10), 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("TokenIdsMismatch(5, [3, 4, 5], [3, 4])");
     await expect(data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [5], [[3, 4, 5, 6]], ethers.utils.parseEther("11").mul(7).div(10), 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("TokenIdsMismatch(5, [3, 4, 5], [3, 4, 5, 6])");
     await expect(data.nix.connect(data.taker0Signer).executeOrders([data.nftA.address], [6], [[3, 4, 5]], ethers.utils.parseEther("11").mul(7).div(10), 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("OrderMaxxed(6, 1, 0)");
+  });
+
+  it("20. Test Update Order Exceptions", async function () {
+    console.log("      20. Test Update Order Exceptions");
+
+    console.log("        --- Maker Add Orders ---");
+    // No Expiry
+    const addOrder0Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ANY, [ 3, 4, 5 ], ethers.utils.parseEther("11"), 0, 5, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
+    await data.printEvents("Maker Added Order #0 - No Expiry - BuyAny Max 5 NFTA:{3|4|5} for 11e", await addOrder0Tx.wait());
+    // All, No Expiry
+    const addOrder5Tx = await data.nix.connect(data.maker0Signer).addOrder(data.nftA.address, ZERO_ADDRESS, BUYORSELL.BUY, ANYORALL.ALL, [ 3, 4, 5 ], ethers.utils.parseEther("11"), 0, 1, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
+    await data.printEvents("Maker Added Order #5 - No Expiry - BuyAll Max 1 NFTA:{3,4,5} for 11e", await addOrder5Tx.wait());
+
+    await data.printState("After Maker Added Orders");
+
+    console.log("        --- Update Order Price And Expiry ---");
+    await expect(data.nix.connect(data.maker1Signer).updateOrderPriceAndExpiry(data.nftA.address, 0, ethers.utils.parseEther("11"), 0, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("NotMaker()");
+
+    const updateOrderPriceAndExpiry0Tx = await data.nix.connect(data.maker0Signer).updateOrderPriceAndExpiry(data.nftA.address, 0, ethers.utils.parseEther("22"), 1, data.integrator, { value: ethers.utils.parseEther("0.000001") });
+    await data.printEvents("Maker Update Order Price And Expiry", await updateOrderPriceAndExpiry0Tx.wait());
+
+    await data.printState("After Maker Update Order Price And Expiry");
+
+    const expiry3 = parseInt(new Date() / 1000) + (60 * 60 * 24);
+    await expect(data.nix.connect(data.maker1Signer).updateOrder(data.nftA.address, 0, ZERO_ADDRESS, [], ethers.utils.parseEther("33"), expiry3, 0, 200, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("NotMaker()");
+    await expect(data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 0, ZERO_ADDRESS, [], ethers.utils.parseEther("33"), expiry3, 0, 2000, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("RoyaltyOverMax(2000, 1000)");
+    await expect(data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 0, ZERO_ADDRESS, [ 4, 3 ], ethers.utils.parseEther("33"), expiry3, 0, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("TokenIdsMustBeSortedWithNoDuplicates");
+    await expect(data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 0, ZERO_ADDRESS, [ 3, 4, 4 ], ethers.utils.parseEther("33"), expiry3, 0, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("TokenIdsMustBeSortedWithNoDuplicates");
+    await expect(data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 0, ZERO_ADDRESS, [ 3, 5, 4 ], ethers.utils.parseEther("33"), expiry3, 0, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("TokenIdsMustBeSortedWithNoDuplicates");
+    await expect(data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 1, ZERO_ADDRESS, [], ethers.utils.parseEther("33"), expiry3, 0, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("TokenIdsMustBeSpecifiedForBuyOrSellAll");
+    await expect(data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 1, ZERO_ADDRESS, [ 2, 3 ], ethers.utils.parseEther("33"), expiry3, 1, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") })).to.be.revertedWith("TradeMaxMustBeZeroOrOneForBuyOrSellAll");
+
+    const updateOrder0Tx = await data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 0, ZERO_ADDRESS, [], ethers.utils.parseEther("33"), expiry3, -3, 100, data.integrator, { value: ethers.utils.parseEther("0.000001") });
+    await data.printEvents("Maker Update Order Price And Expiry", await updateOrder0Tx.wait());
+    const updateOrder1Tx = await data.nix.connect(data.maker0Signer).updateOrder(data.nftA.address, 1, data.taker0Signer.address, [ 3, 4 ], ethers.utils.parseEther("44"), expiry3, 0, 200, data.integrator, { value: ethers.utils.parseEther("0.000001") });
+    await data.printEvents("Maker Update Order Price And Expiry", await updateOrder1Tx.wait());
+
+    await data.printState("After Maker Update Order");
   });
 
   it("99. Admin Test", async function () {
