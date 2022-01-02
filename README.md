@@ -122,3 +122,23 @@ NixHelper https://rinkeby.etherscan.io/address/0x088973C56EB9B5E616A5184b015642e
 Nix https://rinkeby.etherscan.io/address/0xB1eb96f752C624DC784D80961A1aCcfAf348C923#code
 
 NixHelper https://rinkeby.etherscan.io/address/0x8aa752009F38F0b1C9306c7da2f9A146E2bAF56b#code
+
+<br />
+
+#### Nix v0.9.0-alpha
+
+##### Mainnet
+
+Nix https://etherscan.io/address/0xFF0000ffe3475C081E541a1baAbc5DB7eA6e0353#code
+
+NixHelper https://etherscan.io/address/0x76f910c835b5a06CD465657f1a71153e2B6B2C0B#code
+
+ERC721Helper https://etherscan.io/address/0x1CB0bA2E867549Aa7485a91dD90C454C2121b975#code
+
+##### Rinkeby
+
+Nix https://rinkeby.etherscan.io/address/0xFF0000ffe3475C081E541a1baAbc5DB7eA6e0353#code
+
+NixHelper https://rinkeby.etherscan.io/address/0x76f910c835b5a06CD465657f1a71153e2B6B2C0B#code
+
+ERC721Helper https://rinkeby.etherscan.io/address/0x1CB0bA2E867549Aa7485a91dD90C454C2121b975#code
