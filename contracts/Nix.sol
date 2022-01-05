@@ -59,6 +59,7 @@ library ArrayUtils {
                 if (self[mid] < target) {
                     left = mid + 1;
                 } else if (self[mid] > target) {
+                    if(mid < 1) break;
                     right = mid - 1;
                 } else {
                     return true;
