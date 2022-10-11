@@ -1,11 +1,11 @@
 pragma solidity ^0.8.0;
 
 // ----------------------------------------------------------------------------
-// Nix v0.8.5 testing to be deployed
+// Nix v0.9.1 alpha
 //
 // https://github.com/bokkypoobah/Nix
 //
-// Deployed to Rinkeby
+// Deployed to
 // - Nix
 // - NixHelper
 //
@@ -126,8 +126,10 @@ contract Owned {
 
 
 contract ReentrancyGuard {
-    error ReentrancyAttempted();
     uint private _executing;
+
+    error ReentrancyAttempted();
+
     modifier reentrancyGuard() {
         if (_executing == 1) {
             revert ReentrancyAttempted();
